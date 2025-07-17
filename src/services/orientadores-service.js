@@ -15,6 +15,9 @@ const retornaTodasOrientacoes = async (req, res) => {
 					as: 'curso',
 					attributes: ['id', 'nome', 'codigo', 'turno']
 				}
+			],
+			order: [
+				[{ model: model.Docente, as: 'docente' }, 'nome', 'ASC']
 			]
 		});
 		res.status(200).json({ orientacoes: orientacoes });
@@ -36,6 +39,9 @@ const retornaOrientacoesPorDocente = async (req, res) => {
 					as: 'curso',
 					attributes: ['id', 'nome', 'codigo', 'turno']
 				}
+			],
+			order: [
+				[{ model: model.Curso, as: 'curso' }, 'nome', 'ASC']
 			]
 		});
 		res.status(200).json({ orientacoes: orientacoes });
@@ -57,6 +63,9 @@ const retornaOrientacoesPorCurso = async (req, res) => {
 					as: 'docente',
 					attributes: ['codigo', 'nome', 'email']
 				}
+			],
+			order: [
+				[{ model: model.Docente, as: 'docente' }, 'nome', 'ASC']
 			]
 		});
 		res.status(200).json({ orientacoes: orientacoes });
