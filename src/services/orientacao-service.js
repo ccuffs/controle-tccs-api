@@ -3,7 +3,7 @@ const model = require("@backend/models");
 // Função para retornar todas as orientações
 const retornaTodasOrientacoes = async (req, res) => {
 	try {
-		const orientacoes = await model.orientacao.findAll();
+		const orientacoes = await model.Orientacao.findAll();
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
 		console.log("Erro ao buscar orientações:", error);
@@ -15,7 +15,7 @@ const retornaTodasOrientacoes = async (req, res) => {
 const criaOrientacao = async (req, res) => {
 	const formData = req.body.formData;
 	try {
-		const orientacao = model.orientacao.build(formData);
+		const orientacao = model.Orientacao.build(formData);
 		await orientacao.save();
 		res.sendStatus(200);
 	} catch (error) {
@@ -28,7 +28,7 @@ const criaOrientacao = async (req, res) => {
 const atualizaOrientacao = async (req, res) => {
 	const formData = req.body.formData;
 	try {
-		await model.orientacao.update(formData, { where: { codigo: formData.codigo, matricula: formData.matricula } });
+		await model.Orientacao.update(formData, { where: { codigo: formData.codigo, matricula: formData.matricula } });
 		res.sendStatus(200);
 	} catch (error) {
 		console.log("Erro ao atualizar orientação:", error);
@@ -40,7 +40,7 @@ const atualizaOrientacao = async (req, res) => {
 const deletaOrientacao = async (req, res) => {
 	try {
 		const { codigo, matricula } = req.params;
-		const deleted = await model.orientacao.destroy({
+		const deleted = await model.Orientacao.destroy({
 			where: { codigo: codigo, matricula: matricula },
 		});
 

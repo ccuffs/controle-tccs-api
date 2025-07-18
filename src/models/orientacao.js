@@ -1,6 +1,8 @@
+"use strict";
+
 module.exports = (sequelize, DataTypes) => {
 	const Orientacao = sequelize.define(
-		"orientacao",
+		"Orientacao",
 		{
 			codigo: {
 				type: DataTypes.STRING,
@@ -8,23 +10,25 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 			},
 			matricula: {
-				type: DataTypes.INTEGER,
+				type: DataTypes.BIGINT,
 				allowNull: false,
 				primaryKey: true,
 			},
 		},
 		{
 			tableName: "orientacao",
+			schema: "public",
+			freezeTableName: true,
 			timestamps: false,
 		},
 	);
 
 	Orientacao.associate = (models) => {
-		Orientacao.belongsTo(models.docente, {
+		Orientacao.belongsTo(models.Docente, {
 			foreignKey: "codigo",
 			targetKey: "codigo",
 		});
-		Orientacao.belongsTo(models.dicente, {
+		Orientacao.belongsTo(models.Dicente, {
 			foreignKey: "matricula",
 			targetKey: "matricula",
 		});

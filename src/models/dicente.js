@@ -1,9 +1,9 @@
 module.exports = (sequelize, DataTypes) => {
 	const Dicente = sequelize.define(
-		"dicente",
+		"Dicente",
 		{
 			matricula: {
-				type: DataTypes.INTEGER,
+				type: DataTypes.BIGINT,
 				primaryKey: true,
 				allowNull: false,
 			},
@@ -18,6 +18,8 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		{
 			tableName: "dicente",
+			schema: "public",
+			freezeTableName: true,
 			timestamps: false,
 		},
 	);
