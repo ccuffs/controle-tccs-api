@@ -23,5 +23,14 @@ module.exports = (sequelize, DataTypes) => {
 			timestamps: false,
 		},
 	);
+
+	Dicente.associate = (models) => {
+		// Associação com Orientacao
+		Dicente.hasMany(models.Orientacao, {
+			foreignKey: "matricula",
+			sourceKey: "matricula",
+		});
+	};
+
 	return Dicente;
 };

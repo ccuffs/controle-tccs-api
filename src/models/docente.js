@@ -41,6 +41,12 @@ module.exports = (sequelize, DataTypes) => {
 			otherKey: 'id_curso',
 			as: 'cursosOrientacao'
 		});
+
+		// Associação com Orientacao
+		Docente.hasMany(models.Orientacao, {
+			foreignKey: "codigo",
+			sourceKey: "codigo",
+		});
 	};
 
 	return Docente;
