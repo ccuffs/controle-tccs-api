@@ -5,8 +5,50 @@ const pdf = require("pdf-parse");
 // Função para retornar todos os dicentes
 const retornaTodosDicentes = async (req, res) => {
 	try {
-		const dicentes = await model.Dicente.findAll();
-		res.status(200).json({ dicentes: dicentes });
+		const { ano, semestre, fase } = req.query;
+
+		let whereClause = {};
+		let includeOrientacao = false;
+
+		// Se há filtros de orientação, precisamos incluir a tabela Orientacao
+		if (ano || semestre || fase) {
+			includeOrientacao = true;
+
+			// Constrói a cláusula WHERE para a orientação
+			const orientacaoWhere = {};
+
+			if (ano) {
+				orientacaoWhere.ano = parseInt(ano);
+			}
+
+			if (semestre) {
+				orientacaoWhere.semestre = parseInt(semestre);
+			}
+
+			if (fase) {
+				orientacaoWhere.fase = parseInt(fase);
+			}
+
+			// Busca dicentes que possuem orientação com os critérios especificados
+			const dicentes = await model.Dicente.findAll({
+				include: [
+					{
+						model: model.Orientacao,
+						where: orientacaoWhere,
+						required: true, // INNER JOIN - só dicentes com orientação
+						attributes: [] // Não retorna dados da orientação, só usa para filtro
+					}
+				],
+				group: ['Dicente.matricula'], // Evita duplicatas se dicente tem múltiplas orientações
+				distinct: true
+			});
+
+			res.status(200).json({ dicentes: dicentes });
+		} else {
+			// Se não há filtros, retorna todos os dicentes
+			const dicentes = await model.Dicente.findAll();
+			res.status(200).json({ dicentes: dicentes });
+		}
 	} catch (error) {
 		console.log("Erro ao buscar dicentes:", error);
 		res.sendStatus(500);
@@ -153,14 +195,115 @@ const inserirMultiplosDicentes = async (dicentes) => {
 	}
 };
 
+// Função para inserir múltiplos dicentes e suas orientações de uma vez
+const inserirMultiplosDicentesComOrientacao = async (dicentes, orientacaoData) => {
+	try {
+		const resultados = {
+			sucessos: 0,
+			erros: 0,
+			detalhes: []
+		};
+
+		for (const dicenteData of dicentes) {
+			try {
+				// Verifica se o dicente já existe
+				const dicenteExistente = await model.Dicente.findByPk(dicenteData.matricula);
+
+				if (!dicenteExistente) {
+					// Cria o novo dicente se não existir
+					await model.Dicente.create(dicenteData);
+					resultados.detalhes.push({
+						matricula: dicenteData.matricula,
+						nome: dicenteData.nome,
+						status: 'dicente_inserido'
+					});
+				} else {
+					resultados.detalhes.push({
+						matricula: dicenteData.matricula,
+						nome: dicenteData.nome,
+						status: 'dicente_ja_existe'
+					});
+				}
+
+				// Verifica se a orientação já existe
+				const orientacaoExistente = await model.Orientacao.findOne({
+					where: {
+						ano: orientacaoData.ano,
+						semestre: orientacaoData.semestre,
+						id_curso: orientacaoData.id_curso,
+						fase: orientacaoData.fase,
+						matricula: dicenteData.matricula
+					}
+				});
+
+				if (!orientacaoExistente) {
+					// Cria a orientação sem orientador (código = null)
+					await model.Orientacao.create({
+						ano: orientacaoData.ano,
+						semestre: orientacaoData.semestre,
+						id_curso: orientacaoData.id_curso,
+						fase: orientacaoData.fase,
+						matricula: dicenteData.matricula,
+						codigo: null // Orientador será definido posteriormente
+					});
+
+					// Atualiza o status no detalhe se necessário
+					const detalheExistente = resultados.detalhes.find(d => d.matricula === dicenteData.matricula);
+					if (detalheExistente) {
+						if (detalheExistente.status === 'dicente_inserido') {
+							detalheExistente.status = 'dicente_e_orientacao_inseridos';
+						} else {
+							detalheExistente.status = 'orientacao_inserida';
+						}
+					}
+				} else {
+					// Orientação já existe
+					const detalheExistente = resultados.detalhes.find(d => d.matricula === dicenteData.matricula);
+					if (detalheExistente) {
+						if (detalheExistente.status === 'dicente_inserido') {
+							detalheExistente.status = 'dicente_inserido_orientacao_ja_existe';
+						} else {
+							detalheExistente.status = 'orientacao_ja_existe';
+						}
+					}
+				}
+
+				resultados.sucessos++;
+
+			} catch (error) {
+				console.log("Erro ao inserir dicente/orientação:", error);
+				resultados.erros++;
+				resultados.detalhes.push({
+					matricula: dicenteData.matricula,
+					nome: dicenteData.nome,
+					status: 'erro',
+					erro: error.message
+				});
+			}
+		}
+
+		return resultados;
+	} catch (error) {
+		console.error("Erro ao inserir múltiplos dicentes com orientação:", error);
+		throw error;
+	}
+};
+
 // Função para processar PDF e inserir dicentes no banco
 const processarEInserirPDFDicentes = async (req, res) => {
 	try {
 		const caminhoArquivo = req.file?.path;
+		const { ano, semestre, fase, id_curso } = req.body;
 
 		if (!caminhoArquivo) {
 			return res.status(400).json({
 				message: "Nenhum arquivo PDF fornecido"
+			});
+		}
+
+		if (!ano || !semestre || !fase || !id_curso) {
+			return res.status(400).json({
+				message: "Parâmetros obrigatórios não fornecidos: ano, semestre, fase e id_curso são necessários"
 			});
 		}
 
@@ -173,8 +316,16 @@ const processarEInserirPDFDicentes = async (req, res) => {
 			});
 		}
 
-		// Insere os dicentes no banco
-		const resultados = await inserirMultiplosDicentes(dicentes);
+		// Dados da orientação
+		const orientacaoData = {
+			ano: parseInt(ano),
+			semestre: parseInt(semestre),
+			fase: parseInt(fase),
+			id_curso: parseInt(id_curso)
+		};
+
+		// Insere os dicentes e orientações no banco
+		const resultados = await inserirMultiplosDicentesComOrientacao(dicentes, orientacaoData);
 
 		// Remove o arquivo temporário após processamento
 		fs.unlinkSync(caminhoArquivo);
@@ -213,5 +364,6 @@ module.exports = {
 	deletaDicente,
 	processarEInserirPDFDicentes,
 	processarPDFDicentes,
-	inserirMultiplosDicentes
+	inserirMultiplosDicentes,
+	inserirMultiplosDicentesComOrientacao
 };

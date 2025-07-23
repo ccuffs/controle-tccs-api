@@ -38,12 +38,6 @@ module.exports = (sequelize, DataTypes) => {
 			foreignKey: "id_curso",
 			targetKey: "id",
 		});
-
-		// Associação com Orientacao usando chave composta
-		OfertaTcc.hasMany(models.Orientacao, {
-			foreignKey: ["ano", "semestre", "id_curso", "fase"],
-			sourceKey: ["ano", "semestre", "id_curso", "fase"],
-		});
 	};
 
 	return OfertaTcc;

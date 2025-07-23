@@ -43,12 +43,6 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	Orientacao.associate = (models) => {
-		// Associação com OfertaTcc (chave estrangeira composta)
-		Orientacao.belongsTo(models.OfertaTcc, {
-			foreignKey: ["ano", "semestre", "id_curso", "fase"],
-			targetKey: ["ano", "semestre", "id_curso", "fase"],
-		});
-
 		// Associação com Dicente
 		Orientacao.belongsTo(models.Dicente, {
 			foreignKey: "matricula",
@@ -59,6 +53,12 @@ module.exports = (sequelize, DataTypes) => {
 		Orientacao.belongsTo(models.Docente, {
 			foreignKey: "codigo",
 			targetKey: "codigo",
+		});
+
+		// Associação com Curso
+		Orientacao.belongsTo(models.Curso, {
+			foreignKey: "id_curso",
+			targetKey: "id",
 		});
 	};
 
