@@ -14,13 +14,16 @@ const retornaTodasOrientacoes = async (req, res) => {
 // Função para criar uma nova orientação
 const criaOrientacao = async (req, res) => {
 	const formData = req.body.formData;
+
 	try {
 		const orientacao = model.Orientacao.build(formData);
 		await orientacao.save();
+
 		res.sendStatus(200);
 	} catch (error) {
 		console.log("Erro ao criar orientação:", error);
-		res.sendStatus(500);
+		console.log("Dados que causaram erro:", formData);
+		res.status(500).json({ error: error.message });
 	}
 };
 
@@ -28,11 +31,20 @@ const criaOrientacao = async (req, res) => {
 const atualizaOrientacao = async (req, res) => {
 	const formData = req.body.formData;
 	try {
-		await model.Orientacao.update(formData, { where: { codigo: formData.codigo, matricula: formData.matricula } });
+		await model.Orientacao.update(formData, {
+			where: {
+				ano: formData.ano,
+				semestre: formData.semestre,
+				id_curso: formData.id_curso,
+				fase: formData.fase,
+				matricula: formData.matricula
+			}
+		});
 		res.sendStatus(200);
 	} catch (error) {
 		console.log("Erro ao atualizar orientação:", error);
-		res.sendStatus(500);
+		console.log("Dados que causaram erro:", formData);
+		res.status(500).json({ error: error.message });
 	}
 };
 
