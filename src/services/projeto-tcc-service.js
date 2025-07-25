@@ -20,7 +20,6 @@ const retornaTodosProjetosTcc = async (req, res) => {
 					attributes: ['codigo', 'nome', 'email']
 				}
 			],
-			where: { ativo: true },
 			order: [
 				[{ model: model.Docente }, 'nome', 'ASC'],
 				[{ model: model.AreaTcc }, 'descicao', 'ASC'],
@@ -49,8 +48,7 @@ const retornaProjetosTccPorCurso = async (req, res) => {
 
 		const projetos = await model.ProjetoTcc.findAll({
 			where: {
-				codigo_docente: codigosDocentes,
-				ativo: true
+				codigo_docente: codigosDocentes
 			},
 			include: [
 				{
@@ -87,8 +85,7 @@ const retornaProjetosTccPorDocente = async (req, res) => {
 		const codigo = req.params.codigo;
 		const projetos = await model.ProjetoTcc.findAll({
 			where: {
-				codigo_docente: codigo,
-				ativo: true
+				codigo_docente: codigo
 			},
 			include: [
 				{
@@ -135,6 +132,28 @@ const atualizaProjetoTcc = async (req, res) => {
 	}
 };
 
+// Função para alternar status ativo/inativo de um projeto TCC
+const alternaStatusProjetoTcc = async (req, res) => {
+	try {
+		const id = req.params.id;
+		const { ativo } = req.body;
+
+		const updated = await model.ProjetoTcc.update(
+			{ ativo: ativo },
+			{ where: { id: id } }
+		);
+
+		if (updated[0] > 0) {
+			res.sendStatus(200);
+		} else {
+			res.status(404).send({ message: "Projeto TCC não encontrado" });
+		}
+	} catch (error) {
+		console.error("Erro ao alterar status do projeto TCC:", error);
+		res.status(500).send({ message: "Erro ao alterar status do projeto TCC" });
+	}
+};
+
 // Função para deletar um projeto TCC (marcar como inativo)
 const deletaProjetoTcc = async (req, res) => {
 	try {
@@ -161,5 +180,6 @@ module.exports = {
 	retornaProjetosTccPorDocente,
 	criaProjetoTcc,
 	atualizaProjetoTcc,
+	alternaStatusProjetoTcc,
 	deletaProjetoTcc
 };

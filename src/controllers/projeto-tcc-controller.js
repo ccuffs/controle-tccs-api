@@ -7,6 +7,7 @@ projetoTccController.get("/curso/:id_curso", projetoTccService.retornaProjetosTc
 projetoTccController.get("/docente/:codigo", projetoTccService.retornaProjetosTccPorDocente);
 projetoTccController.post("/", projetoTccService.criaProjetoTcc);
 projetoTccController.put("/", projetoTccService.atualizaProjetoTcc);
+projetoTccController.patch("/:id/status", projetoTccService.alternaStatusProjetoTcc);
 projetoTccController.delete("/:id", projetoTccService.deletaProjetoTcc);
 
 module.exports = projetoTccController;
