@@ -25,8 +25,8 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	Dicente.associate = (models) => {
-		// Associação com Orientacao
-		Dicente.hasMany(models.Orientacao, {
+		// Associação com TrabalhoConclusao
+		Dicente.hasMany(models.TrabalhoConclusao, {
 			foreignKey: "matricula",
 			sourceKey: "matricula",
 		});

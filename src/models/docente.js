@@ -44,8 +44,28 @@ module.exports = (sequelize, DataTypes) => {
 
 		// Associação com Orientacao
 		Docente.hasMany(models.Orientacao, {
-			foreignKey: "codigo",
+			foreignKey: "codigo_docente",
 			sourceKey: "codigo",
+		});
+
+		// Associação com Convite
+		Docente.hasMany(models.Convite, {
+			foreignKey: "codigo_docente",
+			sourceKey: "codigo",
+		});
+
+		// Associação com Defesa para membro_banca_a
+		Docente.hasMany(models.Defesa, {
+			foreignKey: "membro_banca_a",
+			sourceKey: "codigo",
+			as: "defesasMembroA",
+		});
+
+		// Associação com Defesa para membro_banca_b
+		Docente.hasMany(models.Defesa, {
+			foreignKey: "membro_banca_b",
+			sourceKey: "codigo",
+			as: "defesasMembroB",
 		});
 	};
 

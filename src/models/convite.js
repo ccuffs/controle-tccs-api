@@ -1,8 +1,8 @@
 "use strict";
 
 module.exports = (sequelize, DataTypes) => {
-	const Orientacao = sequelize.define(
-		"Orientacao",
+	const Convite = sequelize.define(
+		"Convite",
 		{
 			id: {
 				type: DataTypes.INTEGER,
@@ -11,39 +11,44 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			codigo_docente: {
 				type: DataTypes.STRING,
+				primaryKey: true,
 				allowNull: false,
 			},
-			id_tcc: {
-				type: DataTypes.INTEGER,
-				allowNull: false,
-			},
-			orientador: {
+			aceito: {
 				type: DataTypes.BOOLEAN,
 				allowNull: false,
 				defaultValue: false,
 			},
+			data_envio: {
+				type: DataTypes.DATE,
+				allowNull: false,
+			},
+			data_aceite: {
+				type: DataTypes.DATE,
+				allowNull: true,
+			},
 		},
 		{
-			tableName: "orientacao",
+			tableName: "convite",
 			schema: "tccs",
 			freezeTableName: true,
 			timestamps: false,
 		},
 	);
 
-	Orientacao.associate = (models) => {
+	Convite.associate = (models) => {
+		// Associação com TrabalhoConclusao
+		Convite.belongsTo(models.TrabalhoConclusao, {
+			foreignKey: "id",
+			targetKey: "id",
+		});
+
 		// Associação com Docente
-		Orientacao.belongsTo(models.Docente, {
+		Convite.belongsTo(models.Docente, {
 			foreignKey: "codigo_docente",
 			targetKey: "codigo",
 		});
-
-		// Associação com TrabalhoConclusao
-		Orientacao.belongsTo(models.TrabalhoConclusao, {
-			foreignKey: "id_tcc",
-			targetKey: "id",
-		});
 	};
 
-	return Orientacao;
-};
+	return Convite;
+}; 
