@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			descricao: {
 				type: DataTypes.STRING,
-				allowNull: false,
+				allowNull: true,
 			},
 			id_area_tcc: {
 				type: DataTypes.INTEGER,
@@ -22,10 +22,10 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
-			vagas: {
-				type: DataTypes.INTEGER,
-				allowNull: true,
-				defaultValue: 0,
+			ativo: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: true,
 			},
 		},
 		{

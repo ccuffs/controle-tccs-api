@@ -68,6 +68,12 @@ module.exports = (sequelize, DataTypes) => {
 			as: "defesasMembroB",
 		});
 
+		// Associação com AreaTcc
+		Docente.hasMany(models.AreaTcc, {
+			foreignKey: "codigo_docente",
+			sourceKey: "codigo",
+		});
+
 		// Associação com ProjetoTcc
 		Docente.hasMany(models.ProjetoTcc, {
 			foreignKey: "codigo_docente",

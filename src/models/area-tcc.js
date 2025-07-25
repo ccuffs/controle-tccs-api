@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
-			codigo: {
+			codigo_docente: {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
@@ -28,6 +28,12 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	AreaTcc.associate = (models) => {
+		// Associação com Docente
+		AreaTcc.belongsTo(models.Docente, {
+			foreignKey: "codigo_docente",
+			targetKey: "codigo",
+		});
+
 		// Associação com ProjetoTcc
 		AreaTcc.hasMany(models.ProjetoTcc, {
 			foreignKey: "id_area_tcc",
