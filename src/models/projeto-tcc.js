@@ -1,8 +1,8 @@
 "use strict";
 
 module.exports = (sequelize, DataTypes) => {
-	const Orientacao = sequelize.define(
-		"Orientacao",
+	const ProjetoTcc = sequelize.define(
+		"ProjetoTcc",
 		{
 			id: {
 				type: DataTypes.INTEGER,
@@ -10,41 +10,45 @@ module.exports = (sequelize, DataTypes) => {
 				autoIncrement: true,
 				allowNull: false,
 			},
+			descricao: {
+				type: DataTypes.STRING,
+				allowNull: false,
+			},
+			id_area_tcc: {
+				type: DataTypes.INTEGER,
+				allowNull: false,
+			},
 			codigo_docente: {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
-			id_tcc: {
+			vagas: {
 				type: DataTypes.INTEGER,
-				allowNull: false,
-			},
-			orientador: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: false,
+				allowNull: true,
+				defaultValue: 0,
 			},
 		},
 		{
-			tableName: "orientacao",
+			tableName: "projeto_tcc",
 			schema: "tccs",
 			freezeTableName: true,
 			timestamps: false,
 		},
 	);
 
-	Orientacao.associate = (models) => {
+	ProjetoTcc.associate = (models) => {
+		// Associação com AreaTcc
+		ProjetoTcc.belongsTo(models.AreaTcc, {
+			foreignKey: "id_area_tcc",
+			targetKey: "id",
+		});
+
 		// Associação com Docente
-		Orientacao.belongsTo(models.Docente, {
+		ProjetoTcc.belongsTo(models.Docente, {
 			foreignKey: "codigo_docente",
 			targetKey: "codigo",
 		});
-
-		// Associação com TrabalhoConclusao
-		Orientacao.belongsTo(models.TrabalhoConclusao, {
-			foreignKey: "id_tcc",
-			targetKey: "id",
-		});
 	};
 
-	return Orientacao;
+	return ProjetoTcc;
 };
