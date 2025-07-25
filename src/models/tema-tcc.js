@@ -1,8 +1,8 @@
 "use strict";
 
 module.exports = (sequelize, DataTypes) => {
-	const ProjetoTcc = sequelize.define(
-		"ProjetoTcc",
+	const TemaTcc = sequelize.define(
+		"TemaTcc",
 		{
 			id: {
 				type: DataTypes.INTEGER,
@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			descricao: {
 				type: DataTypes.STRING,
-				allowNull: true,
+				allowNull: false,
 			},
 			id_area_tcc: {
 				type: DataTypes.INTEGER,
@@ -29,26 +29,26 @@ module.exports = (sequelize, DataTypes) => {
 			},
 		},
 		{
-			tableName: "projeto_tcc",
+			tableName: "tema_tcc",
 			schema: "tccs",
 			freezeTableName: true,
 			timestamps: false,
 		},
 	);
 
-	ProjetoTcc.associate = (models) => {
+	TemaTcc.associate = (models) => {
 		// Associação com AreaTcc
-		ProjetoTcc.belongsTo(models.AreaTcc, {
+		TemaTcc.belongsTo(models.AreaTcc, {
 			foreignKey: "id_area_tcc",
 			targetKey: "id",
 		});
 
 		// Associação com Docente
-		ProjetoTcc.belongsTo(models.Docente, {
+		TemaTcc.belongsTo(models.Docente, {
 			foreignKey: "codigo_docente",
 			targetKey: "codigo",
 		});
 	};
 
-	return ProjetoTcc;
+	return TemaTcc;
 };

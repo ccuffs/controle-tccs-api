@@ -34,6 +34,7 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	OfertaTcc.associate = (models) => {
+		// Relacionamento com Curso
 		OfertaTcc.belongsTo(models.Curso, {
 			foreignKey: "id_curso",
 			targetKey: "id",
