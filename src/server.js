@@ -15,6 +15,8 @@ const orientadoresController = require("./controllers/orientadores-controller");
 const orientacoesController = require("./controllers/orientacoes-controller");
 const dicentesController = require("./controllers/dicentes-controller");
 const ofertasTccController = require("./controllers/ofertas-tcc-controller");
+const areaTccController = require("./controllers/area-tcc-controller");
+const projetoTccController = require("./controllers/projeto-tcc-controller");
 
 app.use(cors());
 app.use(express.json());
@@ -36,3 +38,5 @@ app.use("/api/orientadores", orientadoresController);
 app.use("/api/orientacoes", orientacoesController);
 app.use("/api/dicentes", dicentesController);
 app.use("/api/ofertas-tcc", ofertasTccController);
+app.use("/api/areas-tcc", areaTccController);
+app.use("/api/projetos-tcc", projetoTccController);
