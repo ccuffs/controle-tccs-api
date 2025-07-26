@@ -29,6 +29,14 @@ module.exports = (sequelize, DataTypes) => {
 			otherKey: 'id_curso',
 			as: 'cursos'
 		});
+
+		// Associação many-to-many com Grupo através da tabela usuario_grupo
+		Usuario.belongsToMany(models.Grupo, {
+			through: models.UsuarioGrupo,
+			foreignKey: 'id_usuario',
+			otherKey: 'id_grupo',
+			as: 'grupos'
+		});
 	};
 
 	return Usuario;
