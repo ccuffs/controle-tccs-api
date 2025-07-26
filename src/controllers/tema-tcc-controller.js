@@ -9,6 +9,7 @@ temaTccController.get("/docente/:codigo", temaTccService.retornaTemasTccPorDocen
 temaTccController.post("/", temaTccService.criaTemaTcc);
 temaTccController.put("/", temaTccService.atualizaTemaTcc);
 temaTccController.patch("/:id/vagas", temaTccService.atualizaVagasTemaTcc); // Atualiza vagas do tema
+temaTccController.patch("/docente/:codigo_docente/curso/:id_curso/vagas", temaTccService.atualizaVagasOfertaDocente); // Atualiza vagas da oferta do docente
 temaTccController.delete("/:id", temaTccService.deletaTemaTcc);
 
 module.exports = temaTccController;

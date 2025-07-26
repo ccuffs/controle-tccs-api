@@ -1,4 +1,5 @@
 const model = require("../models");
+const { obterAnoSemestreAtual } = require("./ano-semestre-util");
 
 // Função para retornar todas as ofertas de TCC
 const retornaTodasOfertasTcc = async (req, res) => {
@@ -167,8 +168,8 @@ const deletaOfertaTcc = async (req, res) => {
 // Função para buscar ofertas ativas (mais recentes)
 const retornaOfertasAtivas = async (req, res) => {
 	try {
-		const anoAtual = new Date().getFullYear();
-		const semestreAtual = new Date().getMonth() < 6 ? 1 : 2;
+		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
+		const { ano: anoAtual, semestre: semestreAtual } = await obterAnoSemestreAtual();
 
 		const ofertas = await model.OfertaTcc.findAll({
 			where: {
