@@ -14,16 +14,6 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 			},
 			descricao: DataTypes.STRING,
-			leitura: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: true,
-			},
-			edicao: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: false,
-			},
 		},
 		{
 			sequelize,
@@ -34,15 +24,15 @@ module.exports = (sequelize, DataTypes) => {
 		},
 	);
 
-	Permissoes.associate = function(models) {
+	Permissoes.associate = function (models) {
 		// Associação many-to-many com Grupo através da tabela grupo_permissao
 		Permissoes.belongsToMany(models.Grupo, {
 			through: models.GrupoPermissao,
-			foreignKey: 'id_permissao',
-			otherKey: 'id_grupo',
-			as: 'grupos'
+			foreignKey: "id_permissao",
+			otherKey: "id_grupo",
+			as: "grupos",
 		});
 	};
 
 	return Permissoes;
-}; 
+};

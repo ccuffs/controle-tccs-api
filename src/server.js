@@ -6,7 +6,6 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 
-
 const app = express();
 const docentesController = require("./controllers/docentes-controller");
 const cursosController = require("./controllers/cursos-controller");
@@ -16,8 +15,11 @@ const orientacoesController = require("./controllers/orientacoes-controller");
 const dicentesController = require("./controllers/dicentes-controller");
 const ofertasTccController = require("./controllers/ofertas-tcc-controller");
 const areaTccController = require("./controllers/area-tcc-controller");
-
 const temaTccController = require("./controllers/tema-tcc-controller");
+const authController = require("./controllers/auth-controller");
+
+// Configuração do Passport para autenticação JWT
+const { passport } = require("./middleware/auth");
 
 app.use(cors());
 app.use(express.json());
@@ -25,6 +27,8 @@ app.use(express.static(__dirname + "/public"));
 app.use(helmet());
 app.use(morgan("combined"));
 
+// Inicializar Passport
+app.use(passport.initialize());
 
 app.listen(3010, () => console.log("Servidor rodando na porta 3010."));
 
@@ -32,6 +36,10 @@ app.get("/", (req, res) => {
 	res.send("Hello, world!");
 });
 
+// Rotas de autenticação
+app.use("/api/auth", authController);
+
+// Rotas da API
 app.use("/api/docentes", docentesController);
 app.use("/api/cursos", cursosController);
 app.use("/api/usuarios", usuariosController);

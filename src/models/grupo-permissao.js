@@ -9,18 +9,32 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 				allowNull: false,
 				references: {
-					model: 'grupo',
-					key: 'id'
-				}
+					model: "grupo",
+					key: "id",
+				},
 			},
 			id_permissao: {
 				type: DataTypes.INTEGER,
 				primaryKey: true,
 				allowNull: false,
 				references: {
-					model: 'permissoes',
-					key: 'id'
-				}
+					model: "permissoes",
+					key: "id",
+				},
+			},
+			sistema: {
+				type: DataTypes.INTEGER,
+				allowNull: false,
+			},
+			leitura: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: true,
+			},
+			edicao: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
 			},
 		},
 		{
@@ -32,19 +46,19 @@ module.exports = (sequelize, DataTypes) => {
 		},
 	);
 
-	GrupoPermissao.associate = function(models) {
+	GrupoPermissao.associate = function (models) {
 		// Associação com Grupo
 		GrupoPermissao.belongsTo(models.Grupo, {
-			foreignKey: 'id_grupo',
-			targetKey: 'id'
+			foreignKey: "id_grupo",
+			targetKey: "id",
 		});
 
 		// Associação com Permissoes
 		GrupoPermissao.belongsTo(models.Permissoes, {
-			foreignKey: 'id_permissao',
-			targetKey: 'id'
+			foreignKey: "id_permissao",
+			targetKey: "id",
 		});
 	};
 
 	return GrupoPermissao;
-}; 
+};

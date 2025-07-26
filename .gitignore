@@ -135,3 +135,5 @@ dist
 *.sql
 *.http
 *.pdf
+src/*/*.md
+exemplos/
