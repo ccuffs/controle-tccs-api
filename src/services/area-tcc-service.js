@@ -1,17 +1,9 @@
-const model = require("@backend/models");
+const areaTccRepository = require("../repository/area-tcc-repository");
 
 // Função para retornar todas as áreas TCC
 const retornaTodasAreasTcc = async (req, res) => {
 	try {
-		const areas = await model.AreaTcc.findAll({
-			include: [
-				{
-					model: model.Docente,
-					attributes: ["codigo", "nome", "email"],
-				},
-			],
-			order: [["descicao", "ASC"]],
-		});
+		const areas = await areaTccRepository.obterTodasAreasTcc();
 		res.status(200).json({ areas: areas });
 	} catch (error) {
 		console.log("Erro ao buscar áreas TCC:", error);
@@ -23,10 +15,7 @@ const retornaTodasAreasTcc = async (req, res) => {
 const retornaAreasTccPorDocente = async (req, res) => {
 	try {
 		const codigo = req.params.codigo;
-		const areas = await model.AreaTcc.findAll({
-			where: { codigo_docente: codigo },
-			order: [["descicao", "ASC"]],
-		});
+		const areas = await areaTccRepository.obterAreasTccPorDocente(codigo);
 		res.status(200).json({ areas: areas });
 	} catch (error) {
 		console.log("Erro ao buscar áreas TCC do docente:", error);
@@ -38,8 +27,7 @@ const retornaAreasTccPorDocente = async (req, res) => {
 const criaAreaTcc = async (req, res) => {
 	const formData = req.body.formData;
 	try {
-		const area = model.AreaTcc.build(formData);
-		await area.save();
+		const area = await areaTccRepository.criarAreaTcc(formData);
 		res.sendStatus(200);
 	} catch (error) {
 		console.log("Erro ao criar área TCC:", error);
@@ -51,10 +39,16 @@ const criaAreaTcc = async (req, res) => {
 const atualizaAreaTcc = async (req, res) => {
 	const formData = req.body.formData;
 	try {
-		await model.AreaTcc.update(formData, {
-			where: { id: formData.id },
-		});
-		res.sendStatus(200);
+		const sucesso = await areaTccRepository.atualizarAreaTcc(
+			formData.id,
+			formData,
+		);
+
+		if (sucesso) {
+			res.sendStatus(200);
+		} else {
+			res.status(404).send({ message: "Área TCC não encontrada" });
+		}
 	} catch (error) {
 		console.log("Erro ao atualizar área TCC:", error);
 		res.sendStatus(500);
@@ -65,11 +59,9 @@ const atualizaAreaTcc = async (req, res) => {
 const deletaAreaTcc = async (req, res) => {
 	try {
 		const id = req.params.id;
-		const deleted = await model.AreaTcc.destroy({
-			where: { id: id },
-		});
+		const sucesso = await areaTccRepository.deletarAreaTcc(id);
 
-		if (deleted) {
+		if (sucesso) {
 			res.sendStatus(200);
 		} else {
 			res.status(404).send({ message: "Área TCC não encontrada" });

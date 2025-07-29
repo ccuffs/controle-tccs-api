@@ -1,23 +1,9 @@
-const model = require("@backend/models");
+const orientadorRepository = require("../repository/orientador-repository");
 
 // Listar todas as orientações
 const retornaTodasOrientacoes = async (req, res) => {
 	try {
-		const orientacoes = await model.OrientadorCurso.findAll({
-			include: [
-				{
-					model: model.Docente,
-					as: "docente",
-					attributes: ["codigo", "nome", "email"],
-				},
-				{
-					model: model.Curso,
-					as: "curso",
-					attributes: ["id", "nome", "codigo", "turno"],
-				},
-			],
-			order: [[{ model: model.Docente, as: "docente" }, "nome", "ASC"]],
-		});
+		const orientacoes = await orientadorRepository.obterTodasOrientacoes();
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
 		console.log("Erro ao buscar orientações:", error);
@@ -29,17 +15,8 @@ const retornaTodasOrientacoes = async (req, res) => {
 const retornaOrientacoesPorDocente = async (req, res) => {
 	try {
 		const codigo = req.params.codigo;
-		const orientacoes = await model.OrientadorCurso.findAll({
-			where: { codigo_docente: codigo },
-			include: [
-				{
-					model: model.Curso,
-					as: "curso",
-					attributes: ["id", "nome", "codigo", "turno"],
-				},
-			],
-			order: [[{ model: model.Curso, as: "curso" }, "nome", "ASC"]],
-		});
+		const orientacoes =
+			await orientadorRepository.obterOrientacoesPorDocente(codigo);
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
 		console.log("Erro ao buscar orientações do docente:", error);
@@ -51,17 +28,9 @@ const retornaOrientacoesPorDocente = async (req, res) => {
 const retornaOrientacoesPorCurso = async (req, res) => {
 	try {
 		const id = req.params.id;
-		const orientacoes = await model.OrientadorCurso.findAll({
-			where: { id_curso: id },
-			include: [
-				{
-					model: model.Docente,
-					as: "docente",
-					attributes: ["codigo", "nome", "email"],
-				},
-			],
-			order: [[{ model: model.Docente, as: "docente" }, "nome", "ASC"]],
-		});
+		const orientacoes = await orientadorRepository.obterOrientacoesPorCurso(
+			id,
+		);
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
 		console.log("Erro ao buscar orientações do curso:", error);
@@ -73,8 +42,7 @@ const retornaOrientacoesPorCurso = async (req, res) => {
 const criaOrientacao = async (req, res) => {
 	const formData = req.body.formData;
 	try {
-		const orientacao = model.OrientadorCurso.build(formData);
-		await orientacao.save();
+		const orientacao = await orientadorRepository.criarOrientacao(formData);
 		res.sendStatus(200);
 	} catch (error) {
 		console.log("Erro ao criar orientação:", error);
@@ -86,14 +54,12 @@ const criaOrientacao = async (req, res) => {
 const deletaOrientacao = async (req, res) => {
 	try {
 		const { id_curso, codigo_docente } = req.params;
-		const deleted = await model.OrientadorCurso.destroy({
-			where: {
-				id_curso: id_curso,
-				codigo_docente: codigo_docente,
-			},
-		});
+		const sucesso = await orientadorRepository.deletarOrientacao(
+			id_curso,
+			codigo_docente,
+		);
 
-		if (deleted) {
+		if (sucesso) {
 			res.sendStatus(200);
 		} else {
 			res.status(404).send({ message: "Orientação não encontrada" });

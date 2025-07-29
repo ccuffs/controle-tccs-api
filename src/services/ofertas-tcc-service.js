@@ -1,5 +1,5 @@
 const model = require("../models");
-const { obterAnoSemestreAtual } = require("./ano-semestre-util");
+const { obterAnoSemestreAtual } = require("./ano-semestre-service");
 
 // Função para retornar todas as ofertas de TCC
 const retornaTodasOfertasTcc = async (req, res) => {

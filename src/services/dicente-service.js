@@ -1,4 +1,5 @@
 const model = require("../models");
+const dicenteRepository = require("../repository/dicente-repository");
 const fs = require("fs");
 const pdf = require("pdf-parse");
 
@@ -9,55 +10,14 @@ const retornaTodosDicentes = async (req, res) => {
 
 		// Se há filtros de TCC, precisamos incluir a tabela TrabalhoConclusao
 		if (ano || semestre || fase || id_curso || etapa) {
-			includeTrabalho = true;
-
-			// Constrói a cláusula WHERE para o trabalho de conclusão
-			const trabalhoWhere = {};
-
-			if (ano) {
-				trabalhoWhere.ano = parseInt(ano);
-			}
-
-			if (semestre) {
-				trabalhoWhere.semestre = parseInt(semestre);
-			}
-
-			if (fase) {
-				trabalhoWhere.fase = parseInt(fase);
-			}
-
-			if (id_curso) {
-				trabalhoWhere.id_curso = parseInt(id_curso);
-			}
-
-			if (etapa) {
-				trabalhoWhere.etapa = parseInt(etapa);
-			}
-
-			// Busca dicentes que possuem trabalho de conclusão com os critérios especificados
-			const dicentes = await model.Dicente.findAll({
-				include: [
-					{
-						model: model.TrabalhoConclusao,
-						where: trabalhoWhere,
-						required: true, // INNER JOIN - só dicentes com TCC
-						include: [
-							{
-								model: model.Curso,
-								attributes: ["id", "nome", "codigo"],
-							},
-						],
-					},
-				],
-				order: [["nome", "ASC"]],
-			});
-
+			const filtros = { ano, semestre, fase, id_curso, etapa };
+			const dicentes = await dicenteRepository.obterDicentesComFiltrosTcc(
+				filtros,
+			);
 			res.status(200).json({ dicentes: dicentes });
 		} else {
 			// Se não há filtros, retorna todos os dicentes
-			const dicentes = await model.Dicente.findAll({
-				order: [["nome", "ASC"]],
-			});
+			const dicentes = await dicenteRepository.obterTodosDicentes();
 			res.status(200).json({ dicentes: dicentes });
 		}
 	} catch (error) {
@@ -71,32 +31,9 @@ const retornaDicentePorMatricula = async (req, res) => {
 	try {
 		const { matricula } = req.params;
 
-		const dicente = await model.Dicente.findByPk(matricula, {
-			include: [
-				{
-					model: model.TrabalhoConclusao,
-					include: [
-						{
-							model: model.Curso,
-							attributes: ["id", "nome", "codigo"],
-						},
-						{
-							model: model.Orientacao,
-							include: [
-								{
-									model: model.Docente,
-									attributes: ["codigo", "nome", "email"],
-								},
-							],
-						},
-						{
-							model: model.Defesa,
-							required: false,
-						},
-					],
-				},
-			],
-		});
+		const dicente = await dicenteRepository.obterDicentePorMatricula(
+			matricula,
+		);
 
 		if (!dicente) {
 			return res.status(404).json({ message: "Dicente não encontrado" });
@@ -114,18 +51,17 @@ const criaDicente = async (req, res) => {
 	const formData = req.body.formData;
 	try {
 		// Verificar se já existe dicente com esta matrícula
-		const dicenteExistente = await model.Dicente.findByPk(
+		const dicenteExiste = await dicenteRepository.verificarDicenteExiste(
 			formData.matricula,
 		);
 
-		if (dicenteExistente) {
+		if (dicenteExiste) {
 			return res.status(400).json({
 				message: "Já existe um dicente com esta matrícula",
 			});
 		}
 
-		const dicente = model.Dicente.build(formData);
-		await dicente.save();
+		const dicente = await dicenteRepository.criarDicente(formData);
 
 		res.status(201).json({
 			message: "Dicente criado com sucesso",
@@ -143,11 +79,12 @@ const atualizaDicente = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
-		const [updatedRowsCount] = await model.Dicente.update(formData, {
-			where: { matricula: matricula },
-		});
+		const sucesso = await dicenteRepository.atualizarDicente(
+			matricula,
+			formData,
+		);
 
-		if (updatedRowsCount === 0) {
+		if (!sucesso) {
 			return res.status(404).json({ message: "Dicente não encontrado" });
 		}
 
@@ -163,11 +100,9 @@ const atualizaDicente = async (req, res) => {
 const deletaDicente = async (req, res) => {
 	try {
 		const matricula = req.params.matricula;
-		const deleted = await model.Dicente.destroy({
-			where: { matricula: matricula },
-		});
+		const sucesso = await dicenteRepository.deletarDicente(matricula);
 
-		if (deleted) {
+		if (sucesso) {
 			res.sendStatus(200);
 		} else {
 			res.status(404).send({ message: "Dicente não encontrado" });

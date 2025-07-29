@@ -1,52 +1,15 @@
-const model = require("../models");
+const trabalhoConclusaoRepository = require("../repository/trabalho-conclusao-repository");
 
 // Função para retornar todos os trabalhos de conclusão
 const retornaTodosTrabalhosConlusao = async (req, res) => {
 	try {
 		const { ano, semestre, id_curso, fase, matricula, etapa } = req.query;
+		const filtros = { ano, semestre, id_curso, fase, matricula, etapa };
 
-		let whereClause = {};
-
-		// Aplicar filtros se fornecidos
-		if (ano) whereClause.ano = parseInt(ano);
-		if (semestre) whereClause.semestre = parseInt(semestre);
-		if (id_curso) whereClause.id_curso = parseInt(id_curso);
-		if (fase) whereClause.fase = parseInt(fase);
-		if (matricula) whereClause.matricula = parseInt(matricula);
-		if (etapa) whereClause.etapa = parseInt(etapa);
-
-		const trabalhos = await model.TrabalhoConclusao.findAll({
-			where: whereClause,
-			include: [
-				{
-					model: model.Dicente,
-					attributes: ["matricula", "nome", "email"],
-				},
-				{
-					model: model.Curso,
-					attributes: ["id", "nome", "codigo"],
-				},
-				{
-					model: model.Orientacao,
-					include: [
-						{
-							model: model.Docente,
-							attributes: ["codigo", "nome", "email"],
-						},
-					],
-				},
-				{
-					model: model.Defesa,
-					required: false,
-				},
-			],
-			order: [
-				["ano", "DESC"],
-				["semestre", "DESC"],
-				["id", "DESC"],
-			],
-		});
-
+		const trabalhos =
+			await trabalhoConclusaoRepository.obterTodosTrabalhosConclusao(
+				filtros,
+			);
 		res.status(200).json({ trabalhos: trabalhos });
 	} catch (error) {
 		console.log("Erro ao buscar trabalhos de conclusão:", error);
@@ -59,45 +22,8 @@ const retornaTrabalhoConlusaoPorId = async (req, res) => {
 	try {
 		const { id } = req.params;
 
-		const trabalho = await model.TrabalhoConclusao.findByPk(id, {
-			include: [
-				{
-					model: model.Dicente,
-					attributes: ["matricula", "nome", "email"],
-				},
-				{
-					model: model.Curso,
-					attributes: ["id", "nome", "codigo"],
-				},
-				{
-					model: model.Orientacao,
-					include: [
-						{
-							model: model.Docente,
-							attributes: ["codigo", "nome", "email"],
-						},
-					],
-				},
-				{
-					model: model.Convite,
-				},
-				{
-					model: model.Defesa,
-					include: [
-						{
-							model: model.Docente,
-							as: "membroBancaA",
-							attributes: ["codigo", "nome", "email"],
-						},
-						{
-							model: model.Docente,
-							as: "membroBancaB",
-							attributes: ["codigo", "nome", "email"],
-						},
-					],
-				},
-			],
-		});
+		const trabalho =
+			await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(id);
 
 		if (!trabalho) {
 			return res
@@ -117,8 +43,8 @@ const criaTrabalhoConlusao = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
-		const trabalho = model.TrabalhoConclusao.build(formData);
-		await trabalho.save();
+		const trabalho =
+			await trabalhoConclusaoRepository.criarTrabalhoConclusao(formData);
 
 		res.status(201).json({
 			message: "Trabalho de conclusão criado com sucesso",
@@ -137,22 +63,21 @@ const atualizaTrabalhoConlusao = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
-		const [updatedRowsCount] = await model.TrabalhoConclusao.update(
-			formData,
-			{
-				where: { id: id },
-			},
-		);
+		const sucesso =
+			await trabalhoConclusaoRepository.atualizarTrabalhoConclusao(
+				id,
+				formData,
+			);
 
-		if (updatedRowsCount === 0) {
-			return res
-				.status(404)
-				.json({ message: "Trabalho de conclusão não encontrado" });
+		if (sucesso) {
+			res.status(200).json({
+				message: "Trabalho de conclusão atualizado com sucesso",
+			});
+		} else {
+			res.status(404).json({
+				message: "Trabalho de conclusão não encontrado",
+			});
 		}
-
-		res.status(200).json({
-			message: "Trabalho de conclusão atualizado com sucesso",
-		});
 	} catch (error) {
 		console.log("Erro ao atualizar trabalho de conclusão:", error);
 		console.log("Dados que causaram erro:", formData);
@@ -165,11 +90,10 @@ const deletaTrabalhoConlusao = async (req, res) => {
 	try {
 		const { id } = req.params;
 
-		const deleted = await model.TrabalhoConclusao.destroy({
-			where: { id: id },
-		});
+		const sucesso =
+			await trabalhoConclusaoRepository.deletarTrabalhoConclusao(id);
 
-		if (deleted) {
+		if (sucesso) {
 			res.status(200).json({
 				message: "Trabalho de conclusão deletado com sucesso",
 			});
@@ -192,18 +116,16 @@ const atualizaEtapaTrabalho = async (req, res) => {
 	const { etapa } = req.body;
 
 	try {
-		const [updatedRowsCount] = await model.TrabalhoConclusao.update(
-			{ etapa: etapa },
-			{ where: { id: id } },
-		);
+		const sucesso =
+			await trabalhoConclusaoRepository.atualizarEtapaTrabalho(id, etapa);
 
-		if (updatedRowsCount === 0) {
-			return res
-				.status(404)
-				.json({ message: "Trabalho de conclusão não encontrado" });
+		if (sucesso) {
+			res.status(200).json({ message: "Etapa atualizada com sucesso" });
+		} else {
+			res.status(404).json({
+				message: "Trabalho de conclusão não encontrado",
+			});
 		}
-
-		res.status(200).json({ message: "Etapa atualizada com sucesso" });
 	} catch (error) {
 		console.log("Erro ao atualizar etapa:", error);
 		res.status(500).json({ error: error.message });

@@ -1,54 +1,12 @@
-const model = require("../models");
+const defesaRepository = require("../repository/defesa-repository");
 
 // Função para retornar todas as defesas
 const retornaTodasDefesas = async (req, res) => {
 	try {
 		const { id_tcc, ano, semestre } = req.query;
+		const filtros = { id_tcc, ano, semestre };
 
-		let whereClause = {};
-		let includeWhere = {};
-
-		// Filtro direto na defesa
-		if (id_tcc) whereClause.id_tcc = parseInt(id_tcc);
-
-		// Filtros no TrabalhoConclusao
-		if (ano) includeWhere.ano = parseInt(ano);
-		if (semestre) includeWhere.semestre = parseInt(semestre);
-
-		const defesas = await model.Defesa.findAll({
-			where: whereClause,
-			include: [
-				{
-					model: model.TrabalhoConclusao,
-					where:
-						Object.keys(includeWhere).length > 0
-							? includeWhere
-							: undefined,
-					include: [
-						{
-							model: model.Dicente,
-							attributes: ["matricula", "nome", "email"],
-						},
-						{
-							model: model.Curso,
-							attributes: ["id", "nome", "codigo"],
-						},
-					],
-				},
-				{
-					model: model.Docente,
-					as: "membroBancaA",
-					attributes: ["codigo", "nome", "email"],
-				},
-				{
-					model: model.Docente,
-					as: "membroBancaB",
-					attributes: ["codigo", "nome", "email"],
-				},
-			],
-			order: [["data_defesa", "DESC"]],
-		});
-
+		const defesas = await defesaRepository.obterTodasDefesas(filtros);
 		res.status(200).json({ defesas: defesas });
 	} catch (error) {
 		console.log("Erro ao buscar defesas:", error);
@@ -61,34 +19,7 @@ const retornaDefesaPorTcc = async (req, res) => {
 	try {
 		const { id_tcc } = req.params;
 
-		const defesa = await model.Defesa.findOne({
-			where: { id_tcc: id_tcc },
-			include: [
-				{
-					model: model.TrabalhoConclusao,
-					include: [
-						{
-							model: model.Dicente,
-							attributes: ["matricula", "nome", "email"],
-						},
-						{
-							model: model.Curso,
-							attributes: ["id", "nome", "codigo"],
-						},
-					],
-				},
-				{
-					model: model.Docente,
-					as: "membroBancaA",
-					attributes: ["codigo", "nome", "email"],
-				},
-				{
-					model: model.Docente,
-					as: "membroBancaB",
-					attributes: ["codigo", "nome", "email"],
-				},
-			],
-		});
+		const defesa = await defesaRepository.obterDefesaPorTcc(id_tcc);
 
 		if (!defesa) {
 			return res.status(404).json({ message: "Defesa não encontrada" });
@@ -107,11 +38,11 @@ const criaDefesa = async (req, res) => {
 
 	try {
 		// Verificar se já existe defesa para este TCC
-		const defesaExistente = await model.Defesa.findOne({
-			where: { id_tcc: formData.id_tcc },
-		});
+		const defesaExiste = await defesaRepository.verificarDefesaExiste(
+			formData.id_tcc,
+		);
 
-		if (defesaExistente) {
+		if (defesaExiste) {
 			return res.status(400).json({
 				message: "Já existe uma defesa agendada para este TCC",
 			});
@@ -124,8 +55,7 @@ const criaDefesa = async (req, res) => {
 			});
 		}
 
-		const defesa = model.Defesa.build(formData);
-		await defesa.save();
+		const defesa = await defesaRepository.criarDefesa(formData);
 
 		res.status(201).json({
 			message: "Defesa criada com sucesso",
@@ -143,19 +73,18 @@ const atualizaDefesa = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
-		const [updatedRowsCount] = await model.Defesa.update(formData, {
-			where: {
-				id_tcc: id_tcc,
-				membro_banca_a: membro_banca_a,
-				membro_banca_b: membro_banca_b,
-			},
-		});
+		const sucesso = await defesaRepository.atualizarDefesa(
+			id_tcc,
+			membro_banca_a,
+			membro_banca_b,
+			formData,
+		);
 
-		if (updatedRowsCount === 0) {
-			return res.status(404).json({ message: "Defesa não encontrada" });
+		if (sucesso) {
+			res.status(200).json({ message: "Defesa atualizada com sucesso" });
+		} else {
+			res.status(404).json({ message: "Defesa não encontrada" });
 		}
-
-		res.status(200).json({ message: "Defesa atualizada com sucesso" });
 	} catch (error) {
 		console.log("Erro ao atualizar defesa:", error);
 		console.log("Dados que causaram erro:", formData);
@@ -169,16 +98,18 @@ const registraAvaliacaoDefesa = async (req, res) => {
 	const { avaliacao } = req.body;
 
 	try {
-		const [updatedRowsCount] = await model.Defesa.update(
-			{ avaliacao: avaliacao },
-			{ where: { id_tcc: id_tcc } },
+		const sucesso = await defesaRepository.registrarAvaliacaoDefesa(
+			id_tcc,
+			avaliacao,
 		);
 
-		if (updatedRowsCount === 0) {
-			return res.status(404).json({ message: "Defesa não encontrada" });
+		if (sucesso) {
+			res.status(200).json({
+				message: "Avaliação registrada com sucesso",
+			});
+		} else {
+			res.status(404).json({ message: "Defesa não encontrada" });
 		}
-
-		res.status(200).json({ message: "Avaliação registrada com sucesso" });
 	} catch (error) {
 		console.log("Erro ao registrar avaliação:", error);
 		res.status(500).json({ error: error.message });
@@ -190,15 +121,13 @@ const deletaDefesa = async (req, res) => {
 	try {
 		const { id_tcc, membro_banca_a, membro_banca_b } = req.params;
 
-		const deleted = await model.Defesa.destroy({
-			where: {
-				id_tcc: id_tcc,
-				membro_banca_a: membro_banca_a,
-				membro_banca_b: membro_banca_b,
-			},
-		});
+		const sucesso = await defesaRepository.deletarDefesa(
+			id_tcc,
+			membro_banca_a,
+			membro_banca_b,
+		);
 
-		if (deleted) {
+		if (sucesso) {
 			res.status(200).json({ message: "Defesa deletada com sucesso" });
 		} else {
 			res.status(404).json({ message: "Defesa não encontrada" });

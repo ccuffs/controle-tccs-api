@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const model = require("@backend/models");
+const authRepository = require("../repository/auth-repository");
 const permissoesService = require("./permissoes-service");
 
 /**
@@ -34,16 +34,7 @@ const gerarToken = (usuario) => {
 const fazerLogin = async (email, senha = null) => {
 	try {
 		// Buscar usuário pelo email
-		const usuario = await model.Usuario.findOne({
-			where: { email: email },
-			include: [
-				{
-					model: model.Grupo,
-					as: "grupos",
-					through: { attributes: [] },
-				},
-			],
-		});
+		const usuario = await authRepository.buscarUsuarioPorEmail(email);
 
 		if (!usuario) {
 			throw new Error("Usuário não encontrado");
@@ -111,7 +102,9 @@ const renovarToken = async (token) => {
 		const payload = validarToken(token);
 
 		// Buscar usuário atualizado
-		const usuario = await model.Usuario.findByPk(payload.userId);
+		const usuario = await authRepository.buscarUsuarioPorIdSimples(
+			payload.userId,
+		);
 
 		if (!usuario) {
 			throw new Error("Usuário não encontrado");
@@ -132,20 +125,7 @@ const renovarToken = async (token) => {
  */
 const buscarDadosUsuario = async (userId) => {
 	try {
-		const usuario = await model.Usuario.findByPk(userId, {
-			include: [
-				{
-					model: model.Grupo,
-					as: "grupos",
-					through: { attributes: [] },
-				},
-				{
-					model: model.Curso,
-					as: "cursos",
-					through: { attributes: [] },
-				},
-			],
-		});
+		const usuario = await authRepository.buscarUsuarioPorId(userId);
 
 		if (!usuario) {
 			throw new Error("Usuário não encontrado");

@@ -1,4 +1,4 @@
-const model = require("@backend/models");
+const permissoesRepository = require("../repository/permissoes-repository");
 
 /**
  * Busca todas as permissões de um usuário através dos grupos que ele pertence
@@ -7,22 +7,10 @@ const model = require("@backend/models");
  */
 const buscarPermissoesDoUsuario = async (userId) => {
 	try {
-		const usuario = await model.Usuario.findByPk(userId, {
-			include: [
-				{
-					model: model.Grupo,
-					as: "grupos",
-					through: { attributes: [] },
-					include: [
-						{
-							model: model.Permissoes,
-							as: "permissoes",
-							through: { attributes: ["leitura", "edicao"] },
-						},
-					],
-				},
-			],
-		});
+		const usuario =
+			await permissoesRepository.buscarUsuarioComGruposEPermissoes(
+				userId,
+			);
 
 		if (!usuario) {
 			throw new Error("Usuário não encontrado");
@@ -108,15 +96,9 @@ const verificarPermissao = async (userId, nomePermissao, acao = "leitura") => {
  */
 const verificarConsultaTodos = async (userId) => {
 	try {
-		const usuario = await model.Usuario.findByPk(userId, {
-			include: [
-				{
-					model: model.Grupo,
-					as: "grupos",
-					through: { attributes: [] },
-				},
-			],
-		});
+		const usuario = await permissoesRepository.buscarUsuarioComGrupos(
+			userId,
+		);
 
 		if (!usuario) {
 			return false;
@@ -137,15 +119,9 @@ const verificarConsultaTodos = async (userId) => {
  */
 const buscarGruposDoUsuario = async (userId) => {
 	try {
-		const usuario = await model.Usuario.findByPk(userId, {
-			include: [
-				{
-					model: model.Grupo,
-					as: "grupos",
-					through: { attributes: [] },
-				},
-			],
-		});
+		const usuario = await permissoesRepository.buscarUsuarioComGrupos(
+			userId,
+		);
 
 		if (!usuario) {
 			throw new Error("Usuário não encontrado");
@@ -164,9 +140,7 @@ const buscarGruposDoUsuario = async (userId) => {
  */
 const buscarTodasPermissoes = async () => {
 	try {
-		const permissoes = await model.Permissoes.findAll({
-			order: [["nome", "ASC"]],
-		});
+		const permissoes = await permissoesRepository.buscarTodasPermissoes();
 		return permissoes;
 	} catch (error) {
 		console.error("Erro ao buscar todas as permissões:", error);
@@ -180,9 +154,7 @@ const buscarTodasPermissoes = async () => {
  */
 const buscarTodosGrupos = async () => {
 	try {
-		const grupos = await model.Grupo.findAll({
-			order: [["nome", "ASC"]],
-		});
+		const grupos = await permissoesRepository.buscarTodosGrupos();
 		return grupos;
 	} catch (error) {
 		console.error("Erro ao buscar todos os grupos:", error);

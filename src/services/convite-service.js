@@ -1,41 +1,12 @@
-const model = require("../models");
+const conviteRepository = require("../repository/convite-repository");
 
 // Função para retornar todos os convites
 const retornaTodosConvites = async (req, res) => {
 	try {
 		const { id_tcc, codigo_docente, aceito } = req.query;
+		const filtros = { id_tcc, codigo_docente, aceito };
 
-		let whereClause = {};
-
-		// Aplicar filtros se fornecidos
-		if (id_tcc) whereClause.id = parseInt(id_tcc);
-		if (codigo_docente) whereClause.codigo_docente = codigo_docente;
-		if (aceito !== undefined) whereClause.aceito = aceito === "true";
-
-		const convites = await model.Convite.findAll({
-			where: whereClause,
-			include: [
-				{
-					model: model.TrabalhoConclusao,
-					include: [
-						{
-							model: model.Dicente,
-							attributes: ["matricula", "nome", "email"],
-						},
-						{
-							model: model.Curso,
-							attributes: ["id", "nome", "codigo"],
-						},
-					],
-				},
-				{
-					model: model.Docente,
-					attributes: ["codigo", "nome", "email"],
-				},
-			],
-			order: [["data_envio", "DESC"]],
-		});
-
+		const convites = await conviteRepository.obterTodosConvites(filtros);
 		res.status(200).json({ convites: convites });
 	} catch (error) {
 		console.log("Erro ao buscar convites:", error);
@@ -49,14 +20,12 @@ const criaConvite = async (req, res) => {
 
 	try {
 		// Verificar se já existe convite para este TCC e docente
-		const conviteExistente = await model.Convite.findOne({
-			where: {
-				id: formData.id,
-				codigo_docente: formData.codigo_docente,
-			},
-		});
+		const conviteExiste = await conviteRepository.verificarConviteExiste(
+			formData.id,
+			formData.codigo_docente,
+		);
 
-		if (conviteExistente) {
+		if (conviteExiste) {
 			return res.status(400).json({
 				message: "Já existe um convite para este docente neste TCC",
 			});
@@ -65,8 +34,7 @@ const criaConvite = async (req, res) => {
 		// Adicionar data de envio atual
 		formData.data_envio = new Date();
 
-		const convite = model.Convite.build(formData);
-		await convite.save();
+		const convite = await conviteRepository.criarConvite(formData);
 
 		res.status(201).json({
 			message: "Convite criado com sucesso",
@@ -91,22 +59,21 @@ const respondeConvite = async (req, res) => {
 			updateData.data_aceite = new Date();
 		}
 
-		const [updatedRowsCount] = await model.Convite.update(updateData, {
-			where: {
-				id: id,
-				codigo_docente: codigo_docente,
-			},
-		});
+		const sucesso = await conviteRepository.atualizarConvite(
+			id,
+			codigo_docente,
+			updateData,
+		);
 
-		if (updatedRowsCount === 0) {
-			return res.status(404).json({ message: "Convite não encontrado" });
+		if (sucesso) {
+			res.status(200).json({
+				message: `Convite ${
+					aceito ? "aceito" : "rejeitado"
+				} com sucesso`,
+			});
+		} else {
+			res.status(404).json({ message: "Convite não encontrado" });
 		}
-
-		res.status(200).json({
-			message: aceito
-				? "Convite aceito com sucesso"
-				: "Convite rejeitado",
-		});
 	} catch (error) {
 		console.log("Erro ao responder convite:", error);
 		res.status(500).json({ error: error.message });
@@ -117,57 +84,32 @@ const respondeConvite = async (req, res) => {
 const deletaConvite = async (req, res) => {
 	try {
 		const { id, codigo_docente } = req.params;
+		const sucesso = await conviteRepository.deletarConvite(
+			id,
+			codigo_docente,
+		);
 
-		const deleted = await model.Convite.destroy({
-			where: {
-				id: id,
-				codigo_docente: codigo_docente,
-			},
-		});
-
-		if (deleted) {
-			res.status(200).json({ message: "Convite deletado com sucesso" });
+		if (sucesso) {
+			res.sendStatus(200);
 		} else {
-			res.status(404).json({ message: "Convite não encontrado" });
+			res.status(404).send({ message: "Convite não encontrado" });
 		}
 	} catch (error) {
 		console.error("Erro ao deletar convite:", error);
-		res.status(500).json({ message: "Erro ao deletar convite" });
+		res.status(500).send({ message: "Erro ao deletar convite" });
 	}
 };
 
-// Função para buscar convites pendentes de um docente
+// Função para retornar convites pendentes de um docente
 const retornaConvitesPendentesDocente = async (req, res) => {
 	try {
-		const { codigo_docente } = req.params;
-
-		const convites = await model.Convite.findAll({
-			where: {
-				codigo_docente: codigo_docente,
-				aceito: false,
-				data_aceite: null,
-			},
-			include: [
-				{
-					model: model.TrabalhoConclusao,
-					include: [
-						{
-							model: model.Dicente,
-							attributes: ["matricula", "nome", "email"],
-						},
-						{
-							model: model.Curso,
-							attributes: ["id", "nome", "codigo"],
-						},
-					],
-				},
-			],
-			order: [["data_envio", "DESC"]],
-		});
-
+		const { codigo } = req.params;
+		const convites = await conviteRepository.obterConvitesPendentesDocente(
+			codigo,
+		);
 		res.status(200).json({ convites: convites });
 	} catch (error) {
-		console.log("Erro ao buscar convites pendentes:", error);
+		console.log("Erro ao buscar convites pendentes do docente:", error);
 		res.sendStatus(500);
 	}
 };
