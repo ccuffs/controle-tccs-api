@@ -11,9 +11,9 @@ permissoesRepository.buscarUsuarioComGruposEPermissoes = async (userId) => {
 				through: { attributes: [] },
 				include: [
 					{
-						model: model.Permissoes,
+						model: model.Permissao,
 						as: "permissoes",
-						through: { attributes: ["leitura", "edicao"] },
+						through: { attributes: [] },
 					},
 				],
 			},
@@ -38,7 +38,7 @@ permissoesRepository.buscarUsuarioComGrupos = async (userId) => {
 
 // Buscar todas as permissões
 permissoesRepository.buscarTodasPermissoes = async () => {
-	const permissoes = await model.Permissoes.findAll({
+	const permissoes = await model.Permissao.findAll({
 		order: [["nome", "ASC"]],
 	});
 	return permissoes;

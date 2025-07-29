@@ -14,11 +14,6 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 			},
 			descricao: DataTypes.STRING,
-			consulta_todos: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: false,
-			},
 		},
 		{
 			sequelize,
@@ -30,8 +25,8 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	Grupo.associate = function (models) {
-		// Associação many-to-many com Permissoes através da tabela grupo_permissao
-		Grupo.belongsToMany(models.Permissoes, {
+		// Associação many-to-many com Permissao através da tabela grupo_permissao
+		Grupo.belongsToMany(models.Permissao, {
 			through: models.GrupoPermissao,
 			foreignKey: "id_grupo",
 			otherKey: "id_permissao",

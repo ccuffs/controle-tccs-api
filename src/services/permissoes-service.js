@@ -22,29 +22,20 @@ const buscarPermissoesDoUsuario = async (userId) => {
 		usuario.grupos.forEach((grupo) => {
 			grupo.permissoes.forEach((permissao) => {
 				const permissaoId = permissao.id;
-				const grupoPermissao = permissao.GrupoPermissao;
 
 				if (!permissoesConsolidadas.has(permissaoId)) {
 					permissoesConsolidadas.set(permissaoId, {
 						id: permissao.id,
 						nome: permissao.nome,
 						descricao: permissao.descricao,
-						leitura: false,
-						edicao: false,
+						leitura: true, // Se tem a permissão, tem leitura
+						edicao: true,  // Se tem a permissão, tem edição
 						grupos: [],
 					});
 				}
 
 				const permissaoConsolidada =
 					permissoesConsolidadas.get(permissaoId);
-
-				// Se qualquer grupo permite leitura/edição, o usuário tem a permissão
-				if (grupoPermissao.leitura) {
-					permissaoConsolidada.leitura = true;
-				}
-				if (grupoPermissao.edicao) {
-					permissaoConsolidada.edicao = true;
-				}
 
 				// Adicionar grupo à lista de grupos que concedem esta permissão
 				if (
@@ -53,7 +44,6 @@ const buscarPermissoesDoUsuario = async (userId) => {
 					permissaoConsolidada.grupos.push({
 						id: grupo.id,
 						nome: grupo.nome,
-						consulta_todos: grupo.consulta_todos,
 					});
 				}
 			});
@@ -90,7 +80,7 @@ const verificarPermissao = async (userId, nomePermissao, acao = "leitura") => {
 };
 
 /**
- * Verifica se um usuário tem permissão de consulta geral (consulta_todos)
+ * Verifica se um usuário tem permissão de consulta geral
  * @param {string} userId - ID do usuário
  * @returns {Promise<boolean>} true se o usuário tem permissão de consulta geral
  */
@@ -104,8 +94,8 @@ const verificarConsultaTodos = async (userId) => {
 			return false;
 		}
 
-		// Verifica se qualquer grupo do usuário tem consulta_todos = true
-		return usuario.grupos.some((grupo) => grupo.consulta_todos === true);
+		// Se o usuário tem grupos, tem permissão de consulta geral
+		return usuario.grupos.length > 0;
 	} catch (error) {
 		console.error("Erro ao verificar consulta_todos:", error);
 		return false;

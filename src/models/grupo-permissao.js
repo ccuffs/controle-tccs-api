@@ -18,23 +18,9 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 				allowNull: false,
 				references: {
-					model: "permissoes",
+					model: "permissao",
 					key: "id",
 				},
-			},
-			sistema: {
-				type: DataTypes.INTEGER,
-				allowNull: false,
-			},
-			leitura: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: true,
-			},
-			edicao: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: false,
 			},
 		},
 		{
@@ -53,8 +39,8 @@ module.exports = (sequelize, DataTypes) => {
 			targetKey: "id",
 		});
 
-		// Associação com Permissoes
-		GrupoPermissao.belongsTo(models.Permissoes, {
+		// Associação com Permissao
+		GrupoPermissao.belongsTo(models.Permissao, {
 			foreignKey: "id_permissao",
 			targetKey: "id",
 		});
