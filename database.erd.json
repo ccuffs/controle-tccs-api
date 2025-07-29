@@ -4,8 +4,8 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -155.1702,
-    "scrollLeft": -339.44,
+    "scrollTop": -150.1702,
+    "scrollLeft": -479.44,
     "zoomLevel": 0.78,
     "show": 431,
     "database": 16,
@@ -3285,7 +3285,7 @@
         "name": "sistema",
         "comment": "",
         "dataType": "int",
-        "default": "",
+        "default": "1",
         "options": 8,
         "ui": {
           "keys": 0,
@@ -3295,7 +3295,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1753558148485,
+          "updateAt": 1753815708857,
           "createAt": 1753558137735
         }
       },

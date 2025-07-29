@@ -33,7 +33,8 @@ passport.use(
 /**
  * Middleware para verificar se o usuário está autenticado
  */
-const autenticarUsuario = (req, res, next) => {
+const auth = {};
+auth.autenticarUsuario = (req, res, next) => {
 	passport.authenticate("jwt", { session: false }, (err, usuario, info) => {
 		if (err) {
 			console.error("Erro na autenticação:", err);
@@ -55,6 +56,6 @@ const autenticarUsuario = (req, res, next) => {
 };
 
 module.exports = {
-	autenticarUsuario,
+	auth,
 	passport,
 };

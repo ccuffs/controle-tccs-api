@@ -1,4 +1,6 @@
-const permissoesService = require("@backend/services/permissoes-service");
+const permissoesService = require("../services/permissoes-service");
+
+const autorizacao = {};
 
 /**
  * Middleware para verificar se o usuário tem uma permissão específica
@@ -6,7 +8,7 @@ const permissoesService = require("@backend/services/permissoes-service");
  * @param {string|Array} acao - 'leitura', 'edicao' ou array de ações ['leitura', 'edicao']
  * @returns {Function} Middleware function
  */
-const verificarPermissao = (nomePermissao, acao = "leitura") => {
+autorizacao.verificarPermissao = (nomePermissao, acao) => {
 	return async (req, res, next) => {
 		try {
 			// Verificar se o usuário está autenticado
@@ -49,5 +51,5 @@ const verificarPermissao = (nomePermissao, acao = "leitura") => {
 };
 
 module.exports = {
-	verificarPermissao,
+	autorizacao,
 };

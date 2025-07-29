@@ -1,6 +1,6 @@
 const express = require("express");
 const authService = require("../services/auth-service");
-const { autenticarUsuario } = require("../middleware/auth");
+const { auth } = require("../middleware/auth");
 
 const authController = express.Router();
 
@@ -168,8 +168,8 @@ const validateToken = async (req, res) => {
 // Rotas
 authController.post("/login", login);
 authController.post("/refresh", refreshToken);
-authController.get("/me", autenticarUsuario, getMe);
-authController.post("/logout", autenticarUsuario, logout);
+authController.get("/me", auth.autenticarUsuario, getMe);
+authController.post("/logout", auth.autenticarUsuario, logout);
 authController.post("/validate", validateToken);
 
 module.exports = authController;

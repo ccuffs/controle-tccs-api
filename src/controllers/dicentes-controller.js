@@ -3,6 +3,9 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const dicenteService = require("../services/dicente-service");
+const { auth } = require("../middleware/auth");
+const { autorizacao } = require("../middleware/autorizacao");
+const { Permissoes } = require("../enums/permissoes");
 
 const dicentesService = express.Router();
 
@@ -46,18 +49,43 @@ const upload = multer({
 });
 
 // Rotas existentes
-dicentesService.get("/", dicenteService.retornaTodosDicentes);
+dicentesService.get(
+	"/",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([
+		Permissoes.DICENTE.VISUALIZAR,
+		Permissoes.DICENTE.VISUALIZAR_TODOS,
+	]),
+	dicenteService.retornaTodosDicentes,
+);
 
-dicentesService.post("/", dicenteService.criaDicente);
+dicentesService.post(
+	"/",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao(Permissoes.DICENTE.CRIAR),
+	dicenteService.criaDicente,
+);
 
-dicentesService.put("/", dicenteService.atualizaDicente);
+dicentesService.put(
+	"/",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao(Permissoes.DICENTE.EDITAR),
+	dicenteService.atualizaDicente,
+);
 
-dicentesService.delete("/:matricula", dicenteService.deletaDicente);
+dicentesService.delete(
+	"/:matricula",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao(Permissoes.DICENTE.DELETAR),
+	dicenteService.deletaDicente,
+);
 
 // Nova rota para processar PDF
 dicentesService.post(
 	"/processar-pdf",
 	upload.single("pdf"),
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao(Permissoes.DICENTE.CRIAR),
 	dicenteService.processarEInserirPDFDicentes,
 );
 
