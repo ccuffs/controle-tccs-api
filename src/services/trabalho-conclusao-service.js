@@ -20,27 +20,31 @@ const retornaTodosTrabalhosConlusao = async (req, res) => {
 			include: [
 				{
 					model: model.Dicente,
-					attributes: ['matricula', 'nome', 'email']
+					attributes: ["matricula", "nome", "email"],
 				},
 				{
 					model: model.Curso,
-					attributes: ['id', 'nome', 'codigo']
+					attributes: ["id", "nome", "codigo"],
 				},
 				{
 					model: model.Orientacao,
 					include: [
 						{
 							model: model.Docente,
-							attributes: ['codigo', 'nome', 'email']
-						}
-					]
+							attributes: ["codigo", "nome", "email"],
+						},
+					],
 				},
 				{
 					model: model.Defesa,
-					required: false
-				}
+					required: false,
+				},
 			],
-			order: [['ano', 'DESC'], ['semestre', 'DESC'], ['id', 'DESC']]
+			order: [
+				["ano", "DESC"],
+				["semestre", "DESC"],
+				["id", "DESC"],
+			],
 		});
 
 		res.status(200).json({ trabalhos: trabalhos });
@@ -59,44 +63,46 @@ const retornaTrabalhoConlusaoPorId = async (req, res) => {
 			include: [
 				{
 					model: model.Dicente,
-					attributes: ['matricula', 'nome', 'email']
+					attributes: ["matricula", "nome", "email"],
 				},
 				{
 					model: model.Curso,
-					attributes: ['id', 'nome', 'codigo']
+					attributes: ["id", "nome", "codigo"],
 				},
 				{
 					model: model.Orientacao,
 					include: [
 						{
 							model: model.Docente,
-							attributes: ['codigo', 'nome', 'email']
-						}
-					]
+							attributes: ["codigo", "nome", "email"],
+						},
+					],
 				},
 				{
-					model: model.Convite
+					model: model.Convite,
 				},
 				{
 					model: model.Defesa,
 					include: [
 						{
 							model: model.Docente,
-							as: 'membroBancaA',
-							attributes: ['codigo', 'nome', 'email']
+							as: "membroBancaA",
+							attributes: ["codigo", "nome", "email"],
 						},
 						{
 							model: model.Docente,
-							as: 'membroBancaB', 
-							attributes: ['codigo', 'nome', 'email']
-						}
-					]
-				}
-			]
+							as: "membroBancaB",
+							attributes: ["codigo", "nome", "email"],
+						},
+					],
+				},
+			],
 		});
 
 		if (!trabalho) {
-			return res.status(404).json({ message: "Trabalho de conclusão não encontrado" });
+			return res
+				.status(404)
+				.json({ message: "Trabalho de conclusão não encontrado" });
 		}
 
 		res.status(200).json({ trabalho: trabalho });
@@ -114,9 +120,9 @@ const criaTrabalhoConlusao = async (req, res) => {
 		const trabalho = model.TrabalhoConclusao.build(formData);
 		await trabalho.save();
 
-		res.status(201).json({ 
+		res.status(201).json({
 			message: "Trabalho de conclusão criado com sucesso",
-			id: trabalho.id 
+			id: trabalho.id,
 		});
 	} catch (error) {
 		console.log("Erro ao criar trabalho de conclusão:", error);
@@ -131,15 +137,22 @@ const atualizaTrabalhoConlusao = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
-		const [updatedRowsCount] = await model.TrabalhoConclusao.update(formData, {
-			where: { id: id }
-		});
+		const [updatedRowsCount] = await model.TrabalhoConclusao.update(
+			formData,
+			{
+				where: { id: id },
+			},
+		);
 
 		if (updatedRowsCount === 0) {
-			return res.status(404).json({ message: "Trabalho de conclusão não encontrado" });
+			return res
+				.status(404)
+				.json({ message: "Trabalho de conclusão não encontrado" });
 		}
 
-		res.status(200).json({ message: "Trabalho de conclusão atualizado com sucesso" });
+		res.status(200).json({
+			message: "Trabalho de conclusão atualizado com sucesso",
+		});
 	} catch (error) {
 		console.log("Erro ao atualizar trabalho de conclusão:", error);
 		console.log("Dados que causaram erro:", formData);
@@ -151,19 +164,25 @@ const atualizaTrabalhoConlusao = async (req, res) => {
 const deletaTrabalhoConlusao = async (req, res) => {
 	try {
 		const { id } = req.params;
-		
+
 		const deleted = await model.TrabalhoConclusao.destroy({
-			where: { id: id }
+			where: { id: id },
 		});
 
 		if (deleted) {
-			res.status(200).json({ message: "Trabalho de conclusão deletado com sucesso" });
+			res.status(200).json({
+				message: "Trabalho de conclusão deletado com sucesso",
+			});
 		} else {
-			res.status(404).json({ message: "Trabalho de conclusão não encontrado" });
+			res.status(404).json({
+				message: "Trabalho de conclusão não encontrado",
+			});
 		}
 	} catch (error) {
 		console.error("Erro ao deletar trabalho de conclusão:", error);
-		res.status(500).json({ message: "Erro ao deletar trabalho de conclusão" });
+		res.status(500).json({
+			message: "Erro ao deletar trabalho de conclusão",
+		});
 	}
 };
 
@@ -175,11 +194,13 @@ const atualizaEtapaTrabalho = async (req, res) => {
 	try {
 		const [updatedRowsCount] = await model.TrabalhoConclusao.update(
 			{ etapa: etapa },
-			{ where: { id: id } }
+			{ where: { id: id } },
 		);
 
 		if (updatedRowsCount === 0) {
-			return res.status(404).json({ message: "Trabalho de conclusão não encontrado" });
+			return res
+				.status(404)
+				.json({ message: "Trabalho de conclusão não encontrado" });
 		}
 
 		res.status(200).json({ message: "Etapa atualizada com sucesso" });
@@ -195,5 +216,5 @@ module.exports = {
 	criaTrabalhoConlusao,
 	atualizaTrabalhoConlusao,
 	deletaTrabalhoConlusao,
-	atualizaEtapaTrabalho
-}; 
+	atualizaEtapaTrabalho,
+};

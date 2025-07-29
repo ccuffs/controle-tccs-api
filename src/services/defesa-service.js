@@ -20,30 +20,33 @@ const retornaTodasDefesas = async (req, res) => {
 			include: [
 				{
 					model: model.TrabalhoConclusao,
-					where: Object.keys(includeWhere).length > 0 ? includeWhere : undefined,
+					where:
+						Object.keys(includeWhere).length > 0
+							? includeWhere
+							: undefined,
 					include: [
 						{
 							model: model.Dicente,
-							attributes: ['matricula', 'nome', 'email']
+							attributes: ["matricula", "nome", "email"],
 						},
 						{
 							model: model.Curso,
-							attributes: ['id', 'nome', 'codigo']
-						}
-					]
+							attributes: ["id", "nome", "codigo"],
+						},
+					],
 				},
 				{
 					model: model.Docente,
-					as: 'membroBancaA',
-					attributes: ['codigo', 'nome', 'email']
+					as: "membroBancaA",
+					attributes: ["codigo", "nome", "email"],
 				},
 				{
 					model: model.Docente,
-					as: 'membroBancaB',
-					attributes: ['codigo', 'nome', 'email']
-				}
+					as: "membroBancaB",
+					attributes: ["codigo", "nome", "email"],
+				},
 			],
-			order: [['data_defesa', 'DESC']]
+			order: [["data_defesa", "DESC"]],
 		});
 
 		res.status(200).json({ defesas: defesas });
@@ -66,25 +69,25 @@ const retornaDefesaPorTcc = async (req, res) => {
 					include: [
 						{
 							model: model.Dicente,
-							attributes: ['matricula', 'nome', 'email']
+							attributes: ["matricula", "nome", "email"],
 						},
 						{
 							model: model.Curso,
-							attributes: ['id', 'nome', 'codigo']
-						}
-					]
+							attributes: ["id", "nome", "codigo"],
+						},
+					],
 				},
 				{
 					model: model.Docente,
-					as: 'membroBancaA',
-					attributes: ['codigo', 'nome', 'email']
+					as: "membroBancaA",
+					attributes: ["codigo", "nome", "email"],
 				},
 				{
 					model: model.Docente,
-					as: 'membroBancaB',
-					attributes: ['codigo', 'nome', 'email']
-				}
-			]
+					as: "membroBancaB",
+					attributes: ["codigo", "nome", "email"],
+				},
+			],
 		});
 
 		if (!defesa) {
@@ -105,19 +108,19 @@ const criaDefesa = async (req, res) => {
 	try {
 		// Verificar se já existe defesa para este TCC
 		const defesaExistente = await model.Defesa.findOne({
-			where: { id_tcc: formData.id_tcc }
+			where: { id_tcc: formData.id_tcc },
 		});
 
 		if (defesaExistente) {
 			return res.status(400).json({
-				message: "Já existe uma defesa agendada para este TCC"
+				message: "Já existe uma defesa agendada para este TCC",
 			});
 		}
 
 		// Verificar se os membros da banca são diferentes
 		if (formData.membro_banca_a === formData.membro_banca_b) {
 			return res.status(400).json({
-				message: "Os membros da banca devem ser diferentes"
+				message: "Os membros da banca devem ser diferentes",
 			});
 		}
 
@@ -125,7 +128,7 @@ const criaDefesa = async (req, res) => {
 		await defesa.save();
 
 		res.status(201).json({
-			message: "Defesa criada com sucesso"
+			message: "Defesa criada com sucesso",
 		});
 	} catch (error) {
 		console.log("Erro ao criar defesa:", error);
@@ -144,8 +147,8 @@ const atualizaDefesa = async (req, res) => {
 			where: {
 				id_tcc: id_tcc,
 				membro_banca_a: membro_banca_a,
-				membro_banca_b: membro_banca_b
-			}
+				membro_banca_b: membro_banca_b,
+			},
 		});
 
 		if (updatedRowsCount === 0) {
@@ -168,7 +171,7 @@ const registraAvaliacaoDefesa = async (req, res) => {
 	try {
 		const [updatedRowsCount] = await model.Defesa.update(
 			{ avaliacao: avaliacao },
-			{ where: { id_tcc: id_tcc } }
+			{ where: { id_tcc: id_tcc } },
 		);
 
 		if (updatedRowsCount === 0) {
@@ -191,8 +194,8 @@ const deletaDefesa = async (req, res) => {
 			where: {
 				id_tcc: id_tcc,
 				membro_banca_a: membro_banca_a,
-				membro_banca_b: membro_banca_b
-			}
+				membro_banca_b: membro_banca_b,
+			},
 		});
 
 		if (deleted) {
@@ -212,5 +215,5 @@ module.exports = {
 	criaDefesa,
 	atualizaDefesa,
 	registraAvaliacaoDefesa,
-	deletaDefesa
+	deletaDefesa,
 };

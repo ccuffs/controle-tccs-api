@@ -10,7 +10,7 @@ const retornaTodosConvites = async (req, res) => {
 		// Aplicar filtros se fornecidos
 		if (id_tcc) whereClause.id = parseInt(id_tcc);
 		if (codigo_docente) whereClause.codigo_docente = codigo_docente;
-		if (aceito !== undefined) whereClause.aceito = aceito === 'true';
+		if (aceito !== undefined) whereClause.aceito = aceito === "true";
 
 		const convites = await model.Convite.findAll({
 			where: whereClause,
@@ -20,20 +20,20 @@ const retornaTodosConvites = async (req, res) => {
 					include: [
 						{
 							model: model.Dicente,
-							attributes: ['matricula', 'nome', 'email']
+							attributes: ["matricula", "nome", "email"],
 						},
 						{
 							model: model.Curso,
-							attributes: ['id', 'nome', 'codigo']
-						}
-					]
+							attributes: ["id", "nome", "codigo"],
+						},
+					],
 				},
 				{
 					model: model.Docente,
-					attributes: ['codigo', 'nome', 'email']
-				}
+					attributes: ["codigo", "nome", "email"],
+				},
 			],
-			order: [['data_envio', 'DESC']]
+			order: [["data_envio", "DESC"]],
 		});
 
 		res.status(200).json({ convites: convites });
@@ -52,13 +52,13 @@ const criaConvite = async (req, res) => {
 		const conviteExistente = await model.Convite.findOne({
 			where: {
 				id: formData.id,
-				codigo_docente: formData.codigo_docente
-			}
+				codigo_docente: formData.codigo_docente,
+			},
 		});
 
 		if (conviteExistente) {
-			return res.status(400).json({ 
-				message: "Já existe um convite para este docente neste TCC" 
+			return res.status(400).json({
+				message: "Já existe um convite para este docente neste TCC",
 			});
 		}
 
@@ -68,8 +68,8 @@ const criaConvite = async (req, res) => {
 		const convite = model.Convite.build(formData);
 		await convite.save();
 
-		res.status(201).json({ 
-			message: "Convite criado com sucesso"
+		res.status(201).json({
+			message: "Convite criado com sucesso",
 		});
 	} catch (error) {
 		console.log("Erro ao criar convite:", error);
@@ -85,25 +85,27 @@ const respondeConvite = async (req, res) => {
 
 	try {
 		const updateData = { aceito: aceito };
-		
+
 		// Se foi aceito, adicionar data de aceite
 		if (aceito) {
 			updateData.data_aceite = new Date();
 		}
 
 		const [updatedRowsCount] = await model.Convite.update(updateData, {
-			where: { 
+			where: {
 				id: id,
-				codigo_docente: codigo_docente
-			}
+				codigo_docente: codigo_docente,
+			},
 		});
 
 		if (updatedRowsCount === 0) {
 			return res.status(404).json({ message: "Convite não encontrado" });
 		}
 
-		res.status(200).json({ 
-			message: aceito ? "Convite aceito com sucesso" : "Convite rejeitado"
+		res.status(200).json({
+			message: aceito
+				? "Convite aceito com sucesso"
+				: "Convite rejeitado",
 		});
 	} catch (error) {
 		console.log("Erro ao responder convite:", error);
@@ -115,12 +117,12 @@ const respondeConvite = async (req, res) => {
 const deletaConvite = async (req, res) => {
 	try {
 		const { id, codigo_docente } = req.params;
-		
+
 		const deleted = await model.Convite.destroy({
-			where: { 
+			where: {
 				id: id,
-				codigo_docente: codigo_docente
-			}
+				codigo_docente: codigo_docente,
+			},
 		});
 
 		if (deleted) {
@@ -143,7 +145,7 @@ const retornaConvitesPendentesDocente = async (req, res) => {
 			where: {
 				codigo_docente: codigo_docente,
 				aceito: false,
-				data_aceite: null
+				data_aceite: null,
 			},
 			include: [
 				{
@@ -151,16 +153,16 @@ const retornaConvitesPendentesDocente = async (req, res) => {
 					include: [
 						{
 							model: model.Dicente,
-							attributes: ['matricula', 'nome', 'email']
+							attributes: ["matricula", "nome", "email"],
 						},
 						{
 							model: model.Curso,
-							attributes: ['id', 'nome', 'codigo']
-						}
-					]
-				}
+							attributes: ["id", "nome", "codigo"],
+						},
+					],
+				},
 			],
-			order: [['data_envio', 'DESC']]
+			order: [["data_envio", "DESC"]],
 		});
 
 		res.status(200).json({ convites: convites });
@@ -175,5 +177,5 @@ module.exports = {
 	criaConvite,
 	respondeConvite,
 	deletaConvite,
-	retornaConvitesPendentesDocente
-}; 
+	retornaConvitesPendentesDocente,
+};

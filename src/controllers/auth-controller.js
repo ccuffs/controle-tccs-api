@@ -14,8 +14,8 @@ const login = async (req, res) => {
 
 		// Validação básica
 		if (!email) {
-			return res.status(400).json({ 
-				message: "Email é obrigatório" 
+			return res.status(400).json({
+				message: "Email é obrigatório",
 			});
 		}
 
@@ -24,25 +24,25 @@ const login = async (req, res) => {
 
 		res.status(200).json({
 			message: "Login realizado com sucesso",
-			...resultado
+			...resultado,
 		});
 	} catch (error) {
 		console.error("Erro no login:", error);
-		
-		if (error.message === 'Usuário não encontrado') {
-			return res.status(401).json({ 
-				message: "Email ou senha incorretos" 
+
+		if (error.message === "Usuário não encontrado") {
+			return res.status(401).json({
+				message: "Email ou senha incorretos",
 			});
 		}
 
-		if (error.message === 'Senha incorreta') {
-			return res.status(401).json({ 
-				message: "Email ou senha incorretos" 
+		if (error.message === "Senha incorreta") {
+			return res.status(401).json({
+				message: "Email ou senha incorretos",
 			});
 		}
 
-		res.status(500).json({ 
-			message: "Erro interno do servidor" 
+		res.status(500).json({
+			message: "Erro interno do servidor",
 		});
 	}
 };
@@ -56,8 +56,8 @@ const refreshToken = async (req, res) => {
 		const { token } = req.body;
 
 		if (!token) {
-			return res.status(400).json({ 
-				message: "Token é obrigatório" 
+			return res.status(400).json({
+				message: "Token é obrigatório",
 			});
 		}
 
@@ -66,19 +66,19 @@ const refreshToken = async (req, res) => {
 
 		res.status(200).json({
 			message: "Token renovado com sucesso",
-			token: novoToken
+			token: novoToken,
 		});
 	} catch (error) {
 		console.error("Erro ao renovar token:", error);
-		
-		if (error.message === 'Token inválido') {
-			return res.status(401).json({ 
-				message: "Token inválido ou expirado" 
+
+		if (error.message === "Token inválido") {
+			return res.status(401).json({
+				message: "Token inválido ou expirado",
 			});
 		}
 
-		res.status(500).json({ 
-			message: "Erro interno do servidor" 
+		res.status(500).json({
+			message: "Erro interno do servidor",
 		});
 	}
 };
@@ -94,12 +94,12 @@ const getMe = async (req, res) => {
 
 		res.status(200).json({
 			message: "Dados do usuário recuperados com sucesso",
-			usuario: dadosUsuario
+			usuario: dadosUsuario,
 		});
 	} catch (error) {
 		console.error("Erro ao buscar dados do usuário:", error);
-		res.status(500).json({ 
-			message: "Erro interno do servidor" 
+		res.status(500).json({
+			message: "Erro interno do servidor",
 		});
 	}
 };
@@ -112,14 +112,14 @@ const logout = async (req, res) => {
 	try {
 		// Em um sistema JWT, o logout é principalmente client-side
 		// Aqui você pode implementar uma blacklist de tokens se necessário
-		
+
 		res.status(200).json({
-			message: "Logout realizado com sucesso"
+			message: "Logout realizado com sucesso",
 		});
 	} catch (error) {
 		console.error("Erro no logout:", error);
-		res.status(500).json({ 
-			message: "Erro interno do servidor" 
+		res.status(500).json({
+			message: "Erro interno do servidor",
 		});
 	}
 };
@@ -133,8 +133,8 @@ const validateToken = async (req, res) => {
 		const { token } = req.body;
 
 		if (!token) {
-			return res.status(400).json({ 
-				message: "Token é obrigatório" 
+			return res.status(400).json({
+				message: "Token é obrigatório",
 			});
 		}
 
@@ -147,20 +147,20 @@ const validateToken = async (req, res) => {
 				userId: payload.userId,
 				email: payload.email,
 				nome: payload.nome,
-				exp: payload.exp
-			}
+				exp: payload.exp,
+			},
 		});
 	} catch (error) {
 		console.error("Erro ao validar token:", error);
-		
-		if (error.message === 'Token inválido') {
-			return res.status(401).json({ 
-				message: "Token inválido ou expirado" 
+
+		if (error.message === "Token inválido") {
+			return res.status(401).json({
+				message: "Token inválido ou expirado",
 			});
 		}
 
-		res.status(500).json({ 
-			message: "Erro interno do servidor" 
+		res.status(500).json({
+			message: "Erro interno do servidor",
 		});
 	}
 };
@@ -172,4 +172,4 @@ authController.get("/me", autenticarUsuario, getMe);
 authController.post("/logout", autenticarUsuario, logout);
 authController.post("/validate", validateToken);
 
-module.exports = authController; 
+module.exports = authController;

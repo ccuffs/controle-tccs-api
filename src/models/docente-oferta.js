@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.INTEGER,
 				primaryKey: true,
 				allowNull: false,
-                defaultValue: 1,
+				defaultValue: 1,
 			},
 			codigo_docente: {
 				type: DataTypes.STRING,

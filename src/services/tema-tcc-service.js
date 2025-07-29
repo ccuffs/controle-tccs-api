@@ -23,7 +23,8 @@ const retornaTemasTccPorCurso = async (req, res) => {
 
 	try {
 		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
-		const { ano: anoAtual, semestre: semestreAtual } = await obterAnoSemestreAtual();
+		const { ano: anoAtual, semestre: semestreAtual } =
+			await obterAnoSemestreAtual();
 
 		// Primeiro, buscar os temas TCC com docente e área
 		const temas = await model.TemaTcc.findAll({
@@ -38,40 +39,42 @@ const retornaTemasTccPorCurso = async (req, res) => {
 					include: [
 						{
 							model: model.Curso,
-							as: 'cursosOrientacao',
+							as: "cursosOrientacao",
 							required: true,
 							where: {
 								id: id_curso,
 							},
-							attributes: [] // Não precisamos dos dados do curso na resposta
-						}
-					]
+							attributes: [], // Não precisamos dos dados do curso na resposta
+						},
+					],
 				},
 			],
 		});
 
 		// Buscar vagas separadamente para cada docente
-		const temasComVagas = await Promise.all(temas.map(async (tema) => {
-			const temaData = tema.toJSON();
+		const temasComVagas = await Promise.all(
+			temas.map(async (tema) => {
+				const temaData = tema.toJSON();
 
-			// Buscar vagas da oferta do docente
-			const docenteOferta = await model.DocenteOferta.findOne({
-				where: {
-					ano: anoAtual,
-					semestre: semestreAtual,
-					id_curso: parseInt(id_curso),
-					fase: 1,
-					codigo_docente: temaData.Docente.codigo
-				}
-			});
+				// Buscar vagas da oferta do docente
+				const docenteOferta = await model.DocenteOferta.findOne({
+					where: {
+						ano: anoAtual,
+						semestre: semestreAtual,
+						id_curso: parseInt(id_curso),
+						fase: 1,
+						codigo_docente: temaData.Docente.codigo,
+					},
+				});
 
-			const vagasOferta = docenteOferta ? docenteOferta.vagas : 0;
+				const vagasOferta = docenteOferta ? docenteOferta.vagas : 0;
 
-			// Adicionar vagas da oferta ao objeto
-			temaData.vagasOferta = vagasOferta;
+				// Adicionar vagas da oferta ao objeto
+				temaData.vagasOferta = vagasOferta;
 
-			return temaData;
-		}));
+				return temaData;
+			}),
+		);
 
 		return res.status(200).json(temasComVagas);
 	} catch (error) {
@@ -160,32 +163,35 @@ const atualizaVagasOfertaDocente = async (req, res) => {
 		const { vagas } = req.body;
 
 		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
-		const { ano: anoAtual, semestre: semestreAtual } = await obterAnoSemestreAtual();
+		const { ano: anoAtual, semestre: semestreAtual } =
+			await obterAnoSemestreAtual();
 
 		// Buscar ou criar a oferta do docente
-		const [docenteOferta, created] = await model.DocenteOferta.findOrCreate({
-			where: {
-				ano: anoAtual,
-				semestre: semestreAtual,
-				id_curso: parseInt(id_curso),
-				fase: 1, // TCC1 como padrão
-				codigo_docente: codigo_docente
+		const [docenteOferta, created] = await model.DocenteOferta.findOrCreate(
+			{
+				where: {
+					ano: anoAtual,
+					semestre: semestreAtual,
+					id_curso: parseInt(id_curso),
+					fase: 1, // TCC1 como padrão
+					codigo_docente: codigo_docente,
+				},
+				defaults: {
+					vagas: parseInt(vagas) || 0,
+				},
 			},
-			defaults: {
-				vagas: parseInt(vagas) || 0
-			}
-		});
+		);
 
 		// Se já existia, atualizar as vagas
 		if (!created) {
 			await docenteOferta.update({
-				vagas: parseInt(vagas) || 0
+				vagas: parseInt(vagas) || 0,
 			});
 		}
 
 		return res.status(200).json({
 			message: "Vagas da oferta atualizadas com sucesso",
-			docenteOferta: docenteOferta
+			docenteOferta: docenteOferta,
 		});
 	} catch (error) {
 		console.log("Erro ao atualizar vagas da oferta do docente:", error);
@@ -201,5 +207,5 @@ module.exports = {
 	atualizaTemaTcc,
 	atualizaVagasTemaTcc,
 	deletaTemaTcc,
-	atualizaVagasOfertaDocente
+	atualizaVagasOfertaDocente,
 };

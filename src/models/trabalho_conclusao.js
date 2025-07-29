@@ -57,7 +57,14 @@ module.exports = (sequelize, DataTypes) => {
 				{
 					unique: true,
 					name: "tcc_unique",
-					fields: ["id", "ano", "semestre", "id_curso", "fase", "matricula"],
+					fields: [
+						"id",
+						"ano",
+						"semestre",
+						"id_curso",
+						"fase",
+						"matricula",
+					],
 				},
 			],
 		},

@@ -26,7 +26,10 @@ const obterAnoSemestreAtual = async () => {
 
 		// Buscar todos os períodos ordenados por ano e semestre
 		const periodos = await model.AnoSemestre.findAll({
-			order: [['ano', 'ASC'], ['semestre', 'ASC']]
+			order: [
+				["ano", "ASC"],
+				["semestre", "ASC"],
+			],
 		});
 
 		if (periodos.length === 0) {
@@ -49,21 +52,30 @@ const obterAnoSemestreAtual = async () => {
 
 		// Se não estamos em nenhum período ativo, aplicar regras de intervalo
 		// Encontrar o próximo período futuro
-		const proximoPeriodo = periodos.find(p => new Date(p.inicio) > dataAtual);
+		const proximoPeriodo = periodos.find(
+			(p) => new Date(p.inicio) > dataAtual,
+		);
 
 		if (proximoPeriodo) {
 			const inicioProximo = new Date(proximoPeriodo.inicio);
-			const diasParaProximo = Math.ceil((inicioProximo - dataAtual) / (1000 * 60 * 60 * 24));
+			const diasParaProximo = Math.ceil(
+				(inicioProximo - dataAtual) / (1000 * 60 * 60 * 24),
+			);
 
 			if (diasParaProximo <= 10) {
 				// Menos de 10 dias para o próximo semestre - retornar o próximo
-				return { ano: proximoPeriodo.ano, semestre: proximoPeriodo.semestre };
+				return {
+					ano: proximoPeriodo.ano,
+					semestre: proximoPeriodo.semestre,
+				};
 			}
 		}
 
 		// Se não há próximo período ou estamos a mais de 10 dias dele,
 		// retornar o período anterior (mais recente que já terminou)
-		const periodosPassados = periodos.filter(p => new Date(p.fim) < dataAtual);
+		const periodosPassados = periodos.filter(
+			(p) => new Date(p.fim) < dataAtual,
+		);
 		if (periodosPassados.length > 0) {
 			const ultimoPeriodo = periodosPassados[periodosPassados.length - 1];
 			return { ano: ultimoPeriodo.ano, semestre: ultimoPeriodo.semestre };
@@ -73,7 +85,6 @@ const obterAnoSemestreAtual = async () => {
 		const anoAtual = dataAtual.getFullYear();
 		const semestreAtual = dataAtual.getMonth() < 6 ? 1 : 2;
 		return { ano: anoAtual, semestre: semestreAtual };
-
 	} catch (error) {
 		console.log("Erro ao calcular ano/semestre atual:", error);
 		// Fallback para lógica simples em caso de erro
@@ -95,7 +106,10 @@ const testarAnoSemestreComDataSimulada = async (dataSimulada) => {
 	try {
 		// Buscar todos os períodos ordenados por ano e semestre
 		const periodos = await model.AnoSemestre.findAll({
-			order: [['ano', 'ASC'], ['semestre', 'ASC']]
+			order: [
+				["ano", "ASC"],
+				["semestre", "ASC"],
+			],
 		});
 
 		if (periodos.length === 0) {
@@ -118,21 +132,30 @@ const testarAnoSemestreComDataSimulada = async (dataSimulada) => {
 
 		// Se não estamos em nenhum período ativo, aplicar regras de intervalo
 		// Encontrar o próximo período futuro
-		const proximoPeriodo = periodos.find(p => new Date(p.inicio) > dataSimulada);
+		const proximoPeriodo = periodos.find(
+			(p) => new Date(p.inicio) > dataSimulada,
+		);
 
 		if (proximoPeriodo) {
 			const inicioProximo = new Date(proximoPeriodo.inicio);
-			const diasParaProximo = Math.ceil((inicioProximo - dataSimulada) / (1000 * 60 * 60 * 24));
+			const diasParaProximo = Math.ceil(
+				(inicioProximo - dataSimulada) / (1000 * 60 * 60 * 24),
+			);
 
 			if (diasParaProximo <= 10) {
 				// Menos de 10 dias para o próximo semestre - retornar o próximo
-				return { ano: proximoPeriodo.ano, semestre: proximoPeriodo.semestre };
+				return {
+					ano: proximoPeriodo.ano,
+					semestre: proximoPeriodo.semestre,
+				};
 			}
 		}
 
 		// Se não há próximo período ou estamos a mais de 10 dias dele,
 		// retornar o período anterior (mais recente que já terminou)
-		const periodosPassados = periodos.filter(p => new Date(p.fim) < dataSimulada);
+		const periodosPassados = periodos.filter(
+			(p) => new Date(p.fim) < dataSimulada,
+		);
 		if (periodosPassados.length > 0) {
 			const ultimoPeriodo = periodosPassados[periodosPassados.length - 1];
 			return { ano: ultimoPeriodo.ano, semestre: ultimoPeriodo.semestre };
@@ -142,7 +165,6 @@ const testarAnoSemestreComDataSimulada = async (dataSimulada) => {
 		const anoAtual = dataSimulada.getFullYear();
 		const semestreAtual = dataSimulada.getMonth() < 6 ? 1 : 2;
 		return { ano: anoAtual, semestre: semestreAtual };
-
 	} catch (error) {
 		console.log("Erro ao calcular ano/semestre com data simulada:", error);
 		// Fallback para lógica simples em caso de erro
@@ -154,5 +176,5 @@ const testarAnoSemestreComDataSimulada = async (dataSimulada) => {
 
 module.exports = {
 	obterAnoSemestreAtual,
-	testarAnoSemestreComDataSimulada
+	testarAnoSemestreComDataSimulada,
 };

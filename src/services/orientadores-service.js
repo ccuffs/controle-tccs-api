@@ -7,18 +7,16 @@ const retornaTodasOrientacoes = async (req, res) => {
 			include: [
 				{
 					model: model.Docente,
-					as: 'docente',
-					attributes: ['codigo', 'nome', 'email']
+					as: "docente",
+					attributes: ["codigo", "nome", "email"],
 				},
 				{
 					model: model.Curso,
-					as: 'curso',
-					attributes: ['id', 'nome', 'codigo', 'turno']
-				}
+					as: "curso",
+					attributes: ["id", "nome", "codigo", "turno"],
+				},
 			],
-			order: [
-				[{ model: model.Docente, as: 'docente' }, 'nome', 'ASC']
-			]
+			order: [[{ model: model.Docente, as: "docente" }, "nome", "ASC"]],
 		});
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
@@ -36,13 +34,11 @@ const retornaOrientacoesPorDocente = async (req, res) => {
 			include: [
 				{
 					model: model.Curso,
-					as: 'curso',
-					attributes: ['id', 'nome', 'codigo', 'turno']
-				}
+					as: "curso",
+					attributes: ["id", "nome", "codigo", "turno"],
+				},
 			],
-			order: [
-				[{ model: model.Curso, as: 'curso' }, 'nome', 'ASC']
-			]
+			order: [[{ model: model.Curso, as: "curso" }, "nome", "ASC"]],
 		});
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
@@ -60,13 +56,11 @@ const retornaOrientacoesPorCurso = async (req, res) => {
 			include: [
 				{
 					model: model.Docente,
-					as: 'docente',
-					attributes: ['codigo', 'nome', 'email']
-				}
+					as: "docente",
+					attributes: ["codigo", "nome", "email"],
+				},
 			],
-			order: [
-				[{ model: model.Docente, as: 'docente' }, 'nome', 'ASC']
-			]
+			order: [[{ model: model.Docente, as: "docente" }, "nome", "ASC"]],
 		});
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
@@ -95,7 +89,7 @@ const deletaOrientacao = async (req, res) => {
 		const deleted = await model.OrientadorCurso.destroy({
 			where: {
 				id_curso: id_curso,
-				codigo_docente: codigo_docente
+				codigo_docente: codigo_docente,
 			},
 		});
 
@@ -115,5 +109,5 @@ module.exports = {
 	retornaOrientacoesPorDocente,
 	retornaOrientacoesPorCurso,
 	criaOrientacao,
-	deletaOrientacao
+	deletaOrientacao,
 };

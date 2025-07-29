@@ -11,28 +11,28 @@ const buscarPermissoesDoUsuario = async (userId) => {
 			include: [
 				{
 					model: model.Grupo,
-					as: 'grupos',
+					as: "grupos",
 					through: { attributes: [] },
 					include: [
 						{
 							model: model.Permissoes,
-							as: 'permissoes',
-							through: { attributes: ['leitura', 'edicao'] }
-						}
-					]
-				}
-			]
+							as: "permissoes",
+							through: { attributes: ["leitura", "edicao"] },
+						},
+					],
+				},
+			],
 		});
 
 		if (!usuario) {
-			throw new Error('Usuário não encontrado');
+			throw new Error("Usuário não encontrado");
 		}
 
 		// Consolidar permissões de todos os grupos
 		const permissoesConsolidadas = new Map();
 
-		usuario.grupos.forEach(grupo => {
-			grupo.permissoes.forEach(permissao => {
+		usuario.grupos.forEach((grupo) => {
+			grupo.permissoes.forEach((permissao) => {
 				const permissaoId = permissao.id;
 				const grupoPermissao = permissao.GrupoPermissao;
 
@@ -43,11 +43,12 @@ const buscarPermissoesDoUsuario = async (userId) => {
 						descricao: permissao.descricao,
 						leitura: false,
 						edicao: false,
-						grupos: []
+						grupos: [],
 					});
 				}
 
-				const permissaoConsolidada = permissoesConsolidadas.get(permissaoId);
+				const permissaoConsolidada =
+					permissoesConsolidadas.get(permissaoId);
 
 				// Se qualquer grupo permite leitura/edição, o usuário tem a permissão
 				if (grupoPermissao.leitura) {
@@ -58,11 +59,13 @@ const buscarPermissoesDoUsuario = async (userId) => {
 				}
 
 				// Adicionar grupo à lista de grupos que concedem esta permissão
-				if (!permissaoConsolidada.grupos.find(g => g.id === grupo.id)) {
+				if (
+					!permissaoConsolidada.grupos.find((g) => g.id === grupo.id)
+				) {
 					permissaoConsolidada.grupos.push({
 						id: grupo.id,
 						nome: grupo.nome,
-						consulta_todos: grupo.consulta_todos
+						consulta_todos: grupo.consulta_todos,
 					});
 				}
 			});
@@ -70,7 +73,7 @@ const buscarPermissoesDoUsuario = async (userId) => {
 
 		return Array.from(permissoesConsolidadas.values());
 	} catch (error) {
-		console.error('Erro ao buscar permissões do usuário:', error);
+		console.error("Erro ao buscar permissões do usuário:", error);
 		throw error;
 	}
 };
@@ -82,10 +85,10 @@ const buscarPermissoesDoUsuario = async (userId) => {
  * @param {string} acao - 'leitura' ou 'edicao'
  * @returns {Promise<boolean>} true se o usuário tem a permissão
  */
-const verificarPermissao = async (userId, nomePermissao, acao = 'leitura') => {
+const verificarPermissao = async (userId, nomePermissao, acao = "leitura") => {
 	try {
 		const permissoes = await buscarPermissoesDoUsuario(userId);
-		const permissao = permissoes.find(p => p.nome === nomePermissao);
+		const permissao = permissoes.find((p) => p.nome === nomePermissao);
 
 		if (!permissao) {
 			return false;
@@ -93,7 +96,7 @@ const verificarPermissao = async (userId, nomePermissao, acao = 'leitura') => {
 
 		return permissao[acao] === true;
 	} catch (error) {
-		console.error('Erro ao verificar permissão:', error);
+		console.error("Erro ao verificar permissão:", error);
 		return false;
 	}
 };
@@ -109,10 +112,10 @@ const verificarConsultaTodos = async (userId) => {
 			include: [
 				{
 					model: model.Grupo,
-					as: 'grupos',
-					through: { attributes: [] }
-				}
-			]
+					as: "grupos",
+					through: { attributes: [] },
+				},
+			],
 		});
 
 		if (!usuario) {
@@ -120,9 +123,9 @@ const verificarConsultaTodos = async (userId) => {
 		}
 
 		// Verifica se qualquer grupo do usuário tem consulta_todos = true
-		return usuario.grupos.some(grupo => grupo.consulta_todos === true);
+		return usuario.grupos.some((grupo) => grupo.consulta_todos === true);
 	} catch (error) {
-		console.error('Erro ao verificar consulta_todos:', error);
+		console.error("Erro ao verificar consulta_todos:", error);
 		return false;
 	}
 };
@@ -138,19 +141,19 @@ const buscarGruposDoUsuario = async (userId) => {
 			include: [
 				{
 					model: model.Grupo,
-					as: 'grupos',
-					through: { attributes: [] }
-				}
-			]
+					as: "grupos",
+					through: { attributes: [] },
+				},
+			],
 		});
 
 		if (!usuario) {
-			throw new Error('Usuário não encontrado');
+			throw new Error("Usuário não encontrado");
 		}
 
 		return usuario.grupos;
 	} catch (error) {
-		console.error('Erro ao buscar grupos do usuário:', error);
+		console.error("Erro ao buscar grupos do usuário:", error);
 		throw error;
 	}
 };
@@ -162,11 +165,11 @@ const buscarGruposDoUsuario = async (userId) => {
 const buscarTodasPermissoes = async () => {
 	try {
 		const permissoes = await model.Permissoes.findAll({
-			order: [['nome', 'ASC']]
+			order: [["nome", "ASC"]],
 		});
 		return permissoes;
 	} catch (error) {
-		console.error('Erro ao buscar todas as permissões:', error);
+		console.error("Erro ao buscar todas as permissões:", error);
 		throw error;
 	}
 };
@@ -178,11 +181,11 @@ const buscarTodasPermissoes = async () => {
 const buscarTodosGrupos = async () => {
 	try {
 		const grupos = await model.Grupo.findAll({
-			order: [['nome', 'ASC']]
+			order: [["nome", "ASC"]],
 		});
 		return grupos;
 	} catch (error) {
-		console.error('Erro ao buscar todos os grupos:', error);
+		console.error("Erro ao buscar todos os grupos:", error);
 		throw error;
 	}
 };
@@ -193,5 +196,5 @@ module.exports = {
 	verificarConsultaTodos,
 	buscarGruposDoUsuario,
 	buscarTodasPermissoes,
-	buscarTodosGrupos
+	buscarTodosGrupos,
 };

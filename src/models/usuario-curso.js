@@ -10,8 +10,8 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				references: {
 					model: "curso",
-					key: "id"
-				}
+					key: "id",
+				},
 			},
 			id_usuario: {
 				type: DataTypes.STRING,
@@ -19,8 +19,8 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				references: {
 					model: "usuario",
-					key: "id"
-				}
+					key: "id",
+				},
 			},
 		},
 		{
@@ -32,18 +32,18 @@ module.exports = (sequelize, DataTypes) => {
 		},
 	);
 
-	UsuarioCurso.associate = function(models) {
+	UsuarioCurso.associate = function (models) {
 		// Associações corretas para tabela de junção
 		UsuarioCurso.belongsTo(models.Curso, {
-			foreignKey: 'id_curso',
-			targetKey: 'id',
-			as: 'curso'
+			foreignKey: "id_curso",
+			targetKey: "id",
+			as: "curso",
 		});
 
 		UsuarioCurso.belongsTo(models.Usuario, {
-			foreignKey: 'id_usuario',
-			targetKey: 'id',
-			as: 'usuario'
+			foreignKey: "id_usuario",
+			targetKey: "id",
+			as: "usuario",
 		});
 	};
 

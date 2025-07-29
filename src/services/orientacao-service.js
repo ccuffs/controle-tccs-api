@@ -10,30 +10,31 @@ const retornaTodasOrientacoes = async (req, res) => {
 		// Aplicar filtros se fornecidos
 		if (id_tcc) whereClause.id_tcc = parseInt(id_tcc);
 		if (codigo_docente) whereClause.codigo_docente = codigo_docente;
-		if (orientador !== undefined) whereClause.orientador = orientador === 'true';
+		if (orientador !== undefined)
+			whereClause.orientador = orientador === "true";
 
 		const orientacoes = await model.Orientacao.findAll({
 			where: whereClause,
 			include: [
 				{
 					model: model.Docente,
-					attributes: ['codigo', 'nome', 'email']
+					attributes: ["codigo", "nome", "email"],
 				},
 				{
 					model: model.TrabalhoConclusao,
 					include: [
 						{
 							model: model.Dicente,
-							attributes: ['matricula', 'nome', 'email']
+							attributes: ["matricula", "nome", "email"],
 						},
 						{
 							model: model.Curso,
-							attributes: ['id', 'nome', 'codigo']
-						}
-					]
-				}
+							attributes: ["id", "nome", "codigo"],
+						},
+					],
+				},
 			],
-			order: [['id', 'DESC']]
+			order: [["id", "DESC"]],
 		});
 
 		res.status(200).json({ orientacoes: orientacoes });
@@ -53,10 +54,13 @@ const retornaOrientacoesPorTcc = async (req, res) => {
 			include: [
 				{
 					model: model.Docente,
-					attributes: ['codigo', 'nome', 'email']
-				}
+					attributes: ["codigo", "nome", "email"],
+				},
 			],
-			order: [['orientador', 'DESC'], ['id', 'ASC']]
+			order: [
+				["orientador", "DESC"],
+				["id", "ASC"],
+			],
 		});
 
 		res.status(200).json({ orientacoes: orientacoes });
@@ -75,13 +79,13 @@ const criaOrientacao = async (req, res) => {
 		const orientacaoExistente = await model.Orientacao.findOne({
 			where: {
 				codigo_docente: formData.codigo_docente,
-				id_tcc: formData.id_tcc
-			}
+				id_tcc: formData.id_tcc,
+			},
 		});
 
 		if (orientacaoExistente) {
 			return res.status(400).json({
-				message: "Este docente já possui orientação para este TCC"
+				message: "Este docente já possui orientação para este TCC",
 			});
 		}
 
@@ -90,13 +94,13 @@ const criaOrientacao = async (req, res) => {
 			const orientadorExistente = await model.Orientacao.findOne({
 				where: {
 					id_tcc: formData.id_tcc,
-					orientador: true
-				}
+					orientador: true,
+				},
 			});
 
 			if (orientadorExistente) {
 				return res.status(400).json({
-					message: "Este TCC já possui um orientador principal"
+					message: "Este TCC já possui um orientador principal",
 				});
 			}
 		}
@@ -106,7 +110,7 @@ const criaOrientacao = async (req, res) => {
 
 		res.status(201).json({
 			message: "Orientação criada com sucesso",
-			id: orientacao.id
+			id: orientacao.id,
 		});
 	} catch (error) {
 		console.log("Erro ao criar orientação:", error);
@@ -125,32 +129,37 @@ const atualizaOrientacao = async (req, res) => {
 		if (formData.orientador) {
 			const orientacaoAtual = await model.Orientacao.findByPk(id);
 			if (!orientacaoAtual) {
-				return res.status(404).json({ message: "Orientação não encontrada" });
+				return res
+					.status(404)
+					.json({ message: "Orientação não encontrada" });
 			}
 
-			if (!orientacaoAtual.orientador) { // Se não era orientador antes
+			if (!orientacaoAtual.orientador) {
+				// Se não era orientador antes
 				const orientadorExistente = await model.Orientacao.findOne({
 					where: {
 						id_tcc: orientacaoAtual.id_tcc,
 						orientador: true,
-						id: { [model.Sequelize.Op.ne]: id } // Diferente da atual
-					}
+						id: { [model.Sequelize.Op.ne]: id }, // Diferente da atual
+					},
 				});
 
 				if (orientadorExistente) {
 					return res.status(400).json({
-						message: "Este TCC já possui um orientador principal"
+						message: "Este TCC já possui um orientador principal",
 					});
 				}
 			}
 		}
 
 		const [updatedRowsCount] = await model.Orientacao.update(formData, {
-			where: { id: id }
+			where: { id: id },
 		});
 
 		if (updatedRowsCount === 0) {
-			return res.status(404).json({ message: "Orientação não encontrada" });
+			return res
+				.status(404)
+				.json({ message: "Orientação não encontrada" });
 		}
 
 		res.status(200).json({ message: "Orientação atualizada com sucesso" });
@@ -167,11 +176,13 @@ const deletaOrientacao = async (req, res) => {
 		const { id } = req.params;
 
 		const deleted = await model.Orientacao.destroy({
-			where: { id: id }
+			where: { id: id },
 		});
 
 		if (deleted) {
-			res.status(200).json({ message: "Orientação deletada com sucesso" });
+			res.status(200).json({
+				message: "Orientação deletada com sucesso",
+			});
 		} else {
 			res.status(404).json({ message: "Orientação não encontrada" });
 		}
@@ -186,5 +197,5 @@ module.exports = {
 	retornaOrientacoesPorTcc,
 	criaOrientacao,
 	atualizaOrientacao,
-	deletaOrientacao
+	deletaOrientacao,
 };

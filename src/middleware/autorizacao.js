@@ -1,4 +1,4 @@
-const permissoesService = require('@backend/services/permissoes-service');
+const permissoesService = require("@backend/services/permissoes-service");
 
 /**
  * Middleware para verificar se o usuário tem uma permissão específica
@@ -6,13 +6,13 @@ const permissoesService = require('@backend/services/permissoes-service');
  * @param {string|Array} acao - 'leitura', 'edicao' ou array de ações ['leitura', 'edicao']
  * @returns {Function} Middleware function
  */
-const verificarPermissao = (nomePermissao, acao = 'leitura') => {
+const verificarPermissao = (nomePermissao, acao = "leitura") => {
 	return async (req, res, next) => {
 		try {
 			// Verificar se o usuário está autenticado
 			if (!req.usuario) {
 				return res.status(401).json({
-					message: 'Usuário não autenticado'
+					message: "Usuário não autenticado",
 				});
 			}
 
@@ -26,7 +26,7 @@ const verificarPermissao = (nomePermissao, acao = 'leitura') => {
 				const temPermissao = await permissoesService.verificarPermissao(
 					userId,
 					nomePermissao,
-					acaoAtual
+					acaoAtual,
 				);
 
 				if (temPermissao) {
@@ -35,19 +35,19 @@ const verificarPermissao = (nomePermissao, acao = 'leitura') => {
 			}
 
 			// Se chegou aqui, não tem nenhuma das permissões
-			const acoesStr = acoes.join(' ou ');
+			const acoesStr = acoes.join(" ou ");
 			return res.status(403).json({
-				message: `Permissão negada: ${acoesStr} em ${nomePermissao}`
+				message: `Permissão negada: ${acoesStr} em ${nomePermissao}`,
 			});
 		} catch (error) {
-			console.error('Erro ao verificar permissão:', error);
+			console.error("Erro ao verificar permissão:", error);
 			return res.status(500).json({
-				message: 'Erro interno do servidor na verificação de permissão'
+				message: "Erro interno do servidor na verificação de permissão",
 			});
 		}
 	};
 };
 
 module.exports = {
-	verificarPermissao
+	verificarPermissao,
 };

@@ -7,10 +7,10 @@ const retornaTodasAreasTcc = async (req, res) => {
 			include: [
 				{
 					model: model.Docente,
-					attributes: ['codigo', 'nome', 'email']
-				}
+					attributes: ["codigo", "nome", "email"],
+				},
 			],
-			order: [["descicao", "ASC"]]
+			order: [["descicao", "ASC"]],
 		});
 		res.status(200).json({ areas: areas });
 	} catch (error) {
@@ -25,7 +25,7 @@ const retornaAreasTccPorDocente = async (req, res) => {
 		const codigo = req.params.codigo;
 		const areas = await model.AreaTcc.findAll({
 			where: { codigo_docente: codigo },
-			order: [["descicao", "ASC"]]
+			order: [["descicao", "ASC"]],
 		});
 		res.status(200).json({ areas: areas });
 	} catch (error) {
@@ -85,5 +85,5 @@ module.exports = {
 	retornaAreasTccPorDocente,
 	criaAreaTcc,
 	atualizaAreaTcc,
-	deletaAreaTcc
+	deletaAreaTcc,
 };

@@ -22,29 +22,29 @@ module.exports = (sequelize, DataTypes) => {
 		},
 	);
 
-	Curso.associate = function(models) {
+	Curso.associate = function (models) {
 		// Associação many-to-many com Docente através da tabela docente_curso
 		Curso.belongsToMany(models.Docente, {
 			through: models.DocenteCurso,
-			foreignKey: 'id_curso',
-			otherKey: 'codigo_docente',
-			as: 'docentes'
+			foreignKey: "id_curso",
+			otherKey: "codigo_docente",
+			as: "docentes",
 		});
 
 		// Associação many-to-many com Docente através da tabela orientadores_curso (orientações)
 		Curso.belongsToMany(models.Docente, {
 			through: models.OrientadorCurso,
-			foreignKey: 'id_curso',
-			otherKey: 'codigo_docente',
-			as: 'orientadores'
+			foreignKey: "id_curso",
+			otherKey: "codigo_docente",
+			as: "orientadores",
 		});
 
 		// Associação many-to-many com Usuario através da tabela usuario_curso
 		Curso.belongsToMany(models.Usuario, {
 			through: models.UsuarioCurso,
-			foreignKey: 'id_curso',
-			otherKey: 'id_usuario',
-			as: 'usuarios'
+			foreignKey: "id_curso",
+			otherKey: "id_usuario",
+			as: "usuarios",
 		});
 
 		// Associação com Orientacao
@@ -52,7 +52,6 @@ module.exports = (sequelize, DataTypes) => {
 			foreignKey: "id_curso",
 			sourceKey: "id",
 		});
-
 	};
 
 	return Curso;

@@ -44,19 +44,19 @@ const retornaTodosDicentes = async (req, res) => {
 						include: [
 							{
 								model: model.Curso,
-								attributes: ['id', 'nome', 'codigo']
-							}
-						]
-					}
+								attributes: ["id", "nome", "codigo"],
+							},
+						],
+					},
 				],
-				order: [['nome', 'ASC']]
+				order: [["nome", "ASC"]],
 			});
 
 			res.status(200).json({ dicentes: dicentes });
 		} else {
 			// Se não há filtros, retorna todos os dicentes
 			const dicentes = await model.Dicente.findAll({
-				order: [['nome', 'ASC']]
+				order: [["nome", "ASC"]],
 			});
 			res.status(200).json({ dicentes: dicentes });
 		}
@@ -78,24 +78,24 @@ const retornaDicentePorMatricula = async (req, res) => {
 					include: [
 						{
 							model: model.Curso,
-							attributes: ['id', 'nome', 'codigo']
+							attributes: ["id", "nome", "codigo"],
 						},
 						{
 							model: model.Orientacao,
 							include: [
 								{
 									model: model.Docente,
-									attributes: ['codigo', 'nome', 'email']
-								}
-							]
+									attributes: ["codigo", "nome", "email"],
+								},
+							],
 						},
 						{
 							model: model.Defesa,
-							required: false
-						}
-					]
-				}
-			]
+							required: false,
+						},
+					],
+				},
+			],
 		});
 
 		if (!dicente) {
@@ -114,11 +114,13 @@ const criaDicente = async (req, res) => {
 	const formData = req.body.formData;
 	try {
 		// Verificar se já existe dicente com esta matrícula
-		const dicenteExistente = await model.Dicente.findByPk(formData.matricula);
+		const dicenteExistente = await model.Dicente.findByPk(
+			formData.matricula,
+		);
 
 		if (dicenteExistente) {
 			return res.status(400).json({
-				message: "Já existe um dicente com esta matrícula"
+				message: "Já existe um dicente com esta matrícula",
 			});
 		}
 
@@ -126,7 +128,7 @@ const criaDicente = async (req, res) => {
 		await dicente.save();
 
 		res.status(201).json({
-			message: "Dicente criado com sucesso"
+			message: "Dicente criado com sucesso",
 		});
 	} catch (error) {
 		console.log("Erro ao criar dicente:", error);
@@ -142,7 +144,7 @@ const atualizaDicente = async (req, res) => {
 
 	try {
 		const [updatedRowsCount] = await model.Dicente.update(formData, {
-			where: { matricula: matricula }
+			where: { matricula: matricula },
 		});
 
 		if (updatedRowsCount === 0) {
@@ -186,7 +188,10 @@ const processarPDFDicentes = async (caminhoArquivo) => {
 		const dicentes = [];
 
 		// Divide o texto em linhas para melhor processamento
-		const linhas = texto.split('\n').map(linha => linha.trim()).filter(linha => linha.length > 0);
+		const linhas = texto
+			.split("\n")
+			.map((linha) => linha.trim())
+			.filter((linha) => linha.length > 0);
 
 		// Procura por padrões: NOME seguido de números (matrícula) e depois um número simples na próxima linha
 		for (let i = 0; i < linhas.length - 1; i++) {
@@ -209,7 +214,7 @@ const processarPDFDicentes = async (caminhoArquivo) => {
 				dicentes.push({
 					matricula: parseInt(matricula),
 					nome: nome.trim(),
-					email: '' // Email vazio por padrão, pois não está no PDF
+					email: "", // Email vazio por padrão, pois não está no PDF
 				});
 			}
 		}
@@ -227,19 +232,21 @@ const inserirMultiplosDicentes = async (dicentes) => {
 		const resultados = {
 			sucessos: 0,
 			erros: 0,
-			detalhes: []
+			detalhes: [],
 		};
 
 		for (const dicenteData of dicentes) {
 			try {
-								// Verifica se o dicente já existe
-				const dicenteExistente = await model.Dicente.findByPk(dicenteData.matricula);
+				// Verifica se o dicente já existe
+				const dicenteExistente = await model.Dicente.findByPk(
+					dicenteData.matricula,
+				);
 
 				if (dicenteExistente) {
 					resultados.detalhes.push({
 						matricula: dicenteData.matricula,
 						nome: dicenteData.nome,
-						status: 'já_existe'
+						status: "já_existe",
 					});
 					continue;
 				}
@@ -250,17 +257,16 @@ const inserirMultiplosDicentes = async (dicentes) => {
 				resultados.detalhes.push({
 					matricula: dicenteData.matricula,
 					nome: dicenteData.nome,
-					status: 'inserido'
+					status: "inserido",
 				});
-
 			} catch (error) {
 				console.log("Erro ao inserir dicente:", error);
 				resultados.erros++;
 				resultados.detalhes.push({
 					matricula: dicenteData.matricula,
 					nome: dicenteData.nome,
-					status: 'erro',
-					erro: error.message
+					status: "erro",
+					erro: error.message,
 				});
 			}
 		}
@@ -273,18 +279,23 @@ const inserirMultiplosDicentes = async (dicentes) => {
 };
 
 // Função para inserir múltiplos dicentes e suas orientações de uma vez
-const inserirMultiplosDicentesComOrientacao = async (dicentes, orientacaoData) => {
+const inserirMultiplosDicentesComOrientacao = async (
+	dicentes,
+	orientacaoData,
+) => {
 	try {
 		const resultados = {
 			sucessos: 0,
 			erros: 0,
-			detalhes: []
+			detalhes: [],
 		};
 
 		for (const dicenteData of dicentes) {
 			try {
 				// Verifica se o dicente já existe
-				const dicenteExistente = await model.Dicente.findByPk(dicenteData.matricula);
+				const dicenteExistente = await model.Dicente.findByPk(
+					dicenteData.matricula,
+				);
 
 				if (!dicenteExistente) {
 					// Cria o novo dicente se não existir
@@ -292,13 +303,13 @@ const inserirMultiplosDicentesComOrientacao = async (dicentes, orientacaoData) =
 					resultados.detalhes.push({
 						matricula: dicenteData.matricula,
 						nome: dicenteData.nome,
-						status: 'dicente_inserido'
+						status: "dicente_inserido",
 					});
 				} else {
 					resultados.detalhes.push({
 						matricula: dicenteData.matricula,
 						nome: dicenteData.nome,
-						status: 'dicente_ja_existe'
+						status: "dicente_ja_existe",
 					});
 				}
 
@@ -309,8 +320,8 @@ const inserirMultiplosDicentesComOrientacao = async (dicentes, orientacaoData) =
 						semestre: orientacaoData.semestre,
 						id_curso: orientacaoData.id_curso,
 						fase: orientacaoData.fase,
-						matricula: dicenteData.matricula
-					}
+						matricula: dicenteData.matricula,
+					},
 				});
 
 				let tccId;
@@ -326,30 +337,35 @@ const inserirMultiplosDicentesComOrientacao = async (dicentes, orientacaoData) =
 						tema: null, // Será definido posteriormente
 						titulo: null, // Será definido posteriormente
 						resumo: null, // Será definido posteriormente
-						etapa: 0 // Etapa inicial
+						etapa: 0, // Etapa inicial
 					});
 
 					tccId = novoTcc.id;
 
 					// Atualiza o status no detalhe
-					const detalheExistente = resultados.detalhes.find(d => d.matricula === dicenteData.matricula);
+					const detalheExistente = resultados.detalhes.find(
+						(d) => d.matricula === dicenteData.matricula,
+					);
 					if (detalheExistente) {
-						if (detalheExistente.status === 'dicente_inserido') {
-							detalheExistente.status = 'dicente_e_tcc_inseridos';
+						if (detalheExistente.status === "dicente_inserido") {
+							detalheExistente.status = "dicente_e_tcc_inseridos";
 						} else {
-							detalheExistente.status = 'tcc_inserido';
+							detalheExistente.status = "tcc_inserido";
 						}
 					}
 				} else {
 					tccId = tccExistente.id;
 
 					// TCC já existe
-					const detalheExistente = resultados.detalhes.find(d => d.matricula === dicenteData.matricula);
+					const detalheExistente = resultados.detalhes.find(
+						(d) => d.matricula === dicenteData.matricula,
+					);
 					if (detalheExistente) {
-						if (detalheExistente.status === 'dicente_inserido') {
-							detalheExistente.status = 'dicente_inserido_tcc_ja_existe';
+						if (detalheExistente.status === "dicente_inserido") {
+							detalheExistente.status =
+								"dicente_inserido_tcc_ja_existe";
 						} else {
-							detalheExistente.status = 'tcc_ja_existe';
+							detalheExistente.status = "tcc_ja_existe";
 						}
 					}
 				}
@@ -360,65 +376,94 @@ const inserirMultiplosDicentesComOrientacao = async (dicentes, orientacaoData) =
 					const orientacaoExistente = await model.Orientacao.findOne({
 						where: {
 							codigo_docente: orientacaoData.codigo_docente,
-							id_tcc: tccId
-						}
+							id_tcc: tccId,
+						},
 					});
 
 					if (!orientacaoExistente) {
 						// Verifica se já existe um orientador principal para este TCC
-						const orientadorPrincipalExistente = await model.Orientacao.findOne({
-							where: {
-								id_tcc: tccId,
-								orientador: true
-							}
-						});
+						const orientadorPrincipalExistente =
+							await model.Orientacao.findOne({
+								where: {
+									id_tcc: tccId,
+									orientador: true,
+								},
+							});
 
-						const isOrientadorPrincipal = orientacaoData.orientador || !orientadorPrincipalExistente;
+						const isOrientadorPrincipal =
+							orientacaoData.orientador ||
+							!orientadorPrincipalExistente;
 
 						await model.Orientacao.create({
 							id: null, // Auto-increment
 							codigo_docente: orientacaoData.codigo_docente,
 							id_tcc: tccId,
-							orientador: isOrientadorPrincipal
+							orientador: isOrientadorPrincipal,
 						});
 
 						// Atualiza o status no detalhe
-						const detalheExistente = resultados.detalhes.find(d => d.matricula === dicenteData.matricula);
+						const detalheExistente = resultados.detalhes.find(
+							(d) => d.matricula === dicenteData.matricula,
+						);
 						if (detalheExistente) {
-							if (detalheExistente.status.includes('tcc_inserido')) {
-								detalheExistente.status = detalheExistente.status.replace('tcc_inserido', 'tcc_e_orientacao_inseridos');
-							} else if (detalheExistente.status.includes('tcc_ja_existe')) {
-								detalheExistente.status = detalheExistente.status.replace('tcc_ja_existe', 'tcc_existe_orientacao_inserida');
+							if (
+								detalheExistente.status.includes("tcc_inserido")
+							) {
+								detalheExistente.status =
+									detalheExistente.status.replace(
+										"tcc_inserido",
+										"tcc_e_orientacao_inseridos",
+									);
+							} else if (
+								detalheExistente.status.includes(
+									"tcc_ja_existe",
+								)
+							) {
+								detalheExistente.status =
+									detalheExistente.status.replace(
+										"tcc_ja_existe",
+										"tcc_existe_orientacao_inserida",
+									);
 							} else {
-								detalheExistente.status += '_orientacao_inserida';
+								detalheExistente.status +=
+									"_orientacao_inserida";
 							}
 						}
 					} else {
 						// Orientação já existe
-						const detalheExistente = resultados.detalhes.find(d => d.matricula === dicenteData.matricula);
-						if (detalheExistente && !detalheExistente.status.includes('orientacao_ja_existe')) {
-							detalheExistente.status += '_orientacao_ja_existe';
+						const detalheExistente = resultados.detalhes.find(
+							(d) => d.matricula === dicenteData.matricula,
+						);
+						if (
+							detalheExistente &&
+							!detalheExistente.status.includes(
+								"orientacao_ja_existe",
+							)
+						) {
+							detalheExistente.status += "_orientacao_ja_existe";
 						}
 					}
 				}
 
 				resultados.sucessos++;
-
 			} catch (error) {
 				console.log("Erro ao inserir dicente/tcc/orientação:", error);
 				resultados.erros++;
 				resultados.detalhes.push({
 					matricula: dicenteData.matricula,
 					nome: dicenteData.nome,
-					status: 'erro',
-					erro: error.message
+					status: "erro",
+					erro: error.message,
 				});
 			}
 		}
 
 		return resultados;
 	} catch (error) {
-		console.error("Erro ao inserir múltiplos dicentes com orientação:", error);
+		console.error(
+			"Erro ao inserir múltiplos dicentes com orientação:",
+			error,
+		);
 		throw error;
 	}
 };
@@ -427,17 +472,19 @@ const inserirMultiplosDicentesComOrientacao = async (dicentes, orientacaoData) =
 const processarEInserirPDFDicentes = async (req, res) => {
 	try {
 		const caminhoArquivo = req.file?.path;
-		const { ano, semestre, fase, id_curso, codigo_docente, orientador } = req.body;
+		const { ano, semestre, fase, id_curso, codigo_docente, orientador } =
+			req.body;
 
 		if (!caminhoArquivo) {
 			return res.status(400).json({
-				message: "Nenhum arquivo PDF fornecido"
+				message: "Nenhum arquivo PDF fornecido",
 			});
 		}
 
 		if (!ano || !semestre || !fase || !id_curso) {
 			return res.status(400).json({
-				message: "Parâmetros obrigatórios não fornecidos: ano, semestre, fase e id_curso são necessários"
+				message:
+					"Parâmetros obrigatórios não fornecidos: ano, semestre, fase e id_curso são necessários",
 			});
 		}
 
@@ -446,7 +493,7 @@ const processarEInserirPDFDicentes = async (req, res) => {
 
 		if (dicentes.length === 0) {
 			return res.status(400).json({
-				message: "Nenhum dicente encontrado no PDF"
+				message: "Nenhum dicente encontrado no PDF",
 			});
 		}
 
@@ -455,17 +502,21 @@ const processarEInserirPDFDicentes = async (req, res) => {
 			ano: parseInt(ano),
 			semestre: parseInt(semestre),
 			fase: parseInt(fase),
-			id_curso: parseInt(id_curso)
+			id_curso: parseInt(id_curso),
 		};
 
 		// Se código do docente for fornecido, incluir nas orientações
 		if (codigo_docente) {
 			orientacaoData.codigo_docente = codigo_docente;
-			orientacaoData.orientador = orientador === 'true' || orientador === true || false;
+			orientacaoData.orientador =
+				orientador === "true" || orientador === true || false;
 		}
 
 		// Insere os dicentes, TCCs e orientações (se aplicável) no banco
-		const resultados = await inserirMultiplosDicentesComOrientacao(dicentes, orientacaoData);
+		const resultados = await inserirMultiplosDicentesComOrientacao(
+			dicentes,
+			orientacaoData,
+		);
 
 		// Remove o arquivo temporário após processamento
 		fs.unlinkSync(caminhoArquivo);
@@ -476,9 +527,8 @@ const processarEInserirPDFDicentes = async (req, res) => {
 			sucessos: resultados.sucessos,
 			erros: resultados.erros,
 			detalhes: resultados.detalhes,
-			orientacoesIncluidas: !!codigo_docente
+			orientacoesIncluidas: !!codigo_docente,
 		});
-
 	} catch (error) {
 		console.error("Erro ao processar PDF de dicentes:", error);
 
@@ -487,13 +537,16 @@ const processarEInserirPDFDicentes = async (req, res) => {
 			try {
 				fs.unlinkSync(req.file.path);
 			} catch (unlinkError) {
-				console.error("Erro ao remover arquivo temporário:", unlinkError);
+				console.error(
+					"Erro ao remover arquivo temporário:",
+					unlinkError,
+				);
 			}
 		}
 
 		res.status(500).json({
 			message: "Erro interno do servidor ao processar PDF",
-			erro: error.message
+			erro: error.message,
 		});
 	}
 };
@@ -507,5 +560,5 @@ module.exports = {
 	processarEInserirPDFDicentes,
 	processarPDFDicentes,
 	inserirMultiplosDicentes,
-	inserirMultiplosDicentesComOrientacao
+	inserirMultiplosDicentesComOrientacao,
 };

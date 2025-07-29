@@ -8,6 +8,9 @@ orientacoesService.post("/", orientacaoService.criaOrientacao);
 
 orientacoesService.put("/", orientacaoService.atualizaOrientacao);
 
-orientacoesService.delete("/:codigo/:matricula", orientacaoService.deletaOrientacao);
+orientacoesService.delete(
+	"/:codigo/:matricula",
+	orientacaoService.deletaOrientacao,
+);
 
 module.exports = orientacoesService;

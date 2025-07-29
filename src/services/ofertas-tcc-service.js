@@ -19,10 +19,14 @@ const retornaTodasOfertasTcc = async (req, res) => {
 			include: [
 				{
 					model: model.Curso,
-					attributes: ['id', 'nome', 'codigo']
-				}
+					attributes: ["id", "nome", "codigo"],
+				},
 			],
-			order: [['ano', 'DESC'], ['semestre', 'DESC'], ['fase', 'ASC']]
+			order: [
+				["ano", "DESC"],
+				["semestre", "DESC"],
+				["fase", "ASC"],
+			],
 		});
 
 		res.status(200).json({ ofertas: ofertas });
@@ -42,18 +46,20 @@ const retornaOfertaTccPorChave = async (req, res) => {
 				ano: parseInt(ano),
 				semestre: parseInt(semestre),
 				id_curso: parseInt(id_curso),
-				fase: parseInt(fase)
+				fase: parseInt(fase),
 			},
 			include: [
 				{
 					model: model.Curso,
-					attributes: ['id', 'nome', 'codigo']
-				}
-			]
+					attributes: ["id", "nome", "codigo"],
+				},
+			],
 		});
 
 		if (!oferta) {
-			return res.status(404).json({ message: "Oferta TCC não encontrada" });
+			return res
+				.status(404)
+				.json({ message: "Oferta TCC não encontrada" });
 		}
 
 		res.status(200).json({ oferta: oferta });
@@ -74,13 +80,14 @@ const criaOfertaTcc = async (req, res) => {
 				ano: formData.ano,
 				semestre: formData.semestre,
 				id_curso: formData.id_curso,
-				fase: formData.fase
-			}
+				fase: formData.fase,
+			},
 		});
 
 		if (ofertaExistente) {
 			return res.status(400).json({
-				message: "Já existe uma oferta TCC para este período, curso e fase"
+				message:
+					"Já existe uma oferta TCC para este período, curso e fase",
 			});
 		}
 
@@ -88,7 +95,7 @@ const criaOfertaTcc = async (req, res) => {
 		await oferta.save();
 
 		res.status(201).json({
-			message: "Oferta TCC criada com sucesso"
+			message: "Oferta TCC criada com sucesso",
 		});
 	} catch (error) {
 		console.log("Erro ao criar oferta TCC:", error);
@@ -108,12 +115,14 @@ const atualizaOfertaTcc = async (req, res) => {
 				ano: parseInt(ano),
 				semestre: parseInt(semestre),
 				id_curso: parseInt(id_curso),
-				fase: parseInt(fase)
-			}
+				fase: parseInt(fase),
+			},
 		});
 
 		if (updatedRowsCount === 0) {
-			return res.status(404).json({ message: "Oferta TCC não encontrada" });
+			return res
+				.status(404)
+				.json({ message: "Oferta TCC não encontrada" });
 		}
 
 		res.status(200).json({ message: "Oferta TCC atualizada com sucesso" });
@@ -135,13 +144,13 @@ const deletaOfertaTcc = async (req, res) => {
 				ano: parseInt(ano),
 				semestre: parseInt(semestre),
 				id_curso: parseInt(id_curso),
-				fase: parseInt(fase)
-			}
+				fase: parseInt(fase),
+			},
 		});
 
 		if (trabalhosVinculados > 0) {
 			return res.status(400).json({
-				message: `Não é possível deletar esta oferta pois existem ${trabalhosVinculados} trabalho(s) de conclusão vinculado(s)`
+				message: `Não é possível deletar esta oferta pois existem ${trabalhosVinculados} trabalho(s) de conclusão vinculado(s)`,
 			});
 		}
 
@@ -150,12 +159,14 @@ const deletaOfertaTcc = async (req, res) => {
 				ano: parseInt(ano),
 				semestre: parseInt(semestre),
 				id_curso: parseInt(id_curso),
-				fase: parseInt(fase)
-			}
+				fase: parseInt(fase),
+			},
 		});
 
 		if (deleted) {
-			res.status(200).json({ message: "Oferta TCC deletada com sucesso" });
+			res.status(200).json({
+				message: "Oferta TCC deletada com sucesso",
+			});
 		} else {
 			res.status(404).json({ message: "Oferta TCC não encontrada" });
 		}
@@ -169,21 +180,26 @@ const deletaOfertaTcc = async (req, res) => {
 const retornaOfertasAtivas = async (req, res) => {
 	try {
 		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
-		const { ano: anoAtual, semestre: semestreAtual } = await obterAnoSemestreAtual();
+		const { ano: anoAtual, semestre: semestreAtual } =
+			await obterAnoSemestreAtual();
 
 		const ofertas = await model.OfertaTcc.findAll({
 			where: {
 				ano: {
-					[model.Sequelize.Op.gte]: anoAtual - 1 // Últimos 2 anos
-				}
+					[model.Sequelize.Op.gte]: anoAtual - 1, // Últimos 2 anos
+				},
 			},
 			include: [
 				{
 					model: model.Curso,
-					attributes: ['id', 'nome', 'codigo']
-				}
+					attributes: ["id", "nome", "codigo"],
+				},
 			],
-			order: [['ano', 'DESC'], ['semestre', 'DESC'], ['fase', 'ASC']]
+			order: [
+				["ano", "DESC"],
+				["semestre", "DESC"],
+				["fase", "ASC"],
+			],
 		});
 
 		res.status(200).json({ ofertas: ofertas });
@@ -199,5 +215,5 @@ module.exports = {
 	criaOfertaTcc,
 	atualizaOfertaTcc,
 	deletaOfertaTcc,
-	retornaOfertasAtivas
+	retornaOfertasAtivas,
 };

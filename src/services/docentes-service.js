@@ -61,5 +61,5 @@ module.exports = {
 	retornaTodosDocentes,
 	criaDocente,
 	atualizaDocente,
-	deletaDocente
+	deletaDocente,
 };

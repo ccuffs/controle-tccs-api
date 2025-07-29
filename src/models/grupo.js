@@ -29,23 +29,23 @@ module.exports = (sequelize, DataTypes) => {
 		},
 	);
 
-	Grupo.associate = function(models) {
+	Grupo.associate = function (models) {
 		// Associação many-to-many com Permissoes através da tabela grupo_permissao
 		Grupo.belongsToMany(models.Permissoes, {
 			through: models.GrupoPermissao,
-			foreignKey: 'id_grupo',
-			otherKey: 'id_permissao',
-			as: 'permissoes'
+			foreignKey: "id_grupo",
+			otherKey: "id_permissao",
+			as: "permissoes",
 		});
 
 		// Associação many-to-many com Usuario através da tabela usuario_grupo
 		Grupo.belongsToMany(models.Usuario, {
 			through: models.UsuarioGrupo,
-			foreignKey: 'id_grupo',
-			otherKey: 'id_usuario',
-			as: 'usuarios'
+			foreignKey: "id_grupo",
+			otherKey: "id_usuario",
+			as: "usuarios",
 		});
 	};
 
 	return Grupo;
-}; 
+};

@@ -9,18 +9,18 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 				allowNull: false,
 				references: {
-					model: 'grupo',
-					key: 'id'
-				}
+					model: "grupo",
+					key: "id",
+				},
 			},
 			id_usuario: {
 				type: DataTypes.STRING,
 				primaryKey: true,
 				allowNull: false,
 				references: {
-					model: 'usuario',
-					key: 'id'
-				}
+					model: "usuario",
+					key: "id",
+				},
 			},
 		},
 		{
@@ -32,19 +32,19 @@ module.exports = (sequelize, DataTypes) => {
 		},
 	);
 
-	UsuarioGrupo.associate = function(models) {
+	UsuarioGrupo.associate = function (models) {
 		// Associação com Grupo
 		UsuarioGrupo.belongsTo(models.Grupo, {
-			foreignKey: 'id_grupo',
-			targetKey: 'id'
+			foreignKey: "id_grupo",
+			targetKey: "id",
 		});
 
 		// Associação com Usuario
 		UsuarioGrupo.belongsTo(models.Usuario, {
-			foreignKey: 'id_usuario',
-			targetKey: 'id'
+			foreignKey: "id_usuario",
+			targetKey: "id",
 		});
 	};
 
 	return UsuarioGrupo;
-}; 
+};

@@ -17,11 +17,13 @@ const retornaCursosDoUsuario = async (req, res) => {
 		const { userId } = req.params;
 
 		const usuario = await model.Usuario.findByPk(userId, {
-			include: [{
-				model: model.Curso,
-				as: 'cursos',
-				through: { attributes: [] } // Excluir atributos da tabela de junção
-			}]
+			include: [
+				{
+					model: model.Curso,
+					as: "cursos",
+					through: { attributes: [] }, // Excluir atributos da tabela de junção
+				},
+			],
 		});
 
 		if (!usuario) {
@@ -69,7 +71,7 @@ const criaUsuario = async (req, res) => {
 const atualizaUsuario = async (req, res) => {
 	const formData = req.body.formData;
 	try {
-		await model.Usuario.update(formData, {where: {id: formData.id} });
+		await model.Usuario.update(formData, { where: { id: formData.id } });
 		res.sendStatus(200);
 	} catch (error) {
 		console.log("Erro ao atualizar usuário:", error);
@@ -102,5 +104,5 @@ module.exports = {
 	retornaUsuarioPorId,
 	criaUsuario,
 	atualizaUsuario,
-	deletaUsuario
+	deletaUsuario,
 };

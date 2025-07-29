@@ -29,7 +29,7 @@ const criaCurso = async (req, res) => {
 const atualizaCurso = async (req, res) => {
 	const formData = req.body.formData;
 	try {
-		await model.Curso.update(formData, {where: {id: formData.id} });
+		await model.Curso.update(formData, { where: { id: formData.id } });
 		res.sendStatus(200);
 	} catch (error) {
 		console.log("Erro ao atualizar curso:", error);
@@ -60,5 +60,5 @@ module.exports = {
 	retornaTodosCursos,
 	criaCurso,
 	atualizaCurso,
-	deletaCurso
+	deletaCurso,
 };
