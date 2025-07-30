@@ -137,3 +137,4 @@ dist
 *.pdf
 src/*/*.md
 exemplos/
+.DS_Store

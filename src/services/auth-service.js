@@ -2,11 +2,6 @@ const jwt = require("jsonwebtoken");
 const authRepository = require("../repository/auth-repository");
 const permissoesService = require("./permissoes-service");
 
-/**
- * Gera um token JWT para o usuário
- * @param {Object} usuario - Objeto do usuário
- * @returns {string} Token JWT
- */
 const gerarToken = (usuario) => {
 	const payload = {
 		userId: usuario.id,
@@ -25,16 +20,10 @@ const gerarToken = (usuario) => {
 	);
 };
 
-/**
- * Realiza o login do usuário
- * @param {string} email - Email do usuário
- * @param {string} senha - Senha do usuário (se aplicável)
- * @returns {Object} Objeto com token e dados básicos do usuário
- */
-const fazerLogin = async (email, senha = null) => {
+const fazerLogin = async (userId, senha = null) => {
 	try {
-		// Buscar usuário pelo email
-		const usuario = await authRepository.buscarUsuarioPorEmail(email);
+		// Buscar usuário pelo ID
+		const usuario = await authRepository.buscarUsuarioPorId(userId);
 
 		if (!usuario) {
 			throw new Error("Usuário não encontrado");

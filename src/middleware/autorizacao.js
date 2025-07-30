@@ -2,13 +2,7 @@ const permissoesService = require("../services/permissoes-service");
 
 const autorizacao = {};
 
-/**
- * Middleware para verificar se o usuário tem uma permissão específica
- * @param {string} nomePermissao - Nome da permissão a ser verificada
- * @param {string|Array} acao - 'leitura', 'edicao' ou array de ações ['leitura', 'edicao']
- * @returns {Function} Middleware function
- */
-autorizacao.verificarPermissao = (nomePermissao, acao) => {
+autorizacao.verificarPermissao = (permissaoId) => {
 	return async (req, res, next) => {
 		try {
 			// Verificar se o usuário está autenticado
@@ -20,15 +14,19 @@ autorizacao.verificarPermissao = (nomePermissao, acao) => {
 
 			const userId = req.usuario.id;
 
-			// Converter para array se for string
-			const acoes = Array.isArray(acao) ? acao : [acao];
+			// Converter para array se for número único
+			const permissoesIds = Array.isArray(permissaoId)
+				? permissaoId
+				: [permissaoId];
 
-			// Verificar se o usuário tem pelo menos uma das ações
-			for (const acaoAtual of acoes) {
-				const temPermissao = await permissoesService.verificarPermissao(
-					userId,
-					nomePermissao,
-					acaoAtual,
+			// Buscar todas as permissões do usuário
+			const permissoesUsuario =
+				await permissoesService.buscarPermissoesDoUsuario(userId);
+
+			// Verificar se o usuário tem pelo menos uma das permissões
+			for (const idPermissao of permissoesIds) {
+				const temPermissao = permissoesUsuario.some(
+					(permissao) => permissao.id === idPermissao,
 				);
 
 				if (temPermissao) {
@@ -37,9 +35,9 @@ autorizacao.verificarPermissao = (nomePermissao, acao) => {
 			}
 
 			// Se chegou aqui, não tem nenhuma das permissões
-			const acoesStr = acoes.join(" ou ");
+			const permissoesStr = permissoesIds.join(" ou ");
 			return res.status(403).json({
-				message: `Permissão negada: ${acoesStr} em ${nomePermissao}`,
+				message: `Permissão negada: usuário não possui as permissões necessárias (${permissoesStr})`,
 			});
 		} catch (error) {
 			console.error("Erro ao verificar permissão:", error);

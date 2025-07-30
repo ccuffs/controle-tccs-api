@@ -10,17 +10,17 @@ const authController = express.Router();
  */
 const login = async (req, res) => {
 	try {
-		const { email, senha } = req.body;
+		const { userId, senha } = req.body;
 
 		// Validação básica
-		if (!email) {
+		if (!userId) {
 			return res.status(400).json({
-				message: "Email é obrigatório",
+				message: "ID do usuário é obrigatório",
 			});
 		}
 
 		// Realizar login
-		const resultado = await authService.fazerLogin(email, senha);
+		const resultado = await authService.fazerLogin(userId, senha);
 
 		res.status(200).json({
 			message: "Login realizado com sucesso",
@@ -31,13 +31,13 @@ const login = async (req, res) => {
 
 		if (error.message === "Usuário não encontrado") {
 			return res.status(401).json({
-				message: "Email ou senha incorretos",
+				message: "ID do usuário ou senha incorretos",
 			});
 		}
 
 		if (error.message === "Senha incorreta") {
 			return res.status(401).json({
-				message: "Email ou senha incorretos",
+				message: "ID do usuário ou senha incorretos",
 			});
 		}
 
@@ -145,7 +145,6 @@ const validateToken = async (req, res) => {
 			message: "Token válido",
 			payload: {
 				userId: payload.userId,
-				email: payload.email,
 				nome: payload.nome,
 				exp: payload.exp,
 			},
