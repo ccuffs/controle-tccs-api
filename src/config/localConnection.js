@@ -21,7 +21,7 @@ const sequelize = new Sequelize(
 		dialect: "postgres",
 		freezeTableName: false,
 		syncOnAssociation: false,
-		logging: true,
+		logging: console.log,
 		define: {
 			freezeTableName: true,
 			timestamps: false,
