@@ -8,7 +8,7 @@ conviteRepository.obterTodosConvites = async (filtros) => {
 	let whereClause = {};
 
 	// Aplicar filtros se fornecidos
-	if (id_tcc) whereClause.id = parseInt(id_tcc);
+	if (id_tcc) whereClause.id_tcc = parseInt(id_tcc);
 	if (codigo_docente) whereClause.codigo_docente = codigo_docente;
 	if (aceito !== undefined) whereClause.aceito = aceito === "true";
 

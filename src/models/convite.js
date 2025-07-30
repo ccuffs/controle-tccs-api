@@ -7,11 +7,15 @@ module.exports = (sequelize, DataTypes) => {
 			id: {
 				type: DataTypes.INTEGER,
 				primaryKey: true,
+				autoIncrement: true,
+				allowNull: false,
+			},
+			id_tcc: {
+				type: DataTypes.INTEGER,
 				allowNull: false,
 			},
 			codigo_docente: {
 				type: DataTypes.STRING,
-				primaryKey: true,
 				allowNull: false,
 			},
 			aceito: {
@@ -39,7 +43,7 @@ module.exports = (sequelize, DataTypes) => {
 	Convite.associate = (models) => {
 		// Associação com TrabalhoConclusao
 		Convite.belongsTo(models.TrabalhoConclusao, {
-			foreignKey: "id",
+			foreignKey: "id_tcc",
 			targetKey: "id",
 		});
 

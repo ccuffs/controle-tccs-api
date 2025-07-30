@@ -20,8 +20,12 @@ const sequelize = new Sequelize(
 		schema: "public",
 		dialect: "postgres",
 		freezeTableName: false,
-		syncOnAssociation: true,
-		logging: console.log,
+		syncOnAssociation: false,
+		logging: true,
+		define: {
+			freezeTableName: true,
+			timestamps: false,
+		},
 	},
 );
 

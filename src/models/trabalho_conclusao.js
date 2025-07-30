@@ -91,7 +91,7 @@ module.exports = (sequelize, DataTypes) => {
 
 		// Associação com Convite
 		TrabalhoConclusao.hasMany(models.Convite, {
-			foreignKey: "id",
+			foreignKey: "id_tcc",
 			sourceKey: "id",
 		});
 

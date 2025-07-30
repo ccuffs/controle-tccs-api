@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
 
 		// Associação many-to-many com Docente através da tabela orientadores_curso (orientações)
 		Curso.belongsToMany(models.Docente, {
-			through: models.OrientadorCurso,
+			through: "orientadores_curso",
 			foreignKey: "id_curso",
 			otherKey: "codigo_docente",
 			as: "orientadores",
@@ -47,8 +47,8 @@ module.exports = (sequelize, DataTypes) => {
 			as: "usuarios",
 		});
 
-		// Associação com Orientacao
-		Curso.hasMany(models.Orientacao, {
+		// Associação com TrabalhoConclusao
+		Curso.hasMany(models.TrabalhoConclusao, {
 			foreignKey: "id_curso",
 			sourceKey: "id",
 		});

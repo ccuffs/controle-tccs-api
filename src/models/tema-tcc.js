@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
 			ativo: {
 				type: DataTypes.BOOLEAN,
 				allowNull: false,
-				defaultValue: true,
+				defaultValue: false,
 			},
 		},
 		{

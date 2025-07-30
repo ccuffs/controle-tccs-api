@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
 				autoIncrement: true,
 				allowNull: false,
 			},
-			descicao: {
+			descricao: {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},

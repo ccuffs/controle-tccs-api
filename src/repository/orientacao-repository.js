@@ -13,31 +13,47 @@ orientacaoRepository.obterTodasOrientacoes = async (filtros) => {
 	if (orientador !== undefined)
 		whereClause.orientador = orientador === "true";
 
-	const orientacoes = await model.Orientacao.findAll({
-		where: whereClause,
-		include: [
-			{
-				model: model.Docente,
-				attributes: ["codigo", "nome", "email"],
-			},
-			{
-				model: model.TrabalhoConclusao,
-				include: [
-					{
-						model: model.Dicente,
-						attributes: ["matricula", "nome", "email"],
-					},
-					{
-						model: model.Curso,
-						attributes: ["id", "nome", "codigo"],
-					},
-				],
-			},
-		],
-		order: [["id", "DESC"]],
-	});
+	try {
+		const orientacoes = await model.Orientacao.findAll({
+			where: whereClause,
+			include: [
+				{
+					model: model.Docente,
+					attributes: ["codigo", "nome", "email"],
+				},
+				{
+					model: model.TrabalhoConclusao,
+					attributes: [
+						"id",
+						"ano",
+						"semestre",
+						"fase",
+						"matricula",
+						"tema",
+						"titulo",
+						"resumo",
+						"etapa",
+					],
+					include: [
+						{
+							model: model.Dicente,
+							attributes: ["matricula", "nome", "email"],
+						},
+						{
+							model: model.Curso,
+							attributes: ["id", "nome", "codigo"],
+						},
+					],
+				},
+			],
+			order: [["id", "DESC"]],
+		});
 
-	return orientacoes;
+		return orientacoes;
+	} catch (error) {
+		console.error("Erro na consulta obterTodasOrientacoes:", error);
+		throw error;
+	}
 };
 
 // Buscar orientações por TCC
