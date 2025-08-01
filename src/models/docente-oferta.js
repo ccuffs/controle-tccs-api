@@ -56,6 +56,16 @@ module.exports = (sequelize, DataTypes) => {
 			foreignKey: "id_curso",
 			targetKey: "id",
 		});
+
+		// Associação com AnoSemestre
+		DocenteOferta.belongsTo(models.AnoSemestre, {
+			foreignKey: "ano",
+			targetKey: "ano",
+			scope: {
+				semestre: sequelize.col('DocenteOferta.semestre')
+			},
+			constraints: false
+		});
 	};
 
 	return DocenteOferta;

@@ -52,6 +52,12 @@ module.exports = (sequelize, DataTypes) => {
 			foreignKey: "id_curso",
 			sourceKey: "id",
 		});
+
+		// Associação com DocenteOferta
+		Curso.hasMany(models.DocenteOferta, {
+			foreignKey: "id_curso",
+			sourceKey: "id",
+		});
 	};
 
 	return Curso;

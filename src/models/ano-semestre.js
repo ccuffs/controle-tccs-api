@@ -33,5 +33,17 @@ module.exports = (sequelize, DataTypes) => {
 		},
 	);
 
+	AnoSemestre.associate = function (models) {
+		// Associação com DocenteOferta
+		AnoSemestre.hasMany(models.DocenteOferta, {
+			foreignKey: "ano",
+			sourceKey: "ano",
+			scope: {
+				semestre: sequelize.col('AnoSemestre.semestre')
+			},
+			constraints: false
+		});
+	};
+
 	return AnoSemestre;
 };
