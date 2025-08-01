@@ -37,6 +37,17 @@ temaTccController.get(
 	temaTccService.retornaTemasTccPorDocente,
 );
 
+// Novo endpoint para buscar temas de um orientador por curso
+temaTccController.get(
+	"/docente/:codigo/curso/:id_curso",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([
+		Permissoes.TEMA_TCC.VISUALIZAR,
+		Permissoes.TEMA_TCC.VISUALIZAR_TODOS,
+	]),
+	temaTccService.retornaTemasTccPorDocenteECurso,
+);
+
 temaTccController.post(
 	"/",
 	auth.autenticarUsuario,

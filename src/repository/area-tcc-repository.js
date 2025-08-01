@@ -10,7 +10,7 @@ areaTccRepository.obterTodasAreasTcc = async () => {
 				attributes: ["codigo", "nome", "email"],
 			},
 		],
-		order: [["descicao", "ASC"]],
+		order: [["descricao", "ASC"]],
 	});
 
 	return areas;
@@ -20,7 +20,7 @@ areaTccRepository.obterTodasAreasTcc = async () => {
 areaTccRepository.obterAreasTccPorDocente = async (codigoDocente) => {
 	const areas = await model.AreaTcc.findAll({
 		where: { codigo_docente: codigoDocente },
-		order: [["descicao", "ASC"]],
+		order: [["descricao", "ASC"]],
 	});
 
 	return areas;

@@ -64,6 +64,42 @@ const retornaTemasTccPorDocente = async (req, res) => {
 	}
 };
 
+const retornaTemasTccPorDocenteECurso = async (req, res) => {
+	const { codigo, id_curso } = req.params;
+
+	try {
+		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
+		const { ano: anoAtual, semestre: semestreAtual } =
+			await obterAnoSemestreAtual();
+
+		// Buscar temas do docente no curso específico
+		const temas = await temaTccRepository.obterTemasTccPorDocenteECurso(codigo, id_curso);
+
+		// Buscar vagas da oferta do docente
+		const docenteOferta =
+			await temaTccRepository.buscarOfertaDocente(
+				anoAtual,
+				semestreAtual,
+				id_curso,
+				codigo,
+			);
+
+		const vagasOferta = docenteOferta ? docenteOferta.vagas : 0;
+
+		// Adicionar vagas da oferta a todos os temas
+		const temasComVagas = temas.map((tema) => {
+			const temaData = tema.toJSON();
+			temaData.vagasOferta = vagasOferta;
+			return temaData;
+		});
+
+		return res.status(200).json(temasComVagas);
+	} catch (error) {
+		console.log("Erro ao buscar temas TCC por docente e curso:", error);
+		return res.status(500).json({ error: "Erro interno do servidor" });
+	}
+};
+
 const criaTemaTcc = async (req, res) => {
 	const formData = req.body;
 
@@ -171,6 +207,7 @@ module.exports = {
 	retornaTodosTemasTcc,
 	retornaTemasTccPorCurso,
 	retornaTemasTccPorDocente,
+	retornaTemasTccPorDocenteECurso,
 	criaTemaTcc,
 	atualizaTemaTcc,
 	atualizaVagasTemaTcc,

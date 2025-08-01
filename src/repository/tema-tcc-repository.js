@@ -66,6 +66,37 @@ temaTccRepository.obterTemasTccPorDocente = async (codigoDocente) => {
 	return temas;
 };
 
+// Buscar temas TCC por docente e curso específico
+temaTccRepository.obterTemasTccPorDocenteECurso = async (codigoDocente, idCurso) => {
+	const temas = await model.TemaTcc.findAll({
+		where: {
+			codigo_docente: codigoDocente,
+		},
+		include: [
+			{
+				model: model.AreaTcc,
+				required: true,
+			},
+			{
+				model: model.Docente,
+				required: true,
+				include: [
+					{
+						model: model.Curso,
+						as: "cursosOrientacao",
+						required: true,
+						where: {
+							id: idCurso,
+						},
+						attributes: [], // Não precisamos dos dados do curso na resposta
+					},
+				],
+			},
+		],
+	});
+	return temas;
+};
+
 // Buscar tema TCC por ID
 temaTccRepository.obterTemaTccPorId = async (id) => {
 	const tema = await model.TemaTcc.findByPk(id, {
