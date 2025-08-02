@@ -80,6 +80,17 @@ dicentesService.delete(
 	dicenteService.deletaDicente,
 );
 
+// Nova rota para buscar dicente por usuário
+dicentesService.get(
+	"/usuario/:id_usuario",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([
+		Permissoes.DICENTE.VISUALIZAR,
+		Permissoes.DICENTE.VISUALIZAR_TODOS,
+	]),
+	dicenteService.retornaDicentePorUsuario,
+);
+
 // Nova rota para processar PDF
 dicentesService.post(
 	"/processar-pdf",

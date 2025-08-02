@@ -4,9 +4,9 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const ofertasTccService = express.Router();
+const ofertasTccRouter = express.Router();
 
-ofertasTccService.get(
+ofertasTccRouter.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -16,4 +16,27 @@ ofertasTccService.get(
 	ofertaTccService.retornaTodasOfertasTcc,
 );
 
-module.exports = ofertasTccService;
+// Endpoint para buscar a última oferta TCC
+ofertasTccRouter.get(
+	"/ultima",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([
+		Permissoes.OFERTA_TCC.VISUALIZAR,
+		Permissoes.OFERTA_TCC.VISUALIZAR_TODOS,
+	]),
+	async (req, res) => {
+		try {
+			const ultimaOferta = await ofertaTccService.buscarUltimaOfertaTcc();
+			if (ultimaOferta) {
+				res.json(ultimaOferta);
+			} else {
+				res.status(404).json({ message: "Nenhuma oferta TCC encontrada" });
+			}
+		} catch (error) {
+			console.error("Erro ao buscar última oferta TCC:", error);
+			res.status(500).json({ message: "Erro interno do servidor" });
+		}
+	}
+);
+
+module.exports = ofertasTccRouter;

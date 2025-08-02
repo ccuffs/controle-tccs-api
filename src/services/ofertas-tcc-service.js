@@ -209,6 +209,29 @@ const retornaOfertasAtivas = async (req, res) => {
 	}
 };
 
+// Função para buscar a última oferta TCC
+const buscarUltimaOfertaTcc = async () => {
+	try {
+		const ultimaOferta = await model.OfertaTcc.findOne({
+			include: [
+				{
+					model: model.Curso,
+					attributes: ["id", "nome", "codigo"],
+				},
+			],
+			order: [
+				["ano", "DESC"],
+				["semestre", "DESC"],
+				["fase", "ASC"],
+			],
+		});
+		return ultimaOferta;
+	} catch (error) {
+		console.error("Erro ao buscar última oferta TCC:", error);
+		throw error;
+	}
+};
+
 module.exports = {
 	retornaTodasOfertasTcc,
 	retornaOfertaTccPorChave,
@@ -216,4 +239,5 @@ module.exports = {
 	atualizaOfertaTcc,
 	deletaOfertaTcc,
 	retornaOfertasAtivas,
+	buscarUltimaOfertaTcc,
 };

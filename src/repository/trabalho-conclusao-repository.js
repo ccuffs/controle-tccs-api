@@ -94,6 +94,54 @@ trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId = async (id) => {
 	return trabalho;
 };
 
+// Buscar trabalho de conclusão por discente (matrícula) - mais recente
+trabalhoConclusaoRepository.buscarPorDiscente = async (matricula) => {
+	const trabalho = await model.TrabalhoConclusao.findOne({
+		where: { matricula: parseInt(matricula) },
+		include: [
+			{
+				model: model.Dicente,
+				attributes: ["matricula", "nome", "email"],
+			},
+			{
+				model: model.Curso,
+				attributes: ["id", "nome", "codigo"],
+			},
+		],
+		order: [
+			["ano", "DESC"],
+			["semestre", "DESC"],
+			["fase", "ASC"],
+			["id", "DESC"],
+		],
+	});
+	return trabalho;
+};
+
+// Buscar trabalho de conclusão por discente e oferta específica
+trabalhoConclusaoRepository.buscarPorDiscenteEOferta = async (matricula, ano, semestre, id_curso, fase) => {
+	const trabalho = await model.TrabalhoConclusao.findOne({
+		where: { 
+			matricula: parseInt(matricula),
+			ano: parseInt(ano),
+			semestre: parseInt(semestre),
+			id_curso: parseInt(id_curso),
+			fase: parseInt(fase)
+		},
+		include: [
+			{
+				model: model.Dicente,
+				attributes: ["matricula", "nome", "email"],
+			},
+			{
+				model: model.Curso,
+				attributes: ["id", "nome", "codigo"],
+			},
+		],
+	});
+	return trabalho;
+};
+
 // Criar novo trabalho de conclusão
 trabalhoConclusaoRepository.criarTrabalhoConclusao = async (dadosTrabalho) => {
 	const trabalho = model.TrabalhoConclusao.build(dadosTrabalho);

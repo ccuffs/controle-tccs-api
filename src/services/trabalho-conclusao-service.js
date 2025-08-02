@@ -1,4 +1,5 @@
 const trabalhoConclusaoRepository = require("../repository/trabalho-conclusao-repository");
+const ofertasTccService = require("./ofertas-tcc-service");
 
 // Função para retornar todos os trabalhos de conclusão
 const retornaTodosTrabalhosConlusao = async (req, res) => {
@@ -132,6 +133,79 @@ const atualizaEtapaTrabalho = async (req, res) => {
 	}
 };
 
+// Métodos para o TccStepper
+const buscarPorDiscente = async (matricula) => {
+	try {
+		// Primeiro, buscar a última oferta TCC
+		const ultimaOferta = await ofertasTccService.buscarUltimaOfertaTcc();
+		
+		if (!ultimaOferta) {
+			throw new Error("Nenhuma oferta TCC encontrada no sistema");
+		}
+
+		// Buscar trabalho de conclusão para o discente na última oferta
+		const trabalho = await trabalhoConclusaoRepository.buscarPorDiscenteEOferta(
+			matricula,
+			ultimaOferta.ano,
+			ultimaOferta.semestre,
+			ultimaOferta.id_curso,
+			ultimaOferta.fase
+		);
+
+		return trabalho;
+	} catch (error) {
+		console.error("Erro ao buscar trabalho por discente:", error);
+		throw error;
+	}
+};
+
+const criar = async (dadosTcc) => {
+	try {
+		// Se não foram fornecidos ano/semestre/curso/fase, buscar da última oferta
+		if (!dadosTcc.ano || !dadosTcc.semestre || !dadosTcc.id_curso || !dadosTcc.fase) {
+			const ultimaOferta = await ofertasTccService.buscarUltimaOfertaTcc();
+			
+			if (!ultimaOferta) {
+				throw new Error("Nenhuma oferta TCC encontrada no sistema");
+			}
+
+			dadosTcc.ano = ultimaOferta.ano;
+			dadosTcc.semestre = ultimaOferta.semestre;
+			dadosTcc.id_curso = ultimaOferta.id_curso;
+			dadosTcc.fase = ultimaOferta.fase;
+		}
+
+		const trabalho = await trabalhoConclusaoRepository.criarTrabalhoConclusao(dadosTcc);
+		return trabalho;
+	} catch (error) {
+		console.error("Erro ao criar trabalho de conclusão:", error);
+		throw error;
+	}
+};
+
+const atualizar = async (id, dadosAtualizados) => {
+	try {
+		const sucesso = await trabalhoConclusaoRepository.atualizarTrabalhoConclusao(id, dadosAtualizados);
+		if (sucesso) {
+			return await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(id);
+		}
+		return null;
+	} catch (error) {
+		console.error("Erro ao atualizar trabalho de conclusão:", error);
+		throw error;
+	}
+};
+
+const buscarPorId = async (id) => {
+	try {
+		const trabalho = await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(id);
+		return trabalho;
+	} catch (error) {
+		console.error("Erro ao buscar trabalho por ID:", error);
+		throw error;
+	}
+};
+
 module.exports = {
 	retornaTodosTrabalhosConlusao,
 	retornaTrabalhoConlusaoPorId,
@@ -139,4 +213,8 @@ module.exports = {
 	atualizaTrabalhoConlusao,
 	deletaTrabalhoConlusao,
 	atualizaEtapaTrabalho,
+	buscarPorDiscente,
+	criar,
+	atualizar,
+	buscarPorId,
 };

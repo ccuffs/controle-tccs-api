@@ -88,6 +88,38 @@ dicenteRepository.obterDicentePorMatricula = async (matricula) => {
 	return dicente;
 };
 
+// Buscar dicente por id_usuario
+dicenteRepository.obterDicentePorUsuario = async (id_usuario) => {
+	const dicente = await model.Dicente.findOne({
+		where: { id_usuario: id_usuario },
+		include: [
+			{
+				model: model.TrabalhoConclusao,
+				include: [
+					{
+						model: model.Curso,
+						attributes: ["id", "nome", "codigo"],
+					},
+					{
+						model: model.Orientacao,
+						include: [
+							{
+								model: model.Docente,
+								attributes: ["codigo", "nome", "email"],
+							},
+						],
+					},
+					{
+						model: model.Defesa,
+						required: false,
+					},
+				],
+			},
+		],
+	});
+	return dicente;
+};
+
 // Verificar se dicente existe por matrícula
 dicenteRepository.verificarDicenteExiste = async (matricula) => {
 	const dicente = await model.Dicente.findByPk(matricula);

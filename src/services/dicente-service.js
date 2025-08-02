@@ -486,9 +486,28 @@ const processarEInserirPDFDicentes = async (req, res) => {
 	}
 };
 
+// Função para buscar dicente por id_usuario
+const retornaDicentePorUsuario = async (req, res) => {
+	try {
+		const { id_usuario } = req.params;
+
+		const dicente = await dicenteRepository.obterDicentePorUsuario(id_usuario);
+
+		if (!dicente) {
+			return res.status(404).json({ message: "Dicente não encontrado" });
+		}
+
+		res.status(200).json(dicente);
+	} catch (error) {
+		console.log("Erro ao buscar dicente por usuário:", error);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
+
 module.exports = {
 	retornaTodosDicentes,
 	retornaDicentePorMatricula,
+	retornaDicentePorUsuario,
 	criaDicente,
 	atualizaDicente,
 	deletaDicente,

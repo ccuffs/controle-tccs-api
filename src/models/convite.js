@@ -4,32 +4,41 @@ module.exports = (sequelize, DataTypes) => {
 	const Convite = sequelize.define(
 		"Convite",
 		{
-			id: {
-				type: DataTypes.INTEGER,
-				primaryKey: true,
-				autoIncrement: true,
-				allowNull: false,
-			},
 			id_tcc: {
 				type: DataTypes.INTEGER,
+				primaryKey: true,
 				allowNull: false,
 			},
 			codigo_docente: {
 				type: DataTypes.STRING,
+				primaryKey: true,
 				allowNull: false,
+			},
+			data_envio: {
+				type: DataTypes.DATE,
+				allowNull: false,
+			},
+			mensagem_envio: {
+				type: DataTypes.STRING,
+				allowNull: false,
+			},
+			data_feedback: {
+				type: DataTypes.DATE,
+				allowNull: true,
 			},
 			aceito: {
 				type: DataTypes.BOOLEAN,
 				allowNull: false,
 				defaultValue: false,
 			},
-			data_envio: {
-				type: DataTypes.DATE,
+			mensagem_feedback: {
+				type: DataTypes.STRING,
 				allowNull: false,
 			},
-			data_aceite: {
-				type: DataTypes.DATE,
-				allowNull: true,
+			orientacao: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
 			},
 		},
 		{

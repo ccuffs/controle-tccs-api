@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
+			id_usuario: {
+				type: DataTypes.STRING,
+				allowNull: true,
+			},
 		},
 		{
 			tableName: "dicente",
@@ -25,6 +29,12 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	Dicente.associate = (models) => {
+		// Associação com Usuario
+		Dicente.belongsTo(models.Usuario, {
+			foreignKey: "id_usuario",
+			targetKey: "id",
+		});
+
 		// Associação com TrabalhoConclusao
 		Dicente.hasMany(models.TrabalhoConclusao, {
 			foreignKey: "matricula",
