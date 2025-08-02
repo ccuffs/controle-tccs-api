@@ -30,13 +30,15 @@ ofertasTccRouter.get(
 			if (ultimaOferta) {
 				res.json(ultimaOferta);
 			} else {
-				res.status(404).json({ message: "Nenhuma oferta TCC encontrada" });
+				res.status(404).json({
+					message: "Nenhuma oferta TCC encontrada",
+				});
 			}
 		} catch (error) {
 			console.error("Erro ao buscar última oferta TCC:", error);
 			res.status(500).json({ message: "Erro interno do servidor" });
 		}
-	}
+	},
 );
 
 module.exports = ofertasTccRouter;

@@ -73,16 +73,18 @@ const retornaTemasTccPorDocenteECurso = async (req, res) => {
 			await obterAnoSemestreAtual();
 
 		// Buscar temas do docente no curso específico
-		const temas = await temaTccRepository.obterTemasTccPorDocenteECurso(codigo, id_curso);
+		const temas = await temaTccRepository.obterTemasTccPorDocenteECurso(
+			codigo,
+			id_curso,
+		);
 
 		// Buscar vagas da oferta do docente
-		const docenteOferta =
-			await temaTccRepository.buscarOfertaDocente(
-				anoAtual,
-				semestreAtual,
-				id_curso,
-				codigo,
-			);
+		const docenteOferta = await temaTccRepository.buscarOfertaDocente(
+			anoAtual,
+			semestreAtual,
+			id_curso,
+			codigo,
+		);
 
 		const vagasOferta = docenteOferta ? docenteOferta.vagas : 0;
 

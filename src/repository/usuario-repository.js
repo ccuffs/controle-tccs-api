@@ -20,7 +20,7 @@ usuarioRepository.obterUsuarioComCursos = async (userId) => {
 			{
 				model: model.Curso,
 				as: "cursos",
-				through: { attributes: [] }, // Excluir atributos da tabela de junção
+				through: { attributes: [] },
 			},
 		],
 	});

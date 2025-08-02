@@ -119,14 +119,20 @@ trabalhoConclusaoRepository.buscarPorDiscente = async (matricula) => {
 };
 
 // Buscar trabalho de conclusão por discente e oferta específica
-trabalhoConclusaoRepository.buscarPorDiscenteEOferta = async (matricula, ano, semestre, id_curso, fase) => {
+trabalhoConclusaoRepository.buscarPorDiscenteEOferta = async (
+	matricula,
+	ano,
+	semestre,
+	id_curso,
+	fase,
+) => {
 	const trabalho = await model.TrabalhoConclusao.findOne({
-		where: { 
+		where: {
 			matricula: parseInt(matricula),
 			ano: parseInt(ano),
 			semestre: parseInt(semestre),
 			id_curso: parseInt(id_curso),
-			fase: parseInt(fase)
+			fase: parseInt(fase),
 		},
 		include: [
 			{

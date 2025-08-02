@@ -138,19 +138,20 @@ const buscarPorDiscente = async (matricula) => {
 	try {
 		// Primeiro, buscar a última oferta TCC
 		const ultimaOferta = await ofertasTccService.buscarUltimaOfertaTcc();
-		
+
 		if (!ultimaOferta) {
 			throw new Error("Nenhuma oferta TCC encontrada no sistema");
 		}
 
 		// Buscar trabalho de conclusão para o discente na última oferta
-		const trabalho = await trabalhoConclusaoRepository.buscarPorDiscenteEOferta(
-			matricula,
-			ultimaOferta.ano,
-			ultimaOferta.semestre,
-			ultimaOferta.id_curso,
-			ultimaOferta.fase
-		);
+		const trabalho =
+			await trabalhoConclusaoRepository.buscarPorDiscenteEOferta(
+				matricula,
+				ultimaOferta.ano,
+				ultimaOferta.semestre,
+				ultimaOferta.id_curso,
+				ultimaOferta.fase,
+			);
 
 		return trabalho;
 	} catch (error) {
@@ -162,9 +163,15 @@ const buscarPorDiscente = async (matricula) => {
 const criar = async (dadosTcc) => {
 	try {
 		// Se não foram fornecidos ano/semestre/curso/fase, buscar da última oferta
-		if (!dadosTcc.ano || !dadosTcc.semestre || !dadosTcc.id_curso || !dadosTcc.fase) {
-			const ultimaOferta = await ofertasTccService.buscarUltimaOfertaTcc();
-			
+		if (
+			!dadosTcc.ano ||
+			!dadosTcc.semestre ||
+			!dadosTcc.id_curso ||
+			!dadosTcc.fase
+		) {
+			const ultimaOferta =
+				await ofertasTccService.buscarUltimaOfertaTcc();
+
 			if (!ultimaOferta) {
 				throw new Error("Nenhuma oferta TCC encontrada no sistema");
 			}
@@ -175,7 +182,8 @@ const criar = async (dadosTcc) => {
 			dadosTcc.fase = ultimaOferta.fase;
 		}
 
-		const trabalho = await trabalhoConclusaoRepository.criarTrabalhoConclusao(dadosTcc);
+		const trabalho =
+			await trabalhoConclusaoRepository.criarTrabalhoConclusao(dadosTcc);
 		return trabalho;
 	} catch (error) {
 		console.error("Erro ao criar trabalho de conclusão:", error);
@@ -185,9 +193,15 @@ const criar = async (dadosTcc) => {
 
 const atualizar = async (id, dadosAtualizados) => {
 	try {
-		const sucesso = await trabalhoConclusaoRepository.atualizarTrabalhoConclusao(id, dadosAtualizados);
+		const sucesso =
+			await trabalhoConclusaoRepository.atualizarTrabalhoConclusao(
+				id,
+				dadosAtualizados,
+			);
 		if (sucesso) {
-			return await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(id);
+			return await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(
+				id,
+			);
 		}
 		return null;
 	} catch (error) {
@@ -198,7 +212,8 @@ const atualizar = async (id, dadosAtualizados) => {
 
 const buscarPorId = async (id) => {
 	try {
-		const trabalho = await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(id);
+		const trabalho =
+			await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(id);
 		return trabalho;
 	} catch (error) {
 		console.error("Erro ao buscar trabalho por ID:", error);

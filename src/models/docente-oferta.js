@@ -62,9 +62,9 @@ module.exports = (sequelize, DataTypes) => {
 			foreignKey: "ano",
 			targetKey: "ano",
 			scope: {
-				semestre: sequelize.col('DocenteOferta.semestre')
+				semestre: sequelize.col("DocenteOferta.semestre"),
 			},
-			constraints: false
+			constraints: false,
 		});
 	};
 

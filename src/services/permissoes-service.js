@@ -29,7 +29,7 @@ const buscarPermissoesDoUsuario = async (userId) => {
 						nome: permissao.nome,
 						descricao: permissao.descricao,
 						leitura: true, // Se tem a permissão, tem leitura
-						edicao: true,  // Se tem a permissão, tem edição
+						edicao: true, // Se tem a permissão, tem edição
 						grupos: [],
 					});
 				}

@@ -30,7 +30,11 @@ usuariosService.get(
 usuariosService.post("/", auth.autenticarUsuario, usuarioService.criaUsuario);
 
 // PUT /api/usuarios - Atualizar usuário
-usuariosService.put("/", auth.autenticarUsuario, usuarioService.atualizaUsuario);
+usuariosService.put(
+	"/",
+	auth.autenticarUsuario,
+	usuarioService.atualizaUsuario,
+);
 
 // DELETE /api/usuarios/:id - Deletar usuário
 usuariosService.delete(

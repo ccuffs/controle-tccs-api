@@ -491,7 +491,9 @@ const retornaDicentePorUsuario = async (req, res) => {
 	try {
 		const { id_usuario } = req.params;
 
-		const dicente = await dicenteRepository.obterDicentePorUsuario(id_usuario);
+		const dicente = await dicenteRepository.obterDicentePorUsuario(
+			id_usuario,
+		);
 
 		if (!dicente) {
 			return res.status(404).json({ message: "Dicente não encontrado" });

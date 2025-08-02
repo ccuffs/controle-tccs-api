@@ -67,7 +67,10 @@ temaTccRepository.obterTemasTccPorDocente = async (codigoDocente) => {
 };
 
 // Buscar temas TCC por docente e curso específico
-temaTccRepository.obterTemasTccPorDocenteECurso = async (codigoDocente, idCurso) => {
+temaTccRepository.obterTemasTccPorDocenteECurso = async (
+	codigoDocente,
+	idCurso,
+) => {
 	const temas = await model.TemaTcc.findAll({
 		where: {
 			codigo_docente: codigoDocente,
