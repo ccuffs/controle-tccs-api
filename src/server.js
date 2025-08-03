@@ -17,6 +17,7 @@ const ofertasTccController = require("./controllers/ofertas-tcc-controller");
 const areaTccController = require("./controllers/area-tcc-controller");
 const temaTccController = require("./controllers/tema-tcc-controller");
 const trabalhoConclusaoController = require("./controllers/trabalho-conclusao-controller");
+const conviteController = require("./controllers/convite-controller");
 const authController = require("./controllers/auth-controller");
 
 // Configuração do Passport para autenticação JWT
@@ -51,3 +52,4 @@ app.use("/api/ofertas-tcc", ofertasTccController);
 app.use("/api/areas-tcc", areaTccController);
 app.use("/api/temas-tcc", temaTccController);
 app.use("/api/trabalho-conclusao", trabalhoConclusaoController);
+app.use("/api/convites", conviteController);

@@ -40,21 +40,27 @@ conviteRepository.obterTodosConvites = async (filtros) => {
 };
 
 // Buscar convite por ID e docente
-conviteRepository.obterConvitePorIdEDocente = async (id, codigoDocente) => {
+conviteRepository.obterConvitePorIdEDocente = async (idTcc, codigoDocente) => {
 	const convite = await model.Convite.findOne({
 		where: {
-			id: id,
+			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
 		},
+		include: [
+			{
+				model: model.Docente,
+				attributes: ["codigo", "nome", "email"],
+			},
+		],
 	});
 	return convite;
 };
 
 // Verificar se convite existe
-conviteRepository.verificarConviteExiste = async (id, codigoDocente) => {
+conviteRepository.verificarConviteExiste = async (idTcc, codigoDocente) => {
 	const convite = await model.Convite.findOne({
 		where: {
-			id: id,
+			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
 		},
 	});
@@ -70,13 +76,13 @@ conviteRepository.criarConvite = async (dadosConvite) => {
 
 // Atualizar convite
 conviteRepository.atualizarConvite = async (
-	id,
+	idTcc,
 	codigoDocente,
 	dadosConvite,
 ) => {
 	const [linhasAfetadas] = await model.Convite.update(dadosConvite, {
 		where: {
-			id: id,
+			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
 		},
 	});
@@ -84,10 +90,10 @@ conviteRepository.atualizarConvite = async (
 };
 
 // Deletar convite
-conviteRepository.deletarConvite = async (id, codigoDocente) => {
+conviteRepository.deletarConvite = async (idTcc, codigoDocente) => {
 	const deleted = await model.Convite.destroy({
 		where: {
-			id: id,
+			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
 		},
 	});
@@ -114,6 +120,10 @@ conviteRepository.obterConvitesPendentesDocente = async (codigoDocente) => {
 						attributes: ["id", "nome", "codigo"],
 					},
 				],
+			},
+			{
+				model: model.Docente,
+				attributes: ["codigo", "nome", "email"],
 			},
 		],
 		order: [["data_envio", "DESC"]],

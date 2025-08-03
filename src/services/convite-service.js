@@ -21,7 +21,7 @@ const criaConvite = async (req, res) => {
 	try {
 		// Verificar se já existe convite para este TCC e docente
 		const conviteExiste = await conviteRepository.verificarConviteExiste(
-			formData.id,
+			formData.id_tcc,
 			formData.codigo_docente,
 		);
 
@@ -31,10 +31,18 @@ const criaConvite = async (req, res) => {
 			});
 		}
 
-		// Adicionar data de envio atual
-		formData.data_envio = new Date();
+		// Preparar dados do convite
+		const dadosConvite = {
+			id_tcc: formData.id_tcc,
+			codigo_docente: formData.codigo_docente,
+			data_envio: new Date(),
+			mensagem_envio: formData.mensagem_envio || "Convite para orientação de TCC",
+			aceito: false,
+			mensagem_feedback: "",
+			orientacao: true,
+		};
 
-		const convite = await conviteRepository.criarConvite(formData);
+		const convite = await conviteRepository.criarConvite(dadosConvite);
 
 		res.status(201).json({
 			message: "Convite criado com sucesso",
@@ -52,12 +60,10 @@ const respondeConvite = async (req, res) => {
 	const { aceito } = req.body;
 
 	try {
-		const updateData = { aceito: aceito };
-
-		// Se foi aceito, adicionar data de aceite
-		if (aceito) {
-			updateData.data_aceite = new Date();
-		}
+		const updateData = { 
+			aceito: aceito,
+			data_feedback: new Date()
+		};
 
 		const sucesso = await conviteRepository.atualizarConvite(
 			id,

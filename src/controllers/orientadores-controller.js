@@ -12,6 +12,8 @@ orientadoresService.get(
 	autorizacao.verificarPermissao([
 		Permissoes.ORIENTACAO.VISUALIZAR,
 		Permissoes.ORIENTACAO.VISUALIZAR_TODOS,
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR,
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
 	]),
 	orientadorService.retornaTodasOrientacoes,
 );
@@ -34,6 +36,8 @@ orientadoresService.get(
 	autorizacao.verificarPermissao([
 		Permissoes.ORIENTACAO.VISUALIZAR,
 		Permissoes.ORIENTACAO.VISUALIZAR_TODOS,
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR,
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
 	]),
 	orientadorService.retornaOrientacoesPorCurso,
 );
