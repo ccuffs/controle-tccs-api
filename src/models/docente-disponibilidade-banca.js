@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				primaryKey: true,
 			},
-			codigo: {
+			codigo_docente: {
 				type: DataTypes.STRING,
 				allowNull: false,
 				primaryKey: true,
@@ -93,7 +93,7 @@ module.exports = (sequelize, DataTypes) => {
 
 		// Relacionamento com Docente
 		DocenteDisponibilidadeBanca.belongsTo(models.Docente, {
-			foreignKey: "codigo",
+			foreignKey: "codigo_docente",
 			targetKey: "codigo",
 		});
 
