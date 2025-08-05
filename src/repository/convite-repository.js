@@ -86,6 +86,7 @@ conviteRepository.atualizarConvite = async (
 	idTcc,
 	codigoDocente,
 	dadosConvite,
+	transaction = null,
 ) => {
 	console.log("Repository - Atualizar convite:", {
 		idTcc,
@@ -98,6 +99,7 @@ conviteRepository.atualizarConvite = async (
 			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
 		},
+		transaction: transaction,
 	});
 
 	console.log("Repository - Linhas afetadas:", linhasAfetadas);

@@ -1,6 +1,8 @@
 const conviteRepository = require("../repository/convite-repository");
 const docenteRepository = require("../repository/docente-repository");
 const temaTccRepository = require("../repository/tema-tcc-repository");
+const orientacaoRepository = require("../repository/orientacao-repository");
+const model = require("@backend/models");
 
 // Função para retornar todos os convites
 const retornaTodosConvites = async (req, res) => {
@@ -71,6 +73,9 @@ const respondeConvite = async (req, res) => {
 		aceito,
 	});
 
+	// Iniciar transação para garantir atomicidade
+	const transaction = await model.sequelize.transaction();
+
 	try {
 		const updateData = {
 			aceito: aceito,
@@ -84,13 +89,47 @@ const respondeConvite = async (req, res) => {
 			id,
 			codigo_docente,
 			updateData,
+			transaction,
 		);
 
 		console.log("Resultado da atualização:", sucesso);
 
 		if (sucesso) {
-			// Se o convite foi aceito, atualizar as vagas na docente_oferta
+			// Se o convite foi aceito, inserir na tabela de orientação
 			if (aceito) {
+				// Verificar se já existe orientação para este TCC e docente
+				const orientacaoExiste =
+					await orientacaoRepository.verificarOrientacaoExiste(
+						codigo_docente,
+						id,
+						transaction,
+					);
+
+				if (!orientacaoExiste) {
+					// Verificar se já existe um orientador para este TCC
+					const orientadorExiste =
+						await orientacaoRepository.verificarOrientadorExiste(
+							id,
+							transaction,
+						);
+
+					// Criar nova orientação
+					const dadosOrientacao = {
+						codigo_docente: codigo_docente,
+						id_tcc: parseInt(id),
+						orientador: !orientadorExiste, // Se não existe orientador, este será o orientador
+					};
+
+					await orientacaoRepository.criarOrientacao(
+						dadosOrientacao,
+						transaction,
+					);
+					console.log("Orientação criada com sucesso");
+				} else {
+					console.log("Orientação já existe para este TCC e docente");
+				}
+
+				// Atualizar as vagas na docente_oferta
 				try {
 					// Buscar o trabalho de conclusão para obter as informações necessárias
 					const trabalhoConclusao =
@@ -133,15 +172,22 @@ const respondeConvite = async (req, res) => {
 				}
 			}
 
+			// Commit da transação
+			await transaction.commit();
+
 			res.status(200).json({
 				message: `Convite ${
 					aceito ? "aceito" : "rejeitado"
 				} com sucesso`,
 			});
 		} else {
+			// Rollback da transação
+			await transaction.rollback();
 			res.status(404).json({ message: "Convite não encontrado" });
 		}
 	} catch (error) {
+		// Rollback da transação em caso de erro
+		await transaction.rollback();
 		console.log("Erro ao responder convite:", error);
 		res.status(500).json({ error: error.message });
 	}

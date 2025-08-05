@@ -78,23 +78,29 @@ orientacaoRepository.obterOrientacoesPorTcc = async (idTcc) => {
 orientacaoRepository.verificarOrientacaoExiste = async (
 	codigoDocente,
 	idTcc,
+	transaction = null,
 ) => {
 	const orientacao = await model.Orientacao.findOne({
 		where: {
 			codigo_docente: codigoDocente,
 			id_tcc: idTcc,
 		},
+		transaction: transaction,
 	});
 	return orientacao !== null;
 };
 
 // Verificar se já existe orientador para o TCC
-orientacaoRepository.verificarOrientadorExiste = async (idTcc) => {
+orientacaoRepository.verificarOrientadorExiste = async (
+	idTcc,
+	transaction = null,
+) => {
 	const orientador = await model.Orientacao.findOne({
 		where: {
 			id_tcc: idTcc,
 			orientador: true,
 		},
+		transaction: transaction,
 	});
 	return orientador !== null;
 };
@@ -121,9 +127,12 @@ orientacaoRepository.verificarOutroOrientadorExiste = async (
 };
 
 // Criar nova orientação
-orientacaoRepository.criarOrientacao = async (dadosOrientacao) => {
+orientacaoRepository.criarOrientacao = async (
+	dadosOrientacao,
+	transaction = null,
+) => {
 	const orientacao = model.Orientacao.build(dadosOrientacao);
-	await orientacao.save();
+	await orientacao.save({ transaction: transaction });
 	return orientacao;
 };
 
