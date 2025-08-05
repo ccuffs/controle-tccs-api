@@ -26,7 +26,10 @@ router.get(
 router.post(
 	"/",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([Permissoes.ORIENTACAO.CRIAR]),
+	autorizacao.verificarPermissao([
+		Permissoes.ORIENTACAO.CRIAR,
+		Permissoes.TRABALHO_CONCLUSAO.EDITAR,
+	]),
 	conviteService.criaConvite,
 );
 
