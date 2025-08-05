@@ -92,9 +92,6 @@ const getMe = async (req, res) => {
 		const userId = req.usuario.id;
 		const dadosUsuario = await authService.buscarDadosUsuario(userId);
 
-		console.log("Dados do usuário sendo enviados:", dadosUsuario);
-		console.log("Grupos do usuário:", dadosUsuario.grupos);
-
 		res.status(200).json({
 			message: "Dados do usuário recuperados com sucesso",
 			usuario: dadosUsuario,

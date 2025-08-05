@@ -1,4 +1,6 @@
 const conviteRepository = require("../repository/convite-repository");
+const docenteRepository = require("../repository/docente-repository");
+const temaTccRepository = require("../repository/tema-tcc-repository");
 
 // Função para retornar todos os convites
 const retornaTodosConvites = async (req, res) => {
@@ -6,7 +8,10 @@ const retornaTodosConvites = async (req, res) => {
 		const { id_tcc, codigo_docente, aceito } = req.query;
 		const filtros = { id_tcc, codigo_docente, aceito };
 
+		console.log("Filtros recebidos:", filtros);
 		const convites = await conviteRepository.obterTodosConvites(filtros);
+		console.log("Convites retornados do repository:", convites);
+
 		res.status(200).json({ convites: convites });
 	} catch (error) {
 		console.log("Erro ao buscar convites:", error);
@@ -36,7 +41,8 @@ const criaConvite = async (req, res) => {
 			id_tcc: formData.id_tcc,
 			codigo_docente: formData.codigo_docente,
 			data_envio: new Date(),
-			mensagem_envio: formData.mensagem_envio || "Convite para orientação de TCC",
+			mensagem_envio:
+				formData.mensagem_envio || "Convite para orientação de TCC",
 			aceito: false,
 			mensagem_feedback: "",
 			orientacao: true,
@@ -59,11 +65,20 @@ const respondeConvite = async (req, res) => {
 	const { id, codigo_docente } = req.params;
 	const { aceito } = req.body;
 
+	console.log("Responde convite - Parâmetros:", {
+		id,
+		codigo_docente,
+		aceito,
+	});
+
 	try {
-		const updateData = { 
+		const updateData = {
 			aceito: aceito,
-			data_feedback: new Date()
+			data_feedback: new Date(),
+			mensagem_feedback: aceito ? "Convite aceito" : "Convite rejeitado",
 		};
+
+		console.log("Dados para atualização:", updateData);
 
 		const sucesso = await conviteRepository.atualizarConvite(
 			id,
@@ -71,7 +86,53 @@ const respondeConvite = async (req, res) => {
 			updateData,
 		);
 
+		console.log("Resultado da atualização:", sucesso);
+
 		if (sucesso) {
+			// Se o convite foi aceito, atualizar as vagas na docente_oferta
+			if (aceito) {
+				try {
+					// Buscar o trabalho de conclusão para obter as informações necessárias
+					const trabalhoConclusao =
+						await conviteRepository.obterTrabalhoConclusaoPorId(id);
+
+					if (trabalhoConclusao) {
+						const { ano, semestre, id_curso, fase } =
+							trabalhoConclusao;
+
+						// Buscar a oferta atual do docente
+						const docenteOferta =
+							await temaTccRepository.buscarOfertaDocente(
+								ano,
+								semestre,
+								id_curso,
+								codigo_docente,
+							);
+
+						if (docenteOferta && docenteOferta.vagas > 0) {
+							// Reduzir uma vaga
+							const novasVagas = docenteOferta.vagas - 1;
+							await docenteOferta.update({ vagas: novasVagas });
+
+							console.log(
+								`Vagas atualizadas para o docente ${codigo_docente}: ${novasVagas}`,
+							);
+						} else if (docenteOferta && docenteOferta.vagas === 0) {
+							// Manter em 0 sem atualização
+							console.log(
+								`Vagas mantidas em 0 para o docente ${codigo_docente}`,
+							);
+						}
+					}
+				} catch (error) {
+					console.log(
+						"Erro ao atualizar vagas na docente_oferta:",
+						error,
+					);
+					// Não falhar a operação principal se a atualização de vagas falhar
+				}
+			}
+
 			res.status(200).json({
 				message: `Convite ${
 					aceito ? "aceito" : "rejeitado"
@@ -106,16 +167,31 @@ const deletaConvite = async (req, res) => {
 	}
 };
 
-// Função para retornar convites pendentes de um docente
-const retornaConvitesPendentesDocente = async (req, res) => {
+// Função para retornar convites de um docente
+const retornaConvitesDocente = async (req, res) => {
 	try {
 		const { codigo } = req.params;
-		const convites = await conviteRepository.obterConvitesPendentesDocente(
-			codigo,
+
+		// Primeiro, buscar o docente pelo ID do usuário
+		const docente = await docenteRepository.obterDocentePorUsuario(codigo);
+
+		if (!docente) {
+			return res.status(404).json({
+				message: "Docente não encontrado para este usuário",
+			});
+		}
+
+		// Agora buscar os convites usando o codigo_docente
+		const convites = await conviteRepository.obterConvitesDocente(
+			docente.codigo,
 		);
-		res.status(200).json({ convites: convites });
+
+		// Retorna os convites encontrados
+		res.status(200).json({
+			convites: convites,
+		});
 	} catch (error) {
-		console.log("Erro ao buscar convites pendentes do docente:", error);
+		console.log("Erro ao buscar convites do docente:", error);
 		res.sendStatus(500);
 	}
 };
@@ -125,5 +201,5 @@ module.exports = {
 	criaConvite,
 	respondeConvite,
 	deletaConvite,
-	retornaConvitesPendentesDocente,
+	retornaConvitesDocente,
 };

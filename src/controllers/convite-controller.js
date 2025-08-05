@@ -34,7 +34,7 @@ router.post(
 router.put(
 	"/:id/:codigo_docente",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([Permissoes.ORIENTACAO.EDITAR]),
+	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.EDITAR]),
 	conviteService.respondeConvite,
 );
 

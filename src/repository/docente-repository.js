@@ -40,4 +40,12 @@ docenteRepository.deletarDocente = async (codigo) => {
 	return deleted > 0;
 };
 
+// Buscar docente por id_usuario
+docenteRepository.obterDocentePorUsuario = async (id_usuario) => {
+	const docente = await model.Docente.findOne({
+		where: { id_usuario: id_usuario },
+	});
+	return docente;
+};
+
 module.exports = docenteRepository;
