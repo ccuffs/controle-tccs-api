@@ -41,11 +41,11 @@ const retornaTrabalhoConlusaoPorId = async (req, res) => {
 
 // Função para criar um novo trabalho de conclusão
 const criaTrabalhoConlusao = async (req, res) => {
-	const formData = req.body.formData;
+	const dadosTrabalho = req.body; // Usar req.body diretamente
 
 	try {
 		const trabalho =
-			await trabalhoConclusaoRepository.criarTrabalhoConclusao(formData);
+			await trabalhoConclusaoRepository.criarTrabalhoConclusao(dadosTrabalho);
 
 		res.status(201).json({
 			message: "Trabalho de conclusão criado com sucesso",
@@ -53,7 +53,7 @@ const criaTrabalhoConlusao = async (req, res) => {
 		});
 	} catch (error) {
 		console.log("Erro ao criar trabalho de conclusão:", error);
-		console.log("Dados que causaram erro:", formData);
+		console.log("Dados que causaram erro:", dadosTrabalho);
 		res.status(500).json({ error: error.message });
 	}
 };
@@ -61,13 +61,14 @@ const criaTrabalhoConlusao = async (req, res) => {
 // Função para atualizar um trabalho de conclusão
 const atualizaTrabalhoConlusao = async (req, res) => {
 	const { id } = req.params;
-	const formData = req.body.formData;
+	const dadosAtualizados = req.body; // Usar req.body diretamente
+	console.log("Dados recebidos:", req.body);
 
 	try {
 		const sucesso =
 			await trabalhoConclusaoRepository.atualizarTrabalhoConclusao(
 				id,
-				formData,
+				dadosAtualizados,
 			);
 
 		if (sucesso) {
@@ -81,7 +82,7 @@ const atualizaTrabalhoConlusao = async (req, res) => {
 		}
 	} catch (error) {
 		console.log("Erro ao atualizar trabalho de conclusão:", error);
-		console.log("Dados que causaram erro:", formData);
+		console.log("Dados que causaram erro:", dadosAtualizados);
 		res.status(500).json({ error: error.message });
 	}
 };
