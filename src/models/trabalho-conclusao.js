@@ -42,6 +42,10 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.TEXT,
 				allowNull: true,
 			},
+			seminario_andamento: {
+				type: DataTypes.TEXT,
+				allowNull: true,
+			},
 			etapa: {
 				type: DataTypes.INTEGER,
 				allowNull: true,
