@@ -14,10 +14,8 @@ router.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
-		Permissoes.ORIENTACAO.VISUALIZAR,
-		Permissoes.ORIENTACAO.VISUALIZAR_TODOS,
-		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR,
-		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		Permissoes.CONVITE.VISUALIZAR,
+		Permissoes.CONVITE.VISUALIZAR_TODOS,
 	]),
 	conviteService.retornaTodosConvites,
 );
@@ -26,10 +24,7 @@ router.get(
 router.post(
 	"/",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([
-		Permissoes.ORIENTACAO.CRIAR,
-		Permissoes.TRABALHO_CONCLUSAO.EDITAR,
-	]),
+	autorizacao.verificarPermissao([Permissoes.CONVITE.CRIAR]),
 	conviteService.criaConvite,
 );
 
@@ -37,7 +32,7 @@ router.post(
 router.put(
 	"/:id/:codigo_docente",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.EDITAR]),
+	autorizacao.verificarPermissao([Permissoes.CONVITE.EDITAR]),
 	conviteService.respondeConvite,
 );
 
@@ -45,7 +40,7 @@ router.put(
 router.delete(
 	"/:id/:codigo_docente",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([Permissoes.ORIENTACAO.DELETAR]),
+	autorizacao.verificarPermissao([Permissoes.CONVITE.DELETAR]),
 	conviteService.deletaConvite,
 );
 
@@ -54,8 +49,8 @@ router.get(
 	"/docente/:codigo",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
-		Permissoes.ORIENTACAO.VISUALIZAR,
-		Permissoes.ORIENTACAO.VISUALIZAR_TODOS,
+		Permissoes.CONVITE.VISUALIZAR,
+		Permissoes.CONVITE.VISUALIZAR_TODOS,
 	]),
 	conviteService.retornaConvitesDocente,
 );
