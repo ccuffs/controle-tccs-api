@@ -9,13 +9,13 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 				allowNull: false,
 			},
-			membro_banca_a: {
+			membro_banca: {
 				type: DataTypes.STRING,
 				primaryKey: true,
 				allowNull: false,
 			},
-			membro_banca_b: {
-				type: DataTypes.STRING,
+			fase: {
+				type: DataTypes.INTEGER,
 				primaryKey: true,
 				allowNull: false,
 			},
@@ -26,6 +26,11 @@ module.exports = (sequelize, DataTypes) => {
 			avaliacao: {
 				type: DataTypes.FLOAT,
 				allowNull: true,
+			},
+			orientador: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
 			},
 		},
 		{
@@ -43,18 +48,11 @@ module.exports = (sequelize, DataTypes) => {
 			targetKey: "id",
 		});
 
-		// Associação com Docente para membro_banca_a
+		// Associação com Docente para membro_banca
 		Defesa.belongsTo(models.Docente, {
-			foreignKey: "membro_banca_a",
+			foreignKey: "membro_banca",
 			targetKey: "codigo",
-			as: "membroBancaA",
-		});
-
-		// Associação com Docente para membro_banca_b
-		Defesa.belongsTo(models.Docente, {
-			foreignKey: "membro_banca_b",
-			targetKey: "codigo",
-			as: "membroBancaB",
+			as: "membroBanca",
 		});
 	};
 

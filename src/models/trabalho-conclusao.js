@@ -47,6 +47,16 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: true,
 				defaultValue: 0,
 			},
+			aprovado_projeto: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
+			},
+			aprovado_tcc: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
+			},
 		},
 		{
 			tableName: "trabalho_conclusao",
