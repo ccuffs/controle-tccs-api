@@ -14,20 +14,20 @@ const retornaTodasDefesas = async (req, res) => {
 	}
 };
 
-// Função para buscar defesa específica por ID do TCC
-const retornaDefesaPorTcc = async (req, res) => {
+// Função para buscar defesas específicas por ID do TCC
+const retornaDefesasPorTcc = async (req, res) => {
 	try {
 		const { id_tcc } = req.params;
 
-		const defesa = await defesaRepository.obterDefesaPorTcc(id_tcc);
+		const defesas = await defesaRepository.obterDefesasPorTcc(id_tcc);
 
-		if (!defesa) {
-			return res.status(404).json({ message: "Defesa não encontrada" });
+		if (!defesas || defesas.length === 0) {
+			return res.status(404).json({ message: "Nenhuma defesa encontrada para este TCC" });
 		}
 
-		res.status(200).json({ defesa: defesa });
+		res.status(200).json({ defesas: defesas });
 	} catch (error) {
-		console.log("Erro ao buscar defesa:", error);
+		console.log("Erro ao buscar defesas:", error);
 		res.sendStatus(500);
 	}
 };
@@ -37,21 +37,22 @@ const criaDefesa = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
-		// Verificar se já existe defesa para este TCC
+		// Verificar se já existe defesa para este TCC com este membro da banca
 		const defesaExiste = await defesaRepository.verificarDefesaExiste(
 			formData.id_tcc,
+			formData.membro_banca,
 		);
 
 		if (defesaExiste) {
 			return res.status(400).json({
-				message: "Já existe uma defesa agendada para este TCC",
+				message: "Já existe uma defesa agendada para este TCC com este membro da banca",
 			});
 		}
 
-		// Verificar se os membros da banca são diferentes
-		if (formData.membro_banca_a === formData.membro_banca_b) {
+		// Verificar se foi fornecido um membro da banca
+		if (!formData.membro_banca) {
 			return res.status(400).json({
-				message: "Os membros da banca devem ser diferentes",
+				message: "É necessário informar um membro da banca",
 			});
 		}
 
@@ -69,14 +70,13 @@ const criaDefesa = async (req, res) => {
 
 // Função para atualizar uma defesa
 const atualizaDefesa = async (req, res) => {
-	const { id_tcc, membro_banca_a, membro_banca_b } = req.params;
+	const { id_tcc, membro_banca } = req.params;
 	const formData = req.body.formData;
 
 	try {
 		const sucesso = await defesaRepository.atualizarDefesa(
 			id_tcc,
-			membro_banca_a,
-			membro_banca_b,
+			membro_banca,
 			formData,
 		);
 
@@ -119,12 +119,11 @@ const registraAvaliacaoDefesa = async (req, res) => {
 // Função para deletar uma defesa
 const deletaDefesa = async (req, res) => {
 	try {
-		const { id_tcc, membro_banca_a, membro_banca_b } = req.params;
+		const { id_tcc, membro_banca } = req.params;
 
 		const sucesso = await defesaRepository.deletarDefesa(
 			id_tcc,
-			membro_banca_a,
-			membro_banca_b,
+			membro_banca,
 		);
 
 		if (sucesso) {
@@ -140,7 +139,7 @@ const deletaDefesa = async (req, res) => {
 
 module.exports = {
 	retornaTodasDefesas,
-	retornaDefesaPorTcc,
+	retornaDefesasPorTcc,
 	criaDefesa,
 	atualizaDefesa,
 	registraAvaliacaoDefesa,

@@ -64,18 +64,11 @@ module.exports = (sequelize, DataTypes) => {
 			sourceKey: "codigo",
 		});
 
-		// Associação com Defesa para membro_banca_a
+		// Associação com Defesa para membro_banca
 		Docente.hasMany(models.Defesa, {
-			foreignKey: "membro_banca_a",
+			foreignKey: "membro_banca",
 			sourceKey: "codigo",
-			as: "defesasMembroA",
-		});
-
-		// Associação com Defesa para membro_banca_b
-		Docente.hasMany(models.Defesa, {
-			foreignKey: "membro_banca_b",
-			sourceKey: "codigo",
-			as: "defesasMembroB",
+			as: "defesas",
 		});
 
 		// Associação com AreaTcc

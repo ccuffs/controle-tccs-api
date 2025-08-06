@@ -72,8 +72,11 @@ const atualizaTrabalhoConlusao = async (req, res) => {
 			);
 
 		if (sucesso) {
+			// Buscar os dados atualizados para retornar
+			const trabalhoAtualizado = await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(id);
 			res.status(200).json({
 				message: "Trabalho de conclusão atualizado com sucesso",
+				trabalho: trabalhoAtualizado,
 			});
 		} else {
 			res.status(404).json({
@@ -137,6 +140,19 @@ const atualizaEtapaTrabalho = async (req, res) => {
 // Métodos para o TccStepper
 const buscarPorDiscente = async (matricula) => {
 	try {
+		// Buscar o trabalho de conclusão mais recente do discente (qualquer oferta)
+		const trabalho = await trabalhoConclusaoRepository.buscarPorDiscente(matricula);
+
+		return trabalho;
+	} catch (error) {
+		console.error("Erro ao buscar trabalho por discente:", error);
+		throw error;
+	}
+};
+
+// Nova função para buscar TCC da oferta atual específica
+const buscarPorDiscenteOfertaAtual = async (matricula) => {
+	try {
 		// Primeiro, buscar a última oferta TCC
 		const ultimaOferta = await ofertasTccService.buscarUltimaOfertaTcc();
 
@@ -156,7 +172,7 @@ const buscarPorDiscente = async (matricula) => {
 
 		return trabalho;
 	} catch (error) {
-		console.error("Erro ao buscar trabalho por discente:", error);
+		console.error("Erro ao buscar trabalho por discente na oferta atual:", error);
 		throw error;
 	}
 };
@@ -200,6 +216,7 @@ const atualizar = async (id, dadosAtualizados) => {
 				dadosAtualizados,
 			);
 		if (sucesso) {
+			// Buscar dados atualizados do banco para garantir consistência
 			return await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(
 				id,
 			);
@@ -230,6 +247,7 @@ module.exports = {
 	deletaTrabalhoConlusao,
 	atualizaEtapaTrabalho,
 	buscarPorDiscente,
+	buscarPorDiscenteOfertaAtual,
 	criar,
 	atualizar,
 	buscarPorId,

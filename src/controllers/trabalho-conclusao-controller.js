@@ -28,7 +28,7 @@ trabalhoConclusaoRouter.get(
 	trabalhoConclusaoService.retornaTrabalhoConlusaoPorId,
 );
 
-// Buscar trabalho de conclusão por discente
+// Buscar trabalho de conclusão mais recente por discente (qualquer oferta)
 trabalhoConclusaoRouter.get(
 	"/discente/:matricula",
 	auth.autenticarUsuario,
@@ -52,6 +52,37 @@ trabalhoConclusaoRouter.get(
 		} catch (error) {
 			console.error(
 				"Erro ao buscar trabalho de conclusão por discente:",
+				error,
+			);
+			res.status(500).json({ message: "Erro interno do servidor" });
+		}
+	},
+);
+
+// Buscar trabalho de conclusão por discente na oferta atual
+trabalhoConclusaoRouter.get(
+	"/discente/:matricula/oferta-atual",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR,
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+	]),
+	async (req, res) => {
+		try {
+			const { matricula } = req.params;
+			const trabalhoConclusao =
+				await trabalhoConclusaoService.buscarPorDiscenteOfertaAtual(matricula);
+
+			if (trabalhoConclusao) {
+				res.json(trabalhoConclusao);
+			} else {
+				res.status(404).json({
+					message: "Trabalho de conclusão não encontrado na oferta atual",
+				});
+			}
+		} catch (error) {
+			console.error(
+				"Erro ao buscar trabalho de conclusão por discente na oferta atual:",
 				error,
 			);
 			res.status(500).json({ message: "Erro interno do servidor" });

@@ -37,12 +37,7 @@ defesaRepository.obterTodasDefesas = async (filtros) => {
 			},
 			{
 				model: model.Docente,
-				as: "membroBancaA",
-				attributes: ["codigo", "nome", "email"],
-			},
-			{
-				model: model.Docente,
-				as: "membroBancaB",
+				as: "membroBanca",
 				attributes: ["codigo", "nome", "email"],
 			},
 		],
@@ -52,9 +47,9 @@ defesaRepository.obterTodasDefesas = async (filtros) => {
 	return defesas;
 };
 
-// Buscar defesa por TCC
-defesaRepository.obterDefesaPorTcc = async (idTcc) => {
-	const defesa = await model.Defesa.findOne({
+// Buscar defesas por TCC (todas as defesas do TCC)
+defesaRepository.obterDefesasPorTcc = async (idTcc) => {
+	const defesas = await model.Defesa.findAll({
 		where: { id_tcc: idTcc },
 		include: [
 			{
@@ -72,23 +67,26 @@ defesaRepository.obterDefesaPorTcc = async (idTcc) => {
 			},
 			{
 				model: model.Docente,
-				as: "membroBancaA",
-				attributes: ["codigo", "nome", "email"],
-			},
-			{
-				model: model.Docente,
-				as: "membroBancaB",
+				as: "membroBanca",
 				attributes: ["codigo", "nome", "email"],
 			},
 		],
+		order: [["membro_banca", "ASC"]],
 	});
-	return defesa;
+	return defesas;
 };
 
-// Verificar se defesa existe
-defesaRepository.verificarDefesaExiste = async (idTcc) => {
+// Verificar se defesa existe para um TCC e membro específico
+defesaRepository.verificarDefesaExiste = async (idTcc, membroBanca = null) => {
+	let whereClause = { id_tcc: idTcc };
+
+	// Se informado membro específico, verificar para esse membro
+	if (membroBanca) {
+		whereClause.membro_banca = membroBanca;
+	}
+
 	const defesa = await model.Defesa.findOne({
-		where: { id_tcc: idTcc },
+		where: whereClause,
 	});
 	return defesa !== null;
 };
@@ -103,15 +101,13 @@ defesaRepository.criarDefesa = async (dadosDefesa) => {
 // Atualizar defesa
 defesaRepository.atualizarDefesa = async (
 	idTcc,
-	membroBancaA,
-	membroBancaB,
+	membroBanca,
 	dadosDefesa,
 ) => {
 	const [linhasAfetadas] = await model.Defesa.update(dadosDefesa, {
 		where: {
 			id_tcc: idTcc,
-			membro_banca_a: membroBancaA,
-			membro_banca_b: membroBancaB,
+			membro_banca: membroBanca,
 		},
 	});
 	return linhasAfetadas > 0;
@@ -127,12 +123,11 @@ defesaRepository.registrarAvaliacaoDefesa = async (idTcc, avaliacao) => {
 };
 
 // Deletar defesa
-defesaRepository.deletarDefesa = async (idTcc, membroBancaA, membroBancaB) => {
+defesaRepository.deletarDefesa = async (idTcc, membroBanca) => {
 	const deleted = await model.Defesa.destroy({
 		where: {
 			id_tcc: idTcc,
-			membro_banca_a: membroBancaA,
-			membro_banca_b: membroBancaB,
+			membro_banca: membroBanca,
 		},
 	});
 	return deleted > 0;

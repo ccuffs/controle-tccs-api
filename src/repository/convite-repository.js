@@ -5,16 +5,12 @@ const conviteRepository = {};
 conviteRepository.obterTodosConvites = async (filtros) => {
 	const { id_tcc, codigo_docente, aceito } = filtros;
 
-	console.log("Filtros recebidos no repository:", filtros);
-
 	let whereClause = {};
 
 	// Aplicar filtros se fornecidos
 	if (id_tcc) whereClause.id_tcc = parseInt(id_tcc);
 	if (codigo_docente) whereClause.codigo_docente = codigo_docente;
 	if (aceito !== undefined) whereClause.aceito = aceito === "true";
-
-	console.log("Where clause construída:", whereClause);
 
 	const convites = await model.Convite.findAll({
 		where: whereClause,
@@ -40,8 +36,6 @@ conviteRepository.obterTodosConvites = async (filtros) => {
 		order: [["data_envio", "DESC"]],
 	});
 
-	console.log("Convites encontrados no banco:", convites);
-	console.log("Quantidade de convites:", convites.length);
 
 	return convites;
 };
@@ -88,12 +82,6 @@ conviteRepository.atualizarConvite = async (
 	dadosConvite,
 	transaction = null,
 ) => {
-	console.log("Repository - Atualizar convite:", {
-		idTcc,
-		codigoDocente,
-		dadosConvite,
-	});
-
 	const [linhasAfetadas] = await model.Convite.update(dadosConvite, {
 		where: {
 			id_tcc: idTcc,
@@ -102,7 +90,6 @@ conviteRepository.atualizarConvite = async (
 		transaction: transaction,
 	});
 
-	console.log("Repository - Linhas afetadas:", linhasAfetadas);
 	return linhasAfetadas > 0;
 };
 

@@ -38,6 +38,13 @@ trabalhoConclusaoRepository.obterTodosTrabalhosConclusao = async (filtros) => {
 			{
 				model: model.Defesa,
 				required: false,
+				include: [
+					{
+						model: model.Docente,
+						as: "membroBanca",
+						attributes: ["codigo", "nome", "email"],
+					},
+				],
 			},
 		],
 		order: [
@@ -79,12 +86,7 @@ trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId = async (id) => {
 				include: [
 					{
 						model: model.Docente,
-						as: "membroBancaA",
-						attributes: ["codigo", "nome", "email"],
-					},
-					{
-						model: model.Docente,
-						as: "membroBancaB",
+						as: "membroBanca",
 						attributes: ["codigo", "nome", "email"],
 					},
 				],

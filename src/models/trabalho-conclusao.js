@@ -106,7 +106,7 @@ module.exports = (sequelize, DataTypes) => {
 		});
 
 		// Associação com Defesa
-		TrabalhoConclusao.hasOne(models.Defesa, {
+		TrabalhoConclusao.hasMany(models.Defesa, {
 			foreignKey: "id_tcc",
 			sourceKey: "id",
 		});

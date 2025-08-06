@@ -10,9 +10,7 @@ const retornaTodosConvites = async (req, res) => {
 		const { id_tcc, codigo_docente, aceito } = req.query;
 		const filtros = { id_tcc, codigo_docente, aceito };
 
-		console.log("Filtros recebidos:", filtros);
 		const convites = await conviteRepository.obterTodosConvites(filtros);
-		console.log("Convites retornados do repository:", convites);
 
 		res.status(200).json({ convites: convites });
 	} catch (error) {
@@ -67,12 +65,6 @@ const respondeConvite = async (req, res) => {
 	const { id, codigo_docente } = req.params;
 	const { aceito } = req.body;
 
-	console.log("Responde convite - Parâmetros:", {
-		id,
-		codigo_docente,
-		aceito,
-	});
-
 	// Iniciar transação para garantir atomicidade
 	const transaction = await model.sequelize.transaction();
 
@@ -83,16 +75,12 @@ const respondeConvite = async (req, res) => {
 			mensagem_feedback: aceito ? "Convite aceito" : "Convite rejeitado",
 		};
 
-		console.log("Dados para atualização:", updateData);
-
 		const sucesso = await conviteRepository.atualizarConvite(
 			id,
 			codigo_docente,
 			updateData,
 			transaction,
 		);
-
-		console.log("Resultado da atualização:", sucesso);
 
 		if (sucesso) {
 			// Se o convite foi aceito, inserir na tabela de orientação
@@ -124,9 +112,6 @@ const respondeConvite = async (req, res) => {
 						dadosOrientacao,
 						transaction,
 					);
-					console.log("Orientação criada com sucesso");
-				} else {
-					console.log("Orientação já existe para este TCC e docente");
 				}
 
 				// Atualizar as vagas na docente_oferta
@@ -152,15 +137,6 @@ const respondeConvite = async (req, res) => {
 							// Reduzir uma vaga
 							const novasVagas = docenteOferta.vagas - 1;
 							await docenteOferta.update({ vagas: novasVagas });
-
-							console.log(
-								`Vagas atualizadas para o docente ${codigo_docente}: ${novasVagas}`,
-							);
-						} else if (docenteOferta && docenteOferta.vagas === 0) {
-							// Manter em 0 sem atualização
-							console.log(
-								`Vagas mantidas em 0 para o docente ${codigo_docente}`,
-							);
 						}
 					}
 				} catch (error) {
