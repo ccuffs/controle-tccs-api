@@ -45,7 +45,7 @@ const criaConvite = async (req, res) => {
 				formData.mensagem_envio || "Convite para orientação de TCC",
 			aceito: false,
 			mensagem_feedback: "",
-			orientacao: true,
+			orientacao: formData.orientacao !== undefined ? formData.orientacao : true, // Usar valor do frontend ou true como padrão
 		};
 
 		const convite = await conviteRepository.criarConvite(dadosConvite);
@@ -83,8 +83,9 @@ const respondeConvite = async (req, res) => {
 		);
 
 		if (sucesso) {
-			// Se o convite foi aceito, inserir na tabela de orientação
-			if (aceito) {
+			// Se o convite foi aceito e é um convite de orientação, inserir na tabela de orientação
+			const conviteInfo = await conviteRepository.obterConvitePorIdEDocente(id, codigo_docente);
+			if (aceito && conviteInfo && conviteInfo.orientacao === true) {
 				// Verificar se já existe orientação para este TCC e docente
 				const orientacaoExiste =
 					await orientacaoRepository.verificarOrientacaoExiste(
