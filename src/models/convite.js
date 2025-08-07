@@ -14,6 +14,12 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 				allowNull: false,
 			},
+			fase: {
+				type: DataTypes.INTEGER,
+				primaryKey: true,
+				allowNull: false,
+				defaultValue: 0,
+			},
 			data_envio: {
 				type: DataTypes.DATE,
 				allowNull: false,
@@ -40,6 +46,7 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				defaultValue: false,
 			},
+
 		},
 		{
 			tableName: "convite",

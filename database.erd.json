@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -92,
-    "scrollLeft": -112,
-    "zoomLevel": 0.75,
+    "scrollTop": -544.5274,
+    "scrollLeft": -573,
+    "zoomLevel": 0.81,
     "show": 431,
     "database": 16,
     "databaseName": "controle-tccs",
@@ -436,6 +436,7 @@
         "columnIds": [
           "eH5W2wdVxxl1TisDPQ-hI",
           "nw3i1ts8PegD9R97ITiwe",
+          "iNiWfyJBJtcfR411hyNYq",
           "QMBhkeLTDHLRWK8U_zCAi",
           "dI3LnBQ3uPa1_4SwxZRqp",
           "_qgiTqUDEVCBTOxETHK15",
@@ -446,6 +447,7 @@
         "seqColumnIds": [
           "eH5W2wdVxxl1TisDPQ-hI",
           "nw3i1ts8PegD9R97ITiwe",
+          "iNiWfyJBJtcfR411hyNYq",
           "QMBhkeLTDHLRWK8U_zCAi",
           "dI3LnBQ3uPa1_4SwxZRqp",
           "_qgiTqUDEVCBTOxETHK15",
@@ -462,7 +464,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1754165148320,
+          "updateAt": 1754578451018,
           "createAt": 1753379745816
         }
       },
@@ -3691,6 +3693,26 @@
           "updateAt": 1754505498662,
           "createAt": 1754505462627
         }
+      },
+      "iNiWfyJBJtcfR411hyNYq": {
+        "id": "iNiWfyJBJtcfR411hyNYq",
+        "tableId": "awXd_K-seBzmzU2_mzrqW",
+        "name": "fase",
+        "comment": "",
+        "dataType": "integer",
+        "default": "0",
+        "options": 10,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1754578449768,
+          "createAt": 1754520135328
+        }
       }
     },
     "relationshipEntities": {
@@ -3994,7 +4016,7 @@
             "eH5W2wdVxxl1TisDPQ-hI"
           ],
           "x": 1485.2883,
-          "y": 906.2922,
+          "y": 918.2922,
           "direction": 2
         },
         "meta": {
@@ -4022,7 +4044,7 @@
             "nw3i1ts8PegD9R97ITiwe"
           ],
           "x": 1055.2883,
-          "y": 906.2922,
+          "y": 918.2922,
           "direction": 1
         },
         "meta": {

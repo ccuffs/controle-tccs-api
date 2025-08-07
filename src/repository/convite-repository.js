@@ -58,11 +58,12 @@ conviteRepository.obterConvitePorIdEDocente = async (idTcc, codigoDocente) => {
 };
 
 // Verificar se convite existe
-conviteRepository.verificarConviteExiste = async (idTcc, codigoDocente) => {
+conviteRepository.verificarConviteExiste = async (idTcc, codigoDocente, fase) => {
 	const convite = await model.Convite.findOne({
 		where: {
 			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
+			fase: fase,
 		},
 	});
 	return convite !== null;

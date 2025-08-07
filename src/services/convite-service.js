@@ -22,12 +22,14 @@ const retornaTodosConvites = async (req, res) => {
 // Função para criar um novo convite
 const criaConvite = async (req, res) => {
 	const formData = req.body.formData;
+	console.log(formData);
 
 	try {
 		// Verificar se já existe convite para este TCC e docente
 		const conviteExiste = await conviteRepository.verificarConviteExiste(
 			formData.id_tcc,
 			formData.codigo_docente,
+			formData.fase,
 		);
 
 		if (conviteExiste) {
@@ -46,6 +48,7 @@ const criaConvite = async (req, res) => {
 			aceito: false,
 			mensagem_feedback: "",
 			orientacao: formData.orientacao !== undefined ? formData.orientacao : true, // Usar valor do frontend ou true como padrão
+			fase: formData.fase !== undefined ? formData.fase : 1, // Usar valor do frontend ou 1 como padrão
 		};
 
 		const convite = await conviteRepository.criarConvite(dadosConvite);
