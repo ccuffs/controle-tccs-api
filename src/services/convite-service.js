@@ -65,7 +65,7 @@ const criaConvite = async (req, res) => {
 
 // Função para aceitar/rejeitar um convite
 const respondeConvite = async (req, res) => {
-	const { id, codigo_docente } = req.params;
+	const { id, codigo_docente, fase } = req.params;
 	const { aceito } = req.body;
 
 	// Iniciar transação para garantir atomicidade
@@ -81,13 +81,14 @@ const respondeConvite = async (req, res) => {
 		const sucesso = await conviteRepository.atualizarConvite(
 			id,
 			codigo_docente,
+			fase,
 			updateData,
 			transaction,
 		);
 
 		if (sucesso) {
 			// Se o convite foi aceito e é um convite de orientação, inserir na tabela de orientação
-			const conviteInfo = await conviteRepository.obterConvitePorIdEDocente(id, codigo_docente);
+			const conviteInfo = await conviteRepository.obterConvitePorIdEDocente(id, codigo_docente, fase);
 			if (aceito && conviteInfo && conviteInfo.orientacao === true) {
 				// Verificar se já existe orientação para este TCC e docente
 				const orientacaoExiste =
@@ -176,10 +177,11 @@ const respondeConvite = async (req, res) => {
 // Função para deletar um convite
 const deletaConvite = async (req, res) => {
 	try {
-		const { id, codigo_docente } = req.params;
+		const { id, codigo_docente, fase } = req.params;
 		const sucesso = await conviteRepository.deletarConvite(
 			id,
 			codigo_docente,
+			fase,
 		);
 
 		if (sucesso) {

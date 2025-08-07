@@ -41,11 +41,12 @@ conviteRepository.obterTodosConvites = async (filtros) => {
 };
 
 // Buscar convite por ID e docente
-conviteRepository.obterConvitePorIdEDocente = async (idTcc, codigoDocente) => {
+conviteRepository.obterConvitePorIdEDocente = async (idTcc, codigoDocente, fase) => {
 	const convite = await model.Convite.findOne({
 		where: {
 			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
+			fase: fase,
 		},
 		include: [
 			{
@@ -80,6 +81,7 @@ conviteRepository.criarConvite = async (dadosConvite) => {
 conviteRepository.atualizarConvite = async (
 	idTcc,
 	codigoDocente,
+	fase,
 	dadosConvite,
 	transaction = null,
 ) => {
@@ -87,6 +89,7 @@ conviteRepository.atualizarConvite = async (
 		where: {
 			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
+			fase: fase,
 		},
 		transaction: transaction,
 	});
@@ -95,11 +98,12 @@ conviteRepository.atualizarConvite = async (
 };
 
 // Deletar convite
-conviteRepository.deletarConvite = async (idTcc, codigoDocente) => {
+conviteRepository.deletarConvite = async (idTcc, codigoDocente, fase) => {
 	const deleted = await model.Convite.destroy({
 		where: {
 			id_tcc: idTcc,
 			codigo_docente: codigoDocente,
+			fase: fase,
 		},
 	});
 	return deleted > 0;

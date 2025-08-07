@@ -28,17 +28,17 @@ router.post(
 	conviteService.criaConvite,
 );
 
-// PUT /api/convites/:id/:codigo_docente - Responde a um convite (aceitar/rejeitar)
+// PUT /api/convites/:id/:codigo_docente/:fase - Responde a um convite (aceitar/rejeitar)
 router.put(
-	"/:id/:codigo_docente",
+	"/:id/:codigo_docente/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.CONVITE.EDITAR]),
 	conviteService.respondeConvite,
 );
 
-// DELETE /api/convites/:id/:codigo_docente - Deleta um convite
+// DELETE /api/convites/:id/:codigo_docente/:fase - Deleta um convite
 router.delete(
-	"/:id/:codigo_docente",
+	"/:id/:codigo_docente/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.CONVITE.DELETAR]),
 	conviteService.deletaConvite,
