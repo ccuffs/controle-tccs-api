@@ -39,11 +39,6 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				primaryKey: true,
 			},
-			disponivel: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: false,
-			},
 		},
 		{
 			tableName: "docente_disponibilidade_banca",

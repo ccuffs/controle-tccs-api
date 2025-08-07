@@ -66,9 +66,19 @@ disponibilidadeBancaRepository.obterDisponibilidade = async (ano, semestre, id_c
 
 // Criar nova disponibilidade
 disponibilidadeBancaRepository.criarDisponibilidade = async (dadosDisponibilidade) => {
-	const disponibilidade = model.DocenteDisponibilidadeBanca.build(dadosDisponibilidade);
-	await disponibilidade.save();
-	return disponibilidade;
+    const dados = {
+        ano: parseInt(dadosDisponibilidade.ano),
+        semestre: parseInt(dadosDisponibilidade.semestre),
+        id_curso: parseInt(dadosDisponibilidade.id_curso),
+        fase: parseInt(dadosDisponibilidade.fase),
+        codigo_docente: dadosDisponibilidade.codigo_docente,
+        data_defesa: dadosDisponibilidade.data_defesa,
+        hora_defesa: dadosDisponibilidade.hora_defesa,
+    };
+
+    const disponibilidade = model.DocenteDisponibilidadeBanca.build(dados);
+    await disponibilidade.save();
+    return disponibilidade;
 };
 
 // Atualizar disponibilidade
@@ -89,24 +99,22 @@ disponibilidadeBancaRepository.atualizarDisponibilidade = async (ano, semestre, 
 
 // Criar ou atualizar disponibilidade (upsert)
 disponibilidadeBancaRepository.criarOuAtualizarDisponibilidade = async (dadosDisponibilidade) => {
-	const [disponibilidade, created] = await model.DocenteDisponibilidadeBanca.findOrCreate({
-		where: {
-			ano: dadosDisponibilidade.ano,
-			semestre: dadosDisponibilidade.semestre,
-			id_curso: dadosDisponibilidade.id_curso,
-			fase: dadosDisponibilidade.fase,
-			codigo_docente: dadosDisponibilidade.codigo_docente,
-			data_defesa: dadosDisponibilidade.data_defesa,
-			hora_defesa: dadosDisponibilidade.hora_defesa,
-		},
-		defaults: dadosDisponibilidade,
-	});
+    const where = {
+        ano: parseInt(dadosDisponibilidade.ano),
+        semestre: parseInt(dadosDisponibilidade.semestre),
+        id_curso: parseInt(dadosDisponibilidade.id_curso),
+        fase: parseInt(dadosDisponibilidade.fase),
+        codigo_docente: dadosDisponibilidade.codigo_docente,
+        data_defesa: dadosDisponibilidade.data_defesa,
+        hora_defesa: dadosDisponibilidade.hora_defesa,
+    };
 
-	if (!created) {
-		await disponibilidade.update(dadosDisponibilidade);
-	}
+    const [disponibilidade] = await model.DocenteDisponibilidadeBanca.findOrCreate({
+        where,
+        defaults: where,
+    });
 
-	return disponibilidade;
+    return disponibilidade;
 };
 
 // Deletar disponibilidade
