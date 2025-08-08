@@ -32,8 +32,27 @@ router.get(
 	defesaService.retornaDefesasPorTcc,
 );
 
+// Função auxiliar para calcular o horário anterior
+const calcularHorarioAnterior = (hora) => {
+	const [horas, minutos, segundos] = hora.split(':').map(Number);
+	let horaAnterior = horas;
+	let minutoAnterior = minutos - 30;
+
+	if (minutoAnterior < 0) {
+		minutoAnterior = 30;
+		horaAnterior -= 1;
+	}
+
+	// Se for antes das 13:30, retornar null (não há horário anterior)
+	if (horaAnterior < 13 || (horaAnterior === 13 && minutoAnterior < 30)) {
+		return null;
+	}
+
+	return `${horaAnterior.toString().padStart(2, '0')}:${minutoAnterior.toString().padStart(2, '0')}:00`;
+};
+
 // Função auxiliar para calcular o próximo horário
-const calcularProximoHorario = (hora) => {
+const calcularHorarioPosterior = (hora) => {
 	const [horas, minutos, segundos] = hora.split(':').map(Number);
 	let proximaHora = horas;
 	let proximoMinuto = minutos + 30;
@@ -118,8 +137,9 @@ router.post(
 				throw new Error("TCC não encontrado");
 			}
 
-			// Calcular próximo horário
-			const proximaHora = calcularProximoHorario(hora);
+			// Calcular horários anterior e posterior
+			const horaAnterior = calcularHorarioAnterior(hora);
+			const horaPosterior = calcularHorarioPosterior(hora);
 
 			const removerParaDocente = async (codigo) => {
 				// Remover disponibilidade do horário escolhido
@@ -136,8 +156,8 @@ router.post(
 					transaction: t,
 				});
 
-				// Remover disponibilidade do próximo horário se existir
-				if (proximaHora) {
+				// Remover disponibilidade do horário anterior se existir
+				if (horaAnterior) {
 					await model.DocenteDisponibilidadeBanca.destroy({
 						where: {
 							ano: tcc.ano,
@@ -146,7 +166,23 @@ router.post(
 							fase: tcc.fase,
 							codigo_docente: codigo,
 							data_defesa: data,
-							hora_defesa: proximaHora,
+							hora_defesa: horaAnterior,
+						},
+						transaction: t,
+					});
+				}
+
+				// Remover disponibilidade do próximo horário se existir
+				if (horaPosterior) {
+					await model.DocenteDisponibilidadeBanca.destroy({
+						where: {
+							ano: tcc.ano,
+							semestre: tcc.semestre,
+							id_curso: tcc.id_curso,
+							fase: tcc.fase,
+							codigo_docente: codigo,
+							data_defesa: data,
+							hora_defesa: horaPosterior,
 						},
 						transaction: t,
 					});
@@ -162,7 +198,8 @@ router.post(
 				.status(201)
 				.json({
 					message: "Defesa agendada com sucesso",
-					proximoHorarioRemovido: proximaHora ? true : false
+					horarioAnteriorRemovido: horaAnterior ? true : false,
+					horarioPosteriorRemovido: horaPosterior ? true : false
 				});
 		} catch (error) {
 			await t.rollback();

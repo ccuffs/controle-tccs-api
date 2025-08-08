@@ -1,7 +1,26 @@
 const defesaRepository = require("../repository/defesa-repository");
 
+// Função auxiliar para calcular o horário anterior
+const calcularHorarioAnterior = (hora) => {
+	const [horas, minutos, segundos] = hora.split(':').map(Number);
+	let horaAnterior = horas;
+	let minutoAnterior = minutos - 30;
+
+	if (minutoAnterior < 0) {
+		minutoAnterior = 30;
+		horaAnterior -= 1;
+	}
+
+	// Se for antes das 13:30, retornar null (não há horário anterior)
+	if (horaAnterior < 13 || (horaAnterior === 13 && minutoAnterior < 30)) {
+		return null;
+	}
+
+	return `${horaAnterior.toString().padStart(2, '0')}:${minutoAnterior.toString().padStart(2, '0')}:00`;
+};
+
 // Função auxiliar para calcular o próximo horário
-const calcularProximoHorario = (hora) => {
+const calcularHorarioPosterior = (hora) => {
 	const [horas, minutos, segundos] = hora.split(':').map(Number);
 	let proximaHora = horas;
 	let proximoMinuto = minutos + 30;
@@ -177,7 +196,8 @@ const deletaDefesa = async (req, res) => {
 		if (defesa.data_defesa) {
 			const data = defesa.data_defesa.toISOString().split('T')[0];
 			const hora = defesa.data_defesa.toTimeString().split(' ')[0];
-			const proximaHora = calcularProximoHorario(hora);
+			const horaAnterior = calcularHorarioAnterior(hora);
+			const horaPosterior = calcularHorarioPosterior(hora);
 
 			// Restaurar disponibilidade do horário da defesa
 			await model.DocenteDisponibilidadeBanca.create(
@@ -193,8 +213,8 @@ const deletaDefesa = async (req, res) => {
 				{ transaction: t }
 			);
 
-			// Restaurar disponibilidade do próximo horário se existir
-			if (proximaHora) {
+			// Restaurar disponibilidade do horário anterior se existir
+			if (horaAnterior) {
 				await model.DocenteDisponibilidadeBanca.create(
 					{
 						ano: defesa.TrabalhoConclusao.ano,
@@ -203,7 +223,23 @@ const deletaDefesa = async (req, res) => {
 						fase: defesa.TrabalhoConclusao.fase,
 						codigo_docente: membro_banca,
 						data_defesa: data,
-						hora_defesa: proximaHora,
+						hora_defesa: horaAnterior,
+					},
+					{ transaction: t }
+				);
+			}
+
+			// Restaurar disponibilidade do próximo horário se existir
+			if (horaPosterior) {
+				await model.DocenteDisponibilidadeBanca.create(
+					{
+						ano: defesa.TrabalhoConclusao.ano,
+						semestre: defesa.TrabalhoConclusao.semestre,
+						id_curso: defesa.TrabalhoConclusao.id_curso,
+						fase: defesa.TrabalhoConclusao.fase,
+						codigo_docente: membro_banca,
+						data_defesa: data,
+						hora_defesa: horaPosterior,
 					},
 					{ transaction: t }
 				);
