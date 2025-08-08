@@ -1,5 +1,24 @@
 const defesaRepository = require("../repository/defesa-repository");
 
+// Função auxiliar para calcular o próximo horário
+const calcularProximoHorario = (hora) => {
+	const [horas, minutos, segundos] = hora.split(':').map(Number);
+	let proximaHora = horas;
+	let proximoMinuto = minutos + 30;
+
+	if (proximoMinuto >= 60) {
+		proximoMinuto = 0;
+		proximaHora += 1;
+	}
+
+	// Se passar das 21:30, retornar null (não há próximo horário)
+	if (proximaHora > 21 || (proximaHora === 21 && proximoMinuto > 30)) {
+		return null;
+	}
+
+	return `${proximaHora.toString().padStart(2, '0')}:${proximoMinuto.toString().padStart(2, '0')}:00`;
+};
+
 // Função para retornar todas as defesas
 const retornaTodasDefesas = async (req, res) => {
 	try {
@@ -118,20 +137,86 @@ const registraAvaliacaoDefesa = async (req, res) => {
 
 // Função para deletar uma defesa
 const deletaDefesa = async (req, res) => {
+	const model = require("../models");
+	const t = await model.sequelize.transaction();
+
 	try {
 		const { id_tcc, membro_banca } = req.params;
 
+		// Buscar a defesa antes de deletar para obter os dados necessários
+		const defesa = await model.Defesa.findOne({
+			where: {
+				id_tcc: id_tcc,
+				membro_banca: membro_banca,
+			},
+			include: [
+				{
+					model: model.TrabalhoConclusao,
+					attributes: ["ano", "semestre", "id_curso", "fase"],
+				},
+			],
+		});
+
+		if (!defesa) {
+			await t.rollback();
+			return res.status(404).json({ message: "Defesa não encontrada" });
+		}
+
+		// Deletar a defesa
 		const sucesso = await defesaRepository.deletarDefesa(
 			id_tcc,
 			membro_banca,
 		);
 
-		if (sucesso) {
-			res.status(200).json({ message: "Defesa deletada com sucesso" });
-		} else {
-			res.status(404).json({ message: "Defesa não encontrada" });
+		if (!sucesso) {
+			await t.rollback();
+			return res.status(404).json({ message: "Defesa não encontrada" });
 		}
+
+		// Se a defesa tinha data e hora, restaurar as disponibilidades
+		if (defesa.data_defesa) {
+			const data = defesa.data_defesa.toISOString().split('T')[0];
+			const hora = defesa.data_defesa.toTimeString().split(' ')[0];
+			const proximaHora = calcularProximoHorario(hora);
+
+			// Restaurar disponibilidade do horário da defesa
+			await model.DocenteDisponibilidadeBanca.create(
+				{
+					ano: defesa.TrabalhoConclusao.ano,
+					semestre: defesa.TrabalhoConclusao.semestre,
+					id_curso: defesa.TrabalhoConclusao.id_curso,
+					fase: defesa.TrabalhoConclusao.fase,
+					codigo_docente: membro_banca,
+					data_defesa: data,
+					hora_defesa: hora,
+				},
+				{ transaction: t }
+			);
+
+			// Restaurar disponibilidade do próximo horário se existir
+			if (proximaHora) {
+				await model.DocenteDisponibilidadeBanca.create(
+					{
+						ano: defesa.TrabalhoConclusao.ano,
+						semestre: defesa.TrabalhoConclusao.semestre,
+						id_curso: defesa.TrabalhoConclusao.id_curso,
+						fase: defesa.TrabalhoConclusao.fase,
+						codigo_docente: membro_banca,
+						data_defesa: data,
+						hora_defesa: proximaHora,
+					},
+					{ transaction: t }
+				);
+			}
+		}
+
+		await t.commit();
+		res.status(200).json({
+			message: "Defesa deletada com sucesso",
+			disponibilidadesRestauradas: defesa.data_defesa ? true : false
+		});
 	} catch (error) {
+		await t.rollback();
 		console.error("Erro ao deletar defesa:", error);
 		res.status(500).json({ message: "Erro ao deletar defesa" });
 	}

@@ -32,6 +32,25 @@ router.get(
 	defesaService.retornaDefesasPorTcc,
 );
 
+// Função auxiliar para calcular o próximo horário
+const calcularProximoHorario = (hora) => {
+	const [horas, minutos, segundos] = hora.split(':').map(Number);
+	let proximaHora = horas;
+	let proximoMinuto = minutos + 30;
+
+	if (proximoMinuto >= 60) {
+		proximoMinuto = 0;
+		proximaHora += 1;
+	}
+
+	// Se passar das 21:30, retornar null (não há próximo horário)
+	if (proximaHora > 21 || (proximaHora === 21 && proximoMinuto > 30)) {
+		return null;
+	}
+
+	return `${proximaHora.toString().padStart(2, '0')}:${proximoMinuto.toString().padStart(2, '0')}:00`;
+};
+
 // POST /api/defesas/agendar - Agenda defesa para orientador + 2 membros, removendo suas disponibilidades (transação)
 router.post(
 	"/agendar",
@@ -99,7 +118,11 @@ router.post(
 				throw new Error("TCC não encontrado");
 			}
 
+			// Calcular próximo horário
+			const proximaHora = calcularProximoHorario(hora);
+
 			const removerParaDocente = async (codigo) => {
+				// Remover disponibilidade do horário escolhido
 				await model.DocenteDisponibilidadeBanca.destroy({
 					where: {
 						ano: tcc.ano,
@@ -112,6 +135,22 @@ router.post(
 					},
 					transaction: t,
 				});
+
+				// Remover disponibilidade do próximo horário se existir
+				if (proximaHora) {
+					await model.DocenteDisponibilidadeBanca.destroy({
+						where: {
+							ano: tcc.ano,
+							semestre: tcc.semestre,
+							id_curso: tcc.id_curso,
+							fase: tcc.fase,
+							codigo_docente: codigo,
+							data_defesa: data,
+							hora_defesa: proximaHora,
+						},
+						transaction: t,
+					});
+				}
 			};
 
 			await removerParaDocente(codigo_orientador);
@@ -121,7 +160,10 @@ router.post(
 			await t.commit();
 			return res
 				.status(201)
-				.json({ message: "Defesa agendada com sucesso" });
+				.json({
+					message: "Defesa agendada com sucesso",
+					proximoHorarioRemovido: proximaHora ? true : false
+				});
 		} catch (error) {
 			await t.rollback();
 			console.error("Erro ao agendar defesa:", error);
