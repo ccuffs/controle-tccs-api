@@ -87,9 +87,7 @@ disponibilidadeBancaRouter.post(
 disponibilidadeBancaRouter.put(
 	"/:ano/:semestre/:id_curso/:fase/:codigo_docente/:data_defesa/:hora_defesa",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([
-		Permissoes.DISPONIBILIDADE_BANCA.EDITAR,
-	]),
+	autorizacao.verificarPermissao([Permissoes.DISPONIBILIDADE_BANCA.EDITAR]),
 	disponibilidadeBancaService.atualizaDisponibilidade,
 );
 
@@ -97,9 +95,7 @@ disponibilidadeBancaRouter.put(
 disponibilidadeBancaRouter.delete(
 	"/:ano/:semestre/:id_curso/:fase/:codigo_docente/:data_defesa/:hora_defesa",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([
-		Permissoes.DISPONIBILIDADE_BANCA.DELETAR,
-	]),
+	autorizacao.verificarPermissao([Permissoes.DISPONIBILIDADE_BANCA.DELETAR]),
 	disponibilidadeBancaService.deletaDisponibilidade,
 );
 

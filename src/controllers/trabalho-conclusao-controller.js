@@ -71,13 +71,16 @@ trabalhoConclusaoRouter.get(
 		try {
 			const { matricula } = req.params;
 			const trabalhoConclusao =
-				await trabalhoConclusaoService.buscarPorDiscenteOfertaAtual(matricula);
+				await trabalhoConclusaoService.buscarPorDiscenteOfertaAtual(
+					matricula,
+				);
 
 			if (trabalhoConclusao) {
 				res.json(trabalhoConclusao);
 			} else {
 				res.status(404).json({
-					message: "Trabalho de conclusão não encontrado na oferta atual",
+					message:
+						"Trabalho de conclusão não encontrado na oferta atual",
 				});
 			}
 		} catch (error) {

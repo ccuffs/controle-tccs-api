@@ -33,7 +33,12 @@ datasDefesaRepository.obterTodasDatasDefesa = async (filtros) => {
 };
 
 // Buscar datas de defesa por oferta específica
-datasDefesaRepository.obterDatasDefesaPorOferta = async (ano, semestre, id_curso, fase) => {
+datasDefesaRepository.obterDatasDefesaPorOferta = async (
+	ano,
+	semestre,
+	id_curso,
+	fase,
+) => {
 	const datasDefesa = await model.DatasDefesaTcc.findOne({
 		where: {
 			ano: parseInt(ano),
@@ -60,20 +65,34 @@ datasDefesaRepository.criarDataDefesa = async (dadosDataDefesa) => {
 };
 
 // Atualizar data de defesa
-datasDefesaRepository.atualizarDataDefesa = async (ano, semestre, id_curso, fase, dadosDataDefesa) => {
-	const [linhasAfetadas] = await model.DatasDefesaTcc.update(dadosDataDefesa, {
-		where: {
-			ano: parseInt(ano),
-			semestre: parseInt(semestre),
-			id_curso: parseInt(id_curso),
-			fase: parseInt(fase),
+datasDefesaRepository.atualizarDataDefesa = async (
+	ano,
+	semestre,
+	id_curso,
+	fase,
+	dadosDataDefesa,
+) => {
+	const [linhasAfetadas] = await model.DatasDefesaTcc.update(
+		dadosDataDefesa,
+		{
+			where: {
+				ano: parseInt(ano),
+				semestre: parseInt(semestre),
+				id_curso: parseInt(id_curso),
+				fase: parseInt(fase),
+			},
 		},
-	});
+	);
 	return linhasAfetadas > 0;
 };
 
 // Deletar data de defesa
-datasDefesaRepository.deletarDataDefesa = async (ano, semestre, id_curso, fase) => {
+datasDefesaRepository.deletarDataDefesa = async (
+	ano,
+	semestre,
+	id_curso,
+	fase,
+) => {
 	const deleted = await model.DatasDefesaTcc.destroy({
 		where: {
 			ano: parseInt(ano),

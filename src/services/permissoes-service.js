@@ -86,9 +86,8 @@ const verificarPermissao = async (userId, nomePermissao, acao = "leitura") => {
  */
 const verificarConsultaTodos = async (userId) => {
 	try {
-		const usuario = await permissoesRepository.buscarUsuarioComGrupos(
-			userId,
-		);
+		const usuario =
+			await permissoesRepository.buscarUsuarioComGrupos(userId);
 
 		if (!usuario) {
 			return false;
@@ -109,9 +108,8 @@ const verificarConsultaTodos = async (userId) => {
  */
 const buscarGruposDoUsuario = async (userId) => {
 	try {
-		const usuario = await permissoesRepository.buscarUsuarioComGrupos(
-			userId,
-		);
+		const usuario =
+			await permissoesRepository.buscarUsuarioComGrupos(userId);
 
 		if (!usuario) {
 			throw new Error("Usuário não encontrado");

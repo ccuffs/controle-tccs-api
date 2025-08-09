@@ -2,7 +2,7 @@ const defesaRepository = require("../repository/defesa-repository");
 
 // Função auxiliar para calcular o horário anterior
 const calcularHorarioAnterior = (hora) => {
-	const [horas, minutos, segundos] = hora.split(':').map(Number);
+	const [horas, minutos, segundos] = hora.split(":").map(Number);
 	let horaAnterior = horas;
 	let minutoAnterior = minutos - 30;
 
@@ -16,12 +16,12 @@ const calcularHorarioAnterior = (hora) => {
 		return null;
 	}
 
-	return `${horaAnterior.toString().padStart(2, '0')}:${minutoAnterior.toString().padStart(2, '0')}:00`;
+	return `${horaAnterior.toString().padStart(2, "0")}:${minutoAnterior.toString().padStart(2, "0")}:00`;
 };
 
 // Função auxiliar para calcular o próximo horário
 const calcularHorarioPosterior = (hora) => {
-	const [horas, minutos, segundos] = hora.split(':').map(Number);
+	const [horas, minutos, segundos] = hora.split(":").map(Number);
 	let proximaHora = horas;
 	let proximoMinuto = minutos + 30;
 
@@ -35,7 +35,7 @@ const calcularHorarioPosterior = (hora) => {
 		return null;
 	}
 
-	return `${proximaHora.toString().padStart(2, '0')}:${proximoMinuto.toString().padStart(2, '0')}:00`;
+	return `${proximaHora.toString().padStart(2, "0")}:${proximoMinuto.toString().padStart(2, "0")}:00`;
 };
 
 // Função para retornar todas as defesas
@@ -60,7 +60,9 @@ const retornaDefesasPorTcc = async (req, res) => {
 		const defesas = await defesaRepository.obterDefesasPorTcc(id_tcc);
 
 		if (!defesas || defesas.length === 0) {
-			return res.status(404).json({ message: "Nenhuma defesa encontrada para este TCC" });
+			return res
+				.status(404)
+				.json({ message: "Nenhuma defesa encontrada para este TCC" });
 		}
 
 		res.status(200).json({ defesas: defesas });
@@ -83,7 +85,8 @@ const criaDefesa = async (req, res) => {
 
 		if (defesaExiste) {
 			return res.status(400).json({
-				message: "Já existe uma defesa agendada para este TCC com este membro da banca",
+				message:
+					"Já existe uma defesa agendada para este TCC com este membro da banca",
 			});
 		}
 
@@ -194,8 +197,8 @@ const deletaDefesa = async (req, res) => {
 
 		// Se a defesa tinha data e hora, restaurar as disponibilidades
 		if (defesa.data_defesa) {
-			const data = defesa.data_defesa.toISOString().split('T')[0];
-			const hora = defesa.data_defesa.toTimeString().split(' ')[0];
+			const data = defesa.data_defesa.toISOString().split("T")[0];
+			const hora = defesa.data_defesa.toTimeString().split(" ")[0];
 			const horaAnterior = calcularHorarioAnterior(hora);
 			const horaPosterior = calcularHorarioPosterior(hora);
 
@@ -210,7 +213,7 @@ const deletaDefesa = async (req, res) => {
 					data_defesa: data,
 					hora_defesa: hora,
 				},
-				{ transaction: t }
+				{ transaction: t },
 			);
 
 			// Restaurar disponibilidade do horário anterior se existir
@@ -225,7 +228,7 @@ const deletaDefesa = async (req, res) => {
 						data_defesa: data,
 						hora_defesa: horaAnterior,
 					},
-					{ transaction: t }
+					{ transaction: t },
 				);
 			}
 
@@ -241,7 +244,7 @@ const deletaDefesa = async (req, res) => {
 						data_defesa: data,
 						hora_defesa: horaPosterior,
 					},
-					{ transaction: t }
+					{ transaction: t },
 				);
 			}
 		}
@@ -249,7 +252,7 @@ const deletaDefesa = async (req, res) => {
 		await t.commit();
 		res.status(200).json({
 			message: "Defesa deletada com sucesso",
-			disponibilidadesRestauradas: defesa.data_defesa ? true : false
+			disponibilidadesRestauradas: defesa.data_defesa ? true : false,
 		});
 	} catch (error) {
 		await t.rollback();

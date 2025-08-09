@@ -45,7 +45,9 @@ const criaTrabalhoConlusao = async (req, res) => {
 
 	try {
 		const trabalho =
-			await trabalhoConclusaoRepository.criarTrabalhoConclusao(dadosTrabalho);
+			await trabalhoConclusaoRepository.criarTrabalhoConclusao(
+				dadosTrabalho,
+			);
 
 		res.status(201).json({
 			message: "Trabalho de conclusão criado com sucesso",
@@ -73,7 +75,10 @@ const atualizaTrabalhoConlusao = async (req, res) => {
 
 		if (sucesso) {
 			// Buscar os dados atualizados para retornar
-			const trabalhoAtualizado = await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(id);
+			const trabalhoAtualizado =
+				await trabalhoConclusaoRepository.obterTrabalhoConclusaoPorId(
+					id,
+				);
 			res.status(200).json({
 				message: "Trabalho de conclusão atualizado com sucesso",
 				trabalho: trabalhoAtualizado,
@@ -141,7 +146,8 @@ const atualizaEtapaTrabalho = async (req, res) => {
 const buscarPorDiscente = async (matricula) => {
 	try {
 		// Buscar o trabalho de conclusão mais recente do discente (qualquer oferta)
-		const trabalho = await trabalhoConclusaoRepository.buscarPorDiscente(matricula);
+		const trabalho =
+			await trabalhoConclusaoRepository.buscarPorDiscente(matricula);
 
 		return trabalho;
 	} catch (error) {
@@ -172,7 +178,10 @@ const buscarPorDiscenteOfertaAtual = async (matricula) => {
 
 		return trabalho;
 	} catch (error) {
-		console.error("Erro ao buscar trabalho por discente na oferta atual:", error);
+		console.error(
+			"Erro ao buscar trabalho por discente na oferta atual:",
+			error,
+		);
 		throw error;
 	}
 };

@@ -1,5 +1,6 @@
 const temaTccRepository = require("../repository/tema-tcc-repository");
 const { obterAnoSemestreAtual } = require("./ano-semestre-service");
+const ofertaTccService = require("./ofertas-tcc-service");
 
 const retornaTodosTemasTcc = async (req, res) => {
 	try {
@@ -22,6 +23,22 @@ const retornaTemasTccPorCurso = async (req, res) => {
 		// Primeiro, buscar os temas TCC com docente e área
 		const temas = await temaTccRepository.obterTemasTccPorCurso(id_curso);
 
+		// Tentar identificar a última oferta para determinar a fase vigente
+		let faseVigente = 1;
+		try {
+			const ultimaOferta = await ofertaTccService.buscarUltimaOfertaTcc();
+			if (
+				ultimaOferta &&
+				parseInt(ultimaOferta.id_curso) === parseInt(id_curso) &&
+				ultimaOferta.ano === anoAtual &&
+				ultimaOferta.semestre === semestreAtual
+			) {
+				faseVigente = parseInt(ultimaOferta.fase) || 1;
+			}
+		} catch (_) {
+			// mantém faseVigente = 1 em caso de erro
+		}
+
 		// Buscar vagas separadamente para cada docente
 		const temasComVagas = await Promise.all(
 			temas.map(async (tema) => {
@@ -34,6 +51,7 @@ const retornaTemasTccPorCurso = async (req, res) => {
 						semestreAtual,
 						id_curso,
 						temaData.Docente.codigo,
+						faseVigente,
 					);
 
 				const vagasOferta = docenteOferta ? docenteOferta.vagas : 0;
@@ -78,12 +96,29 @@ const retornaTemasTccPorDocenteECurso = async (req, res) => {
 			id_curso,
 		);
 
+		// Tentar identificar a última oferta para determinar a fase vigente
+		let faseVigente = 1;
+		try {
+			const ultimaOferta = await ofertaTccService.buscarUltimaOfertaTcc();
+			if (
+				ultimaOferta &&
+				parseInt(ultimaOferta.id_curso) === parseInt(id_curso) &&
+				ultimaOferta.ano === anoAtual &&
+				ultimaOferta.semestre === semestreAtual
+			) {
+				faseVigente = parseInt(ultimaOferta.fase) || 1;
+			}
+		} catch (_) {
+			// mantém faseVigente = 1 em caso de erro
+		}
+
 		// Buscar vagas da oferta do docente
 		const docenteOferta = await temaTccRepository.buscarOfertaDocente(
 			anoAtual,
 			semestreAtual,
 			id_curso,
 			codigo,
+			faseVigente,
 		);
 
 		const vagasOferta = docenteOferta ? docenteOferta.vagas : 0;

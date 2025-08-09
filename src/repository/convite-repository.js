@@ -36,12 +36,15 @@ conviteRepository.obterTodosConvites = async (filtros) => {
 		order: [["data_envio", "DESC"]],
 	});
 
-
 	return convites;
 };
 
 // Buscar convite por ID e docente
-conviteRepository.obterConvitePorIdEDocente = async (idTcc, codigoDocente, fase) => {
+conviteRepository.obterConvitePorIdEDocente = async (
+	idTcc,
+	codigoDocente,
+	fase,
+) => {
 	const convite = await model.Convite.findOne({
 		where: {
 			id_tcc: idTcc,
@@ -59,7 +62,11 @@ conviteRepository.obterConvitePorIdEDocente = async (idTcc, codigoDocente, fase)
 };
 
 // Verificar se convite existe
-conviteRepository.verificarConviteExiste = async (idTcc, codigoDocente, fase) => {
+conviteRepository.verificarConviteExiste = async (
+	idTcc,
+	codigoDocente,
+	fase,
+) => {
 	const convite = await model.Convite.findOne({
 		where: {
 			id_tcc: idTcc,

@@ -99,11 +99,7 @@ defesaRepository.criarDefesa = async (dadosDefesa) => {
 };
 
 // Atualizar defesa
-defesaRepository.atualizarDefesa = async (
-	idTcc,
-	membroBanca,
-	dadosDefesa,
-) => {
+defesaRepository.atualizarDefesa = async (idTcc, membroBanca, dadosDefesa) => {
 	const [linhasAfetadas] = await model.Defesa.update(dadosDefesa, {
 		where: {
 			id_tcc: idTcc,

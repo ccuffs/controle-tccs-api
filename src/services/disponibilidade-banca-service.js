@@ -3,21 +3,37 @@ const datasDefesaRepository = require("../repository/datas-defesa-repository");
 
 // Função utilitária para adicionar compatibilidade do campo 'disponivel'
 const adicionarFlagDisponivel = (entrada) => {
-    if (!entrada) return entrada;
-    if (Array.isArray(entrada)) {
-        return entrada.map((item) => ({ ...item.toJSON?.() ?? item, disponivel: true }));
-    }
-    return { ...entrada.toJSON?.() ?? entrada, disponivel: true };
+	if (!entrada) return entrada;
+	if (Array.isArray(entrada)) {
+		return entrada.map((item) => ({
+			...(item.toJSON?.() ?? item),
+			disponivel: true,
+		}));
+	}
+	return { ...(entrada.toJSON?.() ?? entrada), disponivel: true };
 };
 
 // Função para retornar todas as disponibilidades de banca
 const retornaTodasDisponibilidades = async (req, res) => {
 	try {
-		const { ano, semestre, id_curso, fase, codigo_docente, data_defesa } = req.query;
-		const filtros = { ano, semestre, id_curso, fase, codigo_docente, data_defesa };
+		const { ano, semestre, id_curso, fase, codigo_docente, data_defesa } =
+			req.query;
+		const filtros = {
+			ano,
+			semestre,
+			id_curso,
+			fase,
+			codigo_docente,
+			data_defesa,
+		};
 
-        const disponibilidades = await disponibilidadeBancaRepository.obterTodasDisponibilidades(filtros);
-        res.status(200).json({ disponibilidades: adicionarFlagDisponivel(disponibilidades) });
+		const disponibilidades =
+			await disponibilidadeBancaRepository.obterTodasDisponibilidades(
+				filtros,
+			);
+		res.status(200).json({
+			disponibilidades: adicionarFlagDisponivel(disponibilidades),
+		});
 	} catch (error) {
 		console.log("Erro ao buscar disponibilidades:", error);
 		res.sendStatus(500);
@@ -27,23 +43,36 @@ const retornaTodasDisponibilidades = async (req, res) => {
 // Função para buscar disponibilidade específica
 const retornaDisponibilidade = async (req, res) => {
 	try {
-		const { ano, semestre, id_curso, fase, codigo_docente, data_defesa, hora_defesa } = req.params;
-
-		const disponibilidade = await disponibilidadeBancaRepository.obterDisponibilidade(
+		const {
 			ano,
 			semestre,
 			id_curso,
 			fase,
 			codigo_docente,
 			data_defesa,
-			hora_defesa
-		);
+			hora_defesa,
+		} = req.params;
 
-        if (!disponibilidade) {
-			return res.status(404).json({ message: "Disponibilidade não encontrada" });
+		const disponibilidade =
+			await disponibilidadeBancaRepository.obterDisponibilidade(
+				ano,
+				semestre,
+				id_curso,
+				fase,
+				codigo_docente,
+				data_defesa,
+				hora_defesa,
+			);
+
+		if (!disponibilidade) {
+			return res
+				.status(404)
+				.json({ message: "Disponibilidade não encontrada" });
 		}
 
-        res.status(200).json({ disponibilidade: adicionarFlagDisponivel(disponibilidade) });
+		res.status(200).json({
+			disponibilidade: adicionarFlagDisponivel(disponibilidade),
+		});
 	} catch (error) {
 		console.log("Erro ao buscar disponibilidade:", error);
 		res.sendStatus(500);
@@ -55,15 +84,18 @@ const retornaDisponibilidadesPorDocenteEOferta = async (req, res) => {
 	try {
 		const { codigo_docente, ano, semestre, id_curso, fase } = req.params;
 
-        const disponibilidades = await disponibilidadeBancaRepository.obterDisponibilidadesPorDocenteEOferta(
-			codigo_docente,
-			ano,
-			semestre,
-			id_curso,
-			fase
-		);
+		const disponibilidades =
+			await disponibilidadeBancaRepository.obterDisponibilidadesPorDocenteEOferta(
+				codigo_docente,
+				ano,
+				semestre,
+				id_curso,
+				fase,
+			);
 
-        res.status(200).json({ disponibilidades: adicionarFlagDisponivel(disponibilidades) });
+		res.status(200).json({
+			disponibilidades: adicionarFlagDisponivel(disponibilidades),
+		});
 	} catch (error) {
 		console.log("Erro ao buscar disponibilidades:", error);
 		res.sendStatus(500);
@@ -73,21 +105,31 @@ const retornaDisponibilidadesPorDocenteEOferta = async (req, res) => {
 // Função para criar nova disponibilidade
 const criaDisponibilidade = async (req, res) => {
 	try {
-        const dadosDisponibilidade = { ...req.body };
-        delete dadosDisponibilidade.disponivel;
+		const dadosDisponibilidade = { ...req.body };
+		delete dadosDisponibilidade.disponivel;
 
 		// Validações básicas
-		if (!dadosDisponibilidade.ano || !dadosDisponibilidade.semestre ||
-			!dadosDisponibilidade.id_curso || !dadosDisponibilidade.fase ||
-			!dadosDisponibilidade.codigo_docente || !dadosDisponibilidade.data_defesa ||
-			!dadosDisponibilidade.hora_defesa) {
+		if (
+			!dadosDisponibilidade.ano ||
+			!dadosDisponibilidade.semestre ||
+			!dadosDisponibilidade.id_curso ||
+			!dadosDisponibilidade.fase ||
+			!dadosDisponibilidade.codigo_docente ||
+			!dadosDisponibilidade.data_defesa ||
+			!dadosDisponibilidade.hora_defesa
+		) {
 			return res.status(400).json({
 				message: "Todos os campos são obrigatórios",
 			});
 		}
 
-        const novaDisponibilidade = await disponibilidadeBancaRepository.criarDisponibilidade(dadosDisponibilidade);
-        res.status(201).json({ disponibilidade: adicionarFlagDisponivel(novaDisponibilidade) });
+		const novaDisponibilidade =
+			await disponibilidadeBancaRepository.criarDisponibilidade(
+				dadosDisponibilidade,
+			);
+		res.status(201).json({
+			disponibilidade: adicionarFlagDisponivel(novaDisponibilidade),
+		});
 	} catch (error) {
 		console.log("Erro ao criar disponibilidade:", error);
 		res.status(500).json({ message: "Erro ao criar disponibilidade" });
@@ -97,11 +139,7 @@ const criaDisponibilidade = async (req, res) => {
 // Função para atualizar disponibilidade
 const atualizaDisponibilidade = async (req, res) => {
 	try {
-		const { ano, semestre, id_curso, fase, codigo_docente, data_defesa, hora_defesa } = req.params;
-        const dadosDisponibilidade = { ...req.body };
-        delete dadosDisponibilidade.disponivel;
-
-        const atualizada = await disponibilidadeBancaRepository.atualizarDisponibilidade(
+		const {
 			ano,
 			semestre,
 			id_curso,
@@ -109,11 +147,26 @@ const atualizaDisponibilidade = async (req, res) => {
 			codigo_docente,
 			data_defesa,
 			hora_defesa,
-			dadosDisponibilidade
-		);
+		} = req.params;
+		const dadosDisponibilidade = { ...req.body };
+		delete dadosDisponibilidade.disponivel;
+
+		const atualizada =
+			await disponibilidadeBancaRepository.atualizarDisponibilidade(
+				ano,
+				semestre,
+				id_curso,
+				fase,
+				codigo_docente,
+				data_defesa,
+				hora_defesa,
+				dadosDisponibilidade,
+			);
 
 		if (atualizada) {
-			res.status(200).json({ message: "Disponibilidade atualizada com sucesso" });
+			res.status(200).json({
+				message: "Disponibilidade atualizada com sucesso",
+			});
 		} else {
 			res.status(404).json({ message: "Disponibilidade não encontrada" });
 		}
@@ -126,44 +179,67 @@ const atualizaDisponibilidade = async (req, res) => {
 // Função para criar ou atualizar disponibilidade (upsert)
 const criaOuAtualizaDisponibilidade = async (req, res) => {
 	try {
-        const dadosDisponibilidade = { ...req.body };
-        delete dadosDisponibilidade.disponivel;
+		const dadosDisponibilidade = { ...req.body };
+		delete dadosDisponibilidade.disponivel;
 
 		// Validações básicas
-		if (!dadosDisponibilidade.ano || !dadosDisponibilidade.semestre ||
-			!dadosDisponibilidade.id_curso || !dadosDisponibilidade.fase ||
-			!dadosDisponibilidade.codigo_docente || !dadosDisponibilidade.data_defesa ||
-			!dadosDisponibilidade.hora_defesa) {
+		if (
+			!dadosDisponibilidade.ano ||
+			!dadosDisponibilidade.semestre ||
+			!dadosDisponibilidade.id_curso ||
+			!dadosDisponibilidade.fase ||
+			!dadosDisponibilidade.codigo_docente ||
+			!dadosDisponibilidade.data_defesa ||
+			!dadosDisponibilidade.hora_defesa
+		) {
 			return res.status(400).json({
 				message: "Todos os campos são obrigatórios",
 			});
 		}
 
-        const disponibilidade = await disponibilidadeBancaRepository.criarOuAtualizarDisponibilidade(dadosDisponibilidade);
-        res.status(200).json({ disponibilidade: adicionarFlagDisponivel(disponibilidade) });
+		const disponibilidade =
+			await disponibilidadeBancaRepository.criarOuAtualizarDisponibilidade(
+				dadosDisponibilidade,
+			);
+		res.status(200).json({
+			disponibilidade: adicionarFlagDisponivel(disponibilidade),
+		});
 	} catch (error) {
 		console.log("Erro ao criar/atualizar disponibilidade:", error);
-		res.status(500).json({ message: "Erro ao criar/atualizar disponibilidade" });
+		res.status(500).json({
+			message: "Erro ao criar/atualizar disponibilidade",
+		});
 	}
 };
 
 // Função para deletar disponibilidade
 const deletaDisponibilidade = async (req, res) => {
 	try {
-		const { ano, semestre, id_curso, fase, codigo_docente, data_defesa, hora_defesa } = req.params;
-
-		const deleted = await disponibilidadeBancaRepository.deletarDisponibilidade(
+		const {
 			ano,
 			semestre,
 			id_curso,
 			fase,
 			codigo_docente,
 			data_defesa,
-			hora_defesa
-		);
+			hora_defesa,
+		} = req.params;
+
+		const deleted =
+			await disponibilidadeBancaRepository.deletarDisponibilidade(
+				ano,
+				semestre,
+				id_curso,
+				fase,
+				codigo_docente,
+				data_defesa,
+				hora_defesa,
+			);
 
 		if (deleted) {
-			res.status(200).json({ message: "Disponibilidade deletada com sucesso" });
+			res.status(200).json({
+				message: "Disponibilidade deletada com sucesso",
+			});
 		} else {
 			res.status(404).json({ message: "Disponibilidade não encontrada" });
 		}
@@ -179,25 +255,31 @@ const retornaGradeDisponibilidade = async (req, res) => {
 		const { codigo_docente, ano, semestre, id_curso, fase } = req.params;
 
 		// Buscar datas de defesa para a oferta
-		const datasDefesa = await datasDefesaRepository.obterDatasDefesaPorOferta(
-			ano,
-			semestre,
-			id_curso,
-			fase
-		);
+		const datasDefesa =
+			await datasDefesaRepository.obterDatasDefesaPorOferta(
+				ano,
+				semestre,
+				id_curso,
+				fase,
+			);
 
 		if (!datasDefesa) {
-			return res.status(404).json({ message: "Datas de defesa não encontradas para esta oferta" });
+			return res
+				.status(404)
+				.json({
+					message: "Datas de defesa não encontradas para esta oferta",
+				});
 		}
 
-        // Buscar disponibilidades existentes do docente
-        const disponibilidades = await disponibilidadeBancaRepository.obterDisponibilidadesPorDocenteEOferta(
-			codigo_docente,
-			ano,
-			semestre,
-			id_curso,
-			fase
-		);
+		// Buscar disponibilidades existentes do docente
+		const disponibilidades =
+			await disponibilidadeBancaRepository.obterDisponibilidadesPorDocenteEOferta(
+				codigo_docente,
+				ano,
+				semestre,
+				id_curso,
+				fase,
+			);
 
 		// Gerar horários (13:30 até 21:30 em intervalos de 30 minutos)
 		const horarios = [];
@@ -211,8 +293,8 @@ const retornaGradeDisponibilidade = async (req, res) => {
 				if (hora === horaInicio && minuto < minutoInicio) continue;
 				if (hora === horaFim && minuto > minutoFim) continue;
 
-				const horaStr = hora.toString().padStart(2, '0');
-				const minutoStr = minuto.toString().padStart(2, '0');
+				const horaStr = hora.toString().padStart(2, "0");
+				const minutoStr = minuto.toString().padStart(2, "0");
 				horarios.push(`${horaStr}:${minutoStr}:00`);
 			}
 		}
@@ -223,18 +305,22 @@ const retornaGradeDisponibilidade = async (req, res) => {
 			const dataInicio = new Date(datasDefesa.inicio);
 			const dataFim = new Date(datasDefesa.fim);
 
-			for (let data = new Date(dataInicio); data <= dataFim; data.setDate(data.getDate() + 1)) {
-				datas.push(new Date(data).toISOString().split('T')[0]);
+			for (
+				let data = new Date(dataInicio);
+				data <= dataFim;
+				data.setDate(data.getDate() + 1)
+			) {
+				datas.push(new Date(data).toISOString().split("T")[0]);
 			}
 		}
 
 		// Criar grade de disponibilidade
-        const grade = {
-            horarios: horarios,
-            datas: datas,
-            disponibilidades: adicionarFlagDisponivel(disponibilidades),
-            datasDefesa: datasDefesa
-        };
+		const grade = {
+			horarios: horarios,
+			datas: datas,
+			disponibilidades: adicionarFlagDisponivel(disponibilidades),
+			datasDefesa: datasDefesa,
+		};
 
 		res.status(200).json({ grade: grade });
 	} catch (error) {
@@ -246,7 +332,7 @@ const retornaGradeDisponibilidade = async (req, res) => {
 // Função para sincronizar múltiplas disponibilidades
 const sincronizarDisponibilidades = async (req, res) => {
 	try {
-        const { disponibilidades } = req.body;
+		const { disponibilidades } = req.body;
 
 		if (!disponibilidades || !Array.isArray(disponibilidades)) {
 			return res.status(400).json({
@@ -256,74 +342,87 @@ const sincronizarDisponibilidades = async (req, res) => {
 
 		const resultados = [];
 
-        for (const dadosDisponibilidade of disponibilidades) {
+		for (const dadosDisponibilidade of disponibilidades) {
 			// Validações básicas para cada disponibilidade
-			if (!dadosDisponibilidade.ano || !dadosDisponibilidade.semestre ||
-				!dadosDisponibilidade.id_curso || !dadosDisponibilidade.fase ||
-				!dadosDisponibilidade.codigo_docente || !dadosDisponibilidade.data_defesa ||
-				!dadosDisponibilidade.hora_defesa) {
+			if (
+				!dadosDisponibilidade.ano ||
+				!dadosDisponibilidade.semestre ||
+				!dadosDisponibilidade.id_curso ||
+				!dadosDisponibilidade.fase ||
+				!dadosDisponibilidade.codigo_docente ||
+				!dadosDisponibilidade.data_defesa ||
+				!dadosDisponibilidade.hora_defesa
+			) {
 				return res.status(400).json({
-					message: "Todos os campos são obrigatórios para cada disponibilidade",
+					message:
+						"Todos os campos são obrigatórios para cada disponibilidade",
 				});
 			}
 
 			try {
-                if (dadosDisponibilidade.disponivel === true) {
-                    const payload = { ...dadosDisponibilidade };
-                    delete payload.disponivel;
-                    const disponibilidade = await disponibilidadeBancaRepository.criarOuAtualizarDisponibilidade(payload);
-                    resultados.push({
-                        success: true,
-                        data: dadosDisponibilidade.data_defesa,
-                        hora: dadosDisponibilidade.hora_defesa,
-                        disponibilidade: adicionarFlagDisponivel(disponibilidade),
-                    });
-                } else if (dadosDisponibilidade.disponivel === false) {
-                    const deleted = await disponibilidadeBancaRepository.deletarDisponibilidade(
-                        dadosDisponibilidade.ano,
-                        dadosDisponibilidade.semestre,
-                        dadosDisponibilidade.id_curso,
-                        dadosDisponibilidade.fase,
-                        dadosDisponibilidade.codigo_docente,
-                        dadosDisponibilidade.data_defesa,
-                        dadosDisponibilidade.hora_defesa
-                    );
-                    resultados.push({
-                        success: true,
-                        data: dadosDisponibilidade.data_defesa,
-                        hora: dadosDisponibilidade.hora_defesa,
-                        deleted,
-                    });
-                } else {
-                    // Caso o campo não venha definido, não persiste nem remove.
-                    // Isso garante que apenas registros explicitamente marcados como disponíveis sejam salvos.
-                    resultados.push({
-                        success: true,
-                        data: dadosDisponibilidade.data_defesa,
-                        hora: dadosDisponibilidade.hora_defesa,
-                        ignored: true,
-                    });
-                }
+				if (dadosDisponibilidade.disponivel === true) {
+					const payload = { ...dadosDisponibilidade };
+					delete payload.disponivel;
+					const disponibilidade =
+						await disponibilidadeBancaRepository.criarOuAtualizarDisponibilidade(
+							payload,
+						);
+					resultados.push({
+						success: true,
+						data: dadosDisponibilidade.data_defesa,
+						hora: dadosDisponibilidade.hora_defesa,
+						disponibilidade:
+							adicionarFlagDisponivel(disponibilidade),
+					});
+				} else if (dadosDisponibilidade.disponivel === false) {
+					const deleted =
+						await disponibilidadeBancaRepository.deletarDisponibilidade(
+							dadosDisponibilidade.ano,
+							dadosDisponibilidade.semestre,
+							dadosDisponibilidade.id_curso,
+							dadosDisponibilidade.fase,
+							dadosDisponibilidade.codigo_docente,
+							dadosDisponibilidade.data_defesa,
+							dadosDisponibilidade.hora_defesa,
+						);
+					resultados.push({
+						success: true,
+						data: dadosDisponibilidade.data_defesa,
+						hora: dadosDisponibilidade.hora_defesa,
+						deleted,
+					});
+				} else {
+					// Caso o campo não venha definido, não persiste nem remove.
+					// Isso garante que apenas registros explicitamente marcados como disponíveis sejam salvos.
+					resultados.push({
+						success: true,
+						data: dadosDisponibilidade.data_defesa,
+						hora: dadosDisponibilidade.hora_defesa,
+						ignored: true,
+					});
+				}
 			} catch (error) {
 				resultados.push({
 					success: false,
 					data: dadosDisponibilidade.data_defesa,
 					hora: dadosDisponibilidade.hora_defesa,
-					error: error.message
+					error: error.message,
 				});
 			}
 		}
 
-		const sucessos = resultados.filter(r => r.success).length;
-		const falhas = resultados.filter(r => !r.success).length;
+		const sucessos = resultados.filter((r) => r.success).length;
+		const falhas = resultados.filter((r) => !r.success).length;
 
 		res.status(200).json({
 			message: `Sincronização concluída: ${sucessos} sucessos, ${falhas} falhas`,
-			resultados: resultados
+			resultados: resultados,
 		});
 	} catch (error) {
 		console.log("Erro ao sincronizar disponibilidades:", error);
-		res.status(500).json({ message: "Erro ao sincronizar disponibilidades" });
+		res.status(500).json({
+			message: "Erro ao sincronizar disponibilidades",
+		});
 	}
 };
 

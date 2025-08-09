@@ -120,12 +120,10 @@ const buscarDadosUsuario = async (userId) => {
 			throw new Error("Usuário não encontrado");
 		}
 
-		const permissoes = await permissoesService.buscarPermissoesDoUsuario(
-			userId,
-		);
-		const temConsultaTodos = await permissoesService.verificarConsultaTodos(
-			userId,
-		);
+		const permissoes =
+			await permissoesService.buscarPermissoesDoUsuario(userId);
+		const temConsultaTodos =
+			await permissoesService.verificarConsultaTodos(userId);
 
 		return {
 			id: usuario.id,
@@ -149,12 +147,10 @@ const buscarDadosUsuario = async (userId) => {
  */
 const buscarPermissoesUsuario = async (userId) => {
 	try {
-		const permissoes = await permissoesService.buscarPermissoesDoUsuario(
-			userId,
-		);
-		const temConsultaTodos = await permissoesService.verificarConsultaTodos(
-			userId,
-		);
+		const permissoes =
+			await permissoesService.buscarPermissoesDoUsuario(userId);
+		const temConsultaTodos =
+			await permissoesService.verificarConsultaTodos(userId);
 
 		return {
 			permissoes,

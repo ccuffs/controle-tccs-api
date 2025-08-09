@@ -6,7 +6,8 @@ const retornaTodasDatasDefesa = async (req, res) => {
 		const { ano, semestre, id_curso, fase } = req.query;
 		const filtros = { ano, semestre, id_curso, fase };
 
-		const datasDefesa = await datasDefesaRepository.obterTodasDatasDefesa(filtros);
+		const datasDefesa =
+			await datasDefesaRepository.obterTodasDatasDefesa(filtros);
 		res.status(200).json({ datasDefesa: datasDefesa });
 	} catch (error) {
 		console.log("Erro ao buscar datas de defesa:", error);
@@ -19,15 +20,18 @@ const retornaDatasDefesaPorOferta = async (req, res) => {
 	try {
 		const { ano, semestre, id_curso, fase } = req.params;
 
-		const datasDefesa = await datasDefesaRepository.obterDatasDefesaPorOferta(
-			ano,
-			semestre,
-			id_curso,
-			fase
-		);
+		const datasDefesa =
+			await datasDefesaRepository.obterDatasDefesaPorOferta(
+				ano,
+				semestre,
+				id_curso,
+				fase,
+			);
 
 		if (!datasDefesa) {
-			return res.status(404).json({ message: "Datas de defesa não encontradas" });
+			return res
+				.status(404)
+				.json({ message: "Datas de defesa não encontradas" });
 		}
 
 		res.status(200).json({ datasDefesa: datasDefesa });
@@ -43,13 +47,19 @@ const criaDataDefesa = async (req, res) => {
 		const dadosDataDefesa = req.body;
 
 		// Validações básicas
-		if (!dadosDataDefesa.ano || !dadosDataDefesa.semestre || !dadosDataDefesa.id_curso || !dadosDataDefesa.fase) {
+		if (
+			!dadosDataDefesa.ano ||
+			!dadosDataDefesa.semestre ||
+			!dadosDataDefesa.id_curso ||
+			!dadosDataDefesa.fase
+		) {
 			return res.status(400).json({
 				message: "Ano, semestre, id_curso e fase são obrigatórios",
 			});
 		}
 
-		const novaDataDefesa = await datasDefesaRepository.criarDataDefesa(dadosDataDefesa);
+		const novaDataDefesa =
+			await datasDefesaRepository.criarDataDefesa(dadosDataDefesa);
 		res.status(201).json({ datasDefesa: novaDataDefesa });
 	} catch (error) {
 		console.log("Erro ao criar data de defesa:", error);
@@ -68,11 +78,13 @@ const atualizaDataDefesa = async (req, res) => {
 			semestre,
 			id_curso,
 			fase,
-			dadosDataDefesa
+			dadosDataDefesa,
 		);
 
 		if (atualizada) {
-			res.status(200).json({ message: "Data de defesa atualizada com sucesso" });
+			res.status(200).json({
+				message: "Data de defesa atualizada com sucesso",
+			});
 		} else {
 			res.status(404).json({ message: "Data de defesa não encontrada" });
 		}
@@ -91,11 +103,13 @@ const deletaDataDefesa = async (req, res) => {
 			ano,
 			semestre,
 			id_curso,
-			fase
+			fase,
 		);
 
 		if (deleted) {
-			res.status(200).json({ message: "Data de defesa deletada com sucesso" });
+			res.status(200).json({
+				message: "Data de defesa deletada com sucesso",
+			});
 		} else {
 			res.status(404).json({ message: "Data de defesa não encontrada" });
 		}
@@ -111,4 +125,4 @@ module.exports = {
 	criaDataDefesa,
 	atualizaDataDefesa,
 	deletaDataDefesa,
-}; 
+};

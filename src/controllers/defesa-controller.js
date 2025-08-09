@@ -34,7 +34,7 @@ router.get(
 
 // Função auxiliar para calcular o horário anterior
 const calcularHorarioAnterior = (hora) => {
-	const [horas, minutos, segundos] = hora.split(':').map(Number);
+	const [horas, minutos, segundos] = hora.split(":").map(Number);
 	let horaAnterior = horas;
 	let minutoAnterior = minutos - 30;
 
@@ -48,12 +48,12 @@ const calcularHorarioAnterior = (hora) => {
 		return null;
 	}
 
-	return `${horaAnterior.toString().padStart(2, '0')}:${minutoAnterior.toString().padStart(2, '0')}:00`;
+	return `${horaAnterior.toString().padStart(2, "0")}:${minutoAnterior.toString().padStart(2, "0")}:00`;
 };
 
 // Função auxiliar para calcular o próximo horário
 const calcularHorarioPosterior = (hora) => {
-	const [horas, minutos, segundos] = hora.split(':').map(Number);
+	const [horas, minutos, segundos] = hora.split(":").map(Number);
 	let proximaHora = horas;
 	let proximoMinuto = minutos + 30;
 
@@ -67,7 +67,7 @@ const calcularHorarioPosterior = (hora) => {
 		return null;
 	}
 
-	return `${proximaHora.toString().padStart(2, '0')}:${proximoMinuto.toString().padStart(2, '0')}:00`;
+	return `${proximaHora.toString().padStart(2, "0")}:${proximoMinuto.toString().padStart(2, "0")}:00`;
 };
 
 // POST /api/defesas/agendar - Agenda defesa para orientador + 2 membros, removendo suas disponibilidades (transação)
@@ -194,22 +194,18 @@ router.post(
 			await removerParaDocente(membros_banca[1]);
 
 			await t.commit();
-			return res
-				.status(201)
-				.json({
-					message: "Defesa agendada com sucesso",
-					horarioAnteriorRemovido: horaAnterior ? true : false,
-					horarioPosteriorRemovido: horaPosterior ? true : false
-				});
+			return res.status(201).json({
+				message: "Defesa agendada com sucesso",
+				horarioAnteriorRemovido: horaAnterior ? true : false,
+				horarioPosteriorRemovido: horaPosterior ? true : false,
+			});
 		} catch (error) {
 			await t.rollback();
 			console.error("Erro ao agendar defesa:", error);
-			return res
-				.status(500)
-				.json({
-					message: "Erro ao agendar defesa",
-					error: error.message,
-				});
+			return res.status(500).json({
+				message: "Erro ao agendar defesa",
+				error: error.message,
+			});
 		}
 	},
 );

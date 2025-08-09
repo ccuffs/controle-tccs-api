@@ -6,9 +6,8 @@ const retornaTodasOrientacoes = async (req, res) => {
 		const { id_tcc, codigo_docente, orientador } = req.query;
 		const filtros = { id_tcc, codigo_docente, orientador };
 
-		const orientacoes = await orientacaoRepository.obterTodasOrientacoes(
-			filtros,
-		);
+		const orientacoes =
+			await orientacaoRepository.obterTodasOrientacoes(filtros);
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
 		console.log("Erro ao buscar orientações:", error);
@@ -21,9 +20,8 @@ const retornaOrientacoesPorTcc = async (req, res) => {
 	try {
 		const { id_tcc } = req.params;
 
-		const orientacoes = await orientacaoRepository.obterOrientacoesPorTcc(
-			id_tcc,
-		);
+		const orientacoes =
+			await orientacaoRepository.obterOrientacoesPorTcc(id_tcc);
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
 		console.log("Erro ao buscar orientações do TCC:", error);

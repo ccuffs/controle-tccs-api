@@ -165,13 +165,14 @@ temaTccRepository.buscarOfertaDocente = async (
 	semestre,
 	idCurso,
 	codigoDocente,
+	fase = 1,
 ) => {
 	const docenteOferta = await model.DocenteOferta.findOne({
 		where: {
 			ano: ano,
 			semestre: semestre,
 			id_curso: parseInt(idCurso),
-			fase: 1,
+			fase: parseInt(fase),
 			codigo_docente: codigoDocente,
 		},
 	});

@@ -43,9 +43,7 @@ datasDefesaRouter.post(
 datasDefesaRouter.put(
 	"/:ano/:semestre/:id_curso/:fase",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([
-		Permissoes.OFERTA_TCC.EDITAR,
-	]),
+	autorizacao.verificarPermissao([Permissoes.OFERTA_TCC.EDITAR]),
 	datasDefesaService.atualizaDataDefesa,
 );
 
@@ -53,9 +51,7 @@ datasDefesaRouter.put(
 datasDefesaRouter.delete(
 	"/:ano/:semestre/:id_curso/:fase",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([
-		Permissoes.OFERTA_TCC.DELETAR,
-	]),
+	autorizacao.verificarPermissao([Permissoes.OFERTA_TCC.DELETAR]),
 	datasDefesaService.deletaDataDefesa,
 );
 

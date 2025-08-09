@@ -11,9 +11,8 @@ const retornaTodosDicentes = async (req, res) => {
 		// Se há filtros de TCC, precisamos incluir a tabela TrabalhoConclusao
 		if (ano || semestre || fase || id_curso || etapa) {
 			const filtros = { ano, semestre, fase, id_curso, etapa };
-			const dicentes = await dicenteRepository.obterDicentesComFiltrosTcc(
-				filtros,
-			);
+			const dicentes =
+				await dicenteRepository.obterDicentesComFiltrosTcc(filtros);
 			res.status(200).json({ dicentes: dicentes });
 		} else {
 			// Se não há filtros, retorna todos os dicentes
@@ -31,9 +30,8 @@ const retornaDicentePorMatricula = async (req, res) => {
 	try {
 		const { matricula } = req.params;
 
-		const dicente = await dicenteRepository.obterDicentePorMatricula(
-			matricula,
-		);
+		const dicente =
+			await dicenteRepository.obterDicentePorMatricula(matricula);
 
 		if (!dicente) {
 			return res.status(404).json({ message: "Dicente não encontrado" });
@@ -491,9 +489,8 @@ const retornaDicentePorUsuario = async (req, res) => {
 	try {
 		const { id_usuario } = req.params;
 
-		const dicente = await dicenteRepository.obterDicentePorUsuario(
-			id_usuario,
-		);
+		const dicente =
+			await dicenteRepository.obterDicentePorUsuario(id_usuario);
 
 		if (!dicente) {
 			return res.status(404).json({ message: "Dicente não encontrado" });

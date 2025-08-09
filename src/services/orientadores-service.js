@@ -28,9 +28,8 @@ const retornaOrientacoesPorDocente = async (req, res) => {
 const retornaOrientacoesPorCurso = async (req, res) => {
 	try {
 		const id = req.params.id;
-		const orientacoes = await orientadorRepository.obterOrientacoesPorCurso(
-			id,
-		);
+		const orientacoes =
+			await orientadorRepository.obterOrientacoesPorCurso(id);
 		res.status(200).json({ orientacoes: orientacoes });
 	} catch (error) {
 		console.log("Erro ao buscar orientações do curso:", error);
