@@ -223,6 +223,214 @@ const contarConvitesPorPeriodo = async (filtros) => {
 module.exports.contarConvitesPorPeriodo = contarConvitesPorPeriodo;
 
 /**
+ * Retorna contagem agregada de convites de orientação por status dentro
+ * do período do semestre informado (inicio/fim conforme tabela ano_semestre).
+ * Status considerados:
+ * - respondidos: data_feedback != null (inclui aceitos e rejeitados)
+ * - pendentes: data_feedback == null
+ *
+ * Filtros: ano, semestre, id_curso (opcional), fase (opcional)
+ */
+const contarConvitesOrientacaoStatus = async (filtros) => {
+  const { ano, semestre, id_curso, fase } = filtros || {};
+
+  let anoAlvo = ano;
+  let semestreAlvo = semestre;
+
+  if (!anoAlvo || !semestreAlvo) {
+    const atual = await obterAnoSemestreAtual();
+    anoAlvo = atual.ano;
+    semestreAlvo = atual.semestre;
+  }
+
+  // Buscar período (inicio/fim) do semestre
+  const periodo = await model.AnoSemestre.findOne({
+    where: { ano: parseInt(anoAlvo), semestre: parseInt(semestreAlvo) },
+    raw: true,
+  });
+
+  if (!periodo) {
+    return {
+      ano: anoAlvo,
+      semestre: semestreAlvo,
+      fase: fase ? parseInt(fase) : undefined,
+      id_curso: id_curso ? parseInt(id_curso) : undefined,
+      inicio: null,
+      fim: null,
+      respondidos: 0,
+      pendentes: 0,
+      total: 0,
+    };
+  }
+
+  const inicioPeriodo = new Date(periodo.inicio);
+  const fimPeriodo = new Date(periodo.fim);
+
+  const { fn, col, literal, Op } = model.Sequelize;
+
+  // Agregar convites de orientação no período e vinculados à oferta
+  const resultado = await model.Convite.findAll({
+    attributes: [
+      [
+        fn(
+          "SUM",
+          literal('CASE WHEN "Convite"."data_feedback" IS NOT NULL THEN 1 ELSE 0 END'),
+        ),
+        "respondidos",
+      ],
+      [
+        fn(
+          "SUM",
+          literal('CASE WHEN "Convite"."data_feedback" IS NULL THEN 1 ELSE 0 END'),
+        ),
+        "pendentes",
+      ],
+      [fn("COUNT", col("Convite.id_tcc")), "total"],
+    ],
+    where: {
+      orientacao: true,
+      data_envio: {
+        [Op.between]: [inicioPeriodo, fimPeriodo],
+      },
+    },
+    include: [
+      {
+        model: model.TrabalhoConclusao,
+        required: true,
+        attributes: [],
+        where: {
+          ano: parseInt(anoAlvo),
+          semestre: parseInt(semestreAlvo),
+          ...(fase ? { fase: parseInt(fase) } : {}),
+          ...(id_curso ? { id_curso: parseInt(id_curso) } : {}),
+        },
+      },
+    ],
+    raw: true,
+  });
+
+  const linha = resultado?.[0] || {};
+  const respondidos = parseInt(linha.respondidos || 0);
+  const pendentes = parseInt(linha.pendentes || 0);
+  const total = parseInt(linha.total || 0);
+
+  return {
+    ano: anoAlvo,
+    semestre: semestreAlvo,
+    fase: fase ? parseInt(fase) : undefined,
+    id_curso: id_curso ? parseInt(id_curso) : undefined,
+    inicio: inicioPeriodo,
+    fim: fimPeriodo,
+    respondidos,
+    pendentes,
+    total,
+  };
+};
+
+module.exports.contarConvitesOrientacaoStatus = contarConvitesOrientacaoStatus;
+
+/**
+ * Agrega convites de banca por status (respondidos vs pendentes) no período do semestre.
+ * Pendentes: data_feedback IS NULL. Respondidos: data_feedback IS NOT NULL.
+ * Filtros: ano, semestre, id_curso (opcional), fase (opcional)
+ */
+const contarConvitesBancaStatus = async (filtros) => {
+  const { ano, semestre, id_curso, fase } = filtros || {};
+
+  let anoAlvo = ano;
+  let semestreAlvo = semestre;
+
+  if (!anoAlvo || !semestreAlvo) {
+    const atual = await obterAnoSemestreAtual();
+    anoAlvo = atual.ano;
+    semestreAlvo = atual.semestre;
+  }
+
+  const periodo = await model.AnoSemestre.findOne({
+    where: { ano: parseInt(anoAlvo), semestre: parseInt(semestreAlvo) },
+    raw: true,
+  });
+
+  if (!periodo) {
+    return {
+      ano: anoAlvo,
+      semestre: semestreAlvo,
+      fase: fase ? parseInt(fase) : undefined,
+      id_curso: id_curso ? parseInt(id_curso) : undefined,
+      inicio: null,
+      fim: null,
+      respondidos: 0,
+      pendentes: 0,
+      total: 0,
+    };
+  }
+
+  const inicioPeriodo = new Date(periodo.inicio);
+  const fimPeriodo = new Date(periodo.fim);
+
+  const { fn, col, literal, Op } = model.Sequelize;
+
+  const resultado = await model.Convite.findAll({
+    attributes: [
+      [
+        fn(
+          "SUM",
+          literal('CASE WHEN "Convite"."data_feedback" IS NOT NULL THEN 1 ELSE 0 END'),
+        ),
+        "respondidos",
+      ],
+      [
+        fn(
+          "SUM",
+          literal('CASE WHEN "Convite"."data_feedback" IS NULL THEN 1 ELSE 0 END'),
+        ),
+        "pendentes",
+      ],
+      [fn("COUNT", col("Convite.id_tcc")), "total"],
+    ],
+    where: {
+      orientacao: false,
+      data_envio: {
+        [Op.between]: [inicioPeriodo, fimPeriodo],
+      },
+    },
+    include: [
+      {
+        model: model.TrabalhoConclusao,
+        required: true,
+        attributes: [],
+        where: {
+          ano: parseInt(anoAlvo),
+          semestre: parseInt(semestreAlvo),
+          ...(fase ? { fase: parseInt(fase) } : {}),
+          ...(id_curso ? { id_curso: parseInt(id_curso) } : {}),
+        },
+      },
+    ],
+    raw: true,
+  });
+
+  const linha = resultado?.[0] || {};
+  const respondidos = parseInt(linha.respondidos || 0);
+  const pendentes = parseInt(linha.pendentes || 0);
+  const total = parseInt(linha.total || 0);
+
+  return {
+    ano: anoAlvo,
+    semestre: semestreAlvo,
+    fase: fase ? parseInt(fase) : undefined,
+    id_curso: id_curso ? parseInt(id_curso) : undefined,
+    inicio: inicioPeriodo,
+    fim: fimPeriodo,
+    respondidos,
+    pendentes,
+    total,
+  };
+};
+
+module.exports.contarConvitesBancaStatus = contarConvitesBancaStatus;
+
+/**
  * Retorna contagem de orientandos (TCCs onde o docente é orientador principal)
  * por docente, incluindo docentes disponíveis em orientador-curso mesmo com 0.
  * Filtros: ano, semestre, id_curso (opcional), fase (opcional)

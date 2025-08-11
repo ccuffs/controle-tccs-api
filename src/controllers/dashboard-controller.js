@@ -39,6 +39,38 @@ dashboardController.get(
 	},
 );
 
+// GET /api/dashboard/convites-banca-status
+// Retorna contagem agregada de convites de banca por status (respondidos vs pendentes)
+dashboardController.get(
+    "/convites-banca-status",
+    auth.autenticarUsuario,
+    autorizacao.verificarPermissaoGrupo([
+        Permissoes.GRUPOS.ADMIN,
+        Permissoes.GRUPOS.PROFESSOR,
+        Permissoes.GRUPOS.ORIENTADOR,
+    ]),
+    async (req, res) => {
+        try {
+            const { ano, semestre, id_curso, fase } = req.query;
+            const filtros = {
+                ano: ano ? parseInt(ano) : undefined,
+                semestre: semestre ? parseInt(semestre) : undefined,
+                id_curso: id_curso ? parseInt(id_curso) : undefined,
+                fase: fase ? parseInt(fase) : undefined,
+            };
+            const resultado =
+                await dashboardService.contarConvitesBancaStatus(filtros);
+            res.status(200).json(resultado);
+        } catch (error) {
+            console.error(
+                "Erro ao obter status de convites de banca:",
+                error,
+            );
+            res.status(500).json({ message: "Erro interno do servidor" });
+        }
+    },
+);
+
 // GET /api/dashboard/defesas-agendadas
 // Retorna lista de defesas agendadas (tabela) para o período/curso/fase
 dashboardController.get(
@@ -125,6 +157,38 @@ dashboardController.get(
 			res.status(500).json({ message: "Erro interno do servidor" });
 		}
 	},
+);
+
+// GET /api/dashboard/convites-orientacao-status
+// Retorna contagem agregada de convites de orientação por status (respondidos vs pendentes)
+dashboardController.get(
+    "/convites-orientacao-status",
+    auth.autenticarUsuario,
+    autorizacao.verificarPermissaoGrupo([
+        Permissoes.GRUPOS.ADMIN,
+        Permissoes.GRUPOS.PROFESSOR,
+        Permissoes.GRUPOS.ORIENTADOR,
+    ]),
+    async (req, res) => {
+        try {
+            const { ano, semestre, id_curso, fase } = req.query;
+            const filtros = {
+                ano: ano ? parseInt(ano) : undefined,
+                semestre: semestre ? parseInt(semestre) : undefined,
+                id_curso: id_curso ? parseInt(id_curso) : undefined,
+                fase: fase ? parseInt(fase) : undefined,
+            };
+            const resultado =
+                await dashboardService.contarConvitesOrientacaoStatus(filtros);
+            res.status(200).json(resultado);
+        } catch (error) {
+            console.error(
+                "Erro ao obter status de convites de orientação:",
+                error,
+            );
+            res.status(500).json({ message: "Erro interno do servidor" });
+        }
+    },
 );
 
 // GET /api/dashboard/orientandos-por-docente
