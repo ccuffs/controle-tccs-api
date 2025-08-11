@@ -369,13 +369,14 @@ const contarDefesasAceitasPorDocente = async (filtros) => {
 		semestreAlvo = atual.semestre;
 	}
 
-	// Montar where do TCC para filtrar os convites aceitos da oferta
-	const tccWhere = {
-		ano: parseInt(anoAlvo),
-		semestre: parseInt(semestreAlvo),
-	};
-	if (fase) tccWhere.fase = parseInt(fase);
-	if (id_curso) tccWhere.id_curso = parseInt(id_curso);
+  // Montar where do TCC para filtrar pela oferta (ano/semestre/curso)
+  // Importante: não filtrar por fase aqui, pois a fase relevante é a do convite
+  // (o TCC pode ter mudado de fase posteriormente).
+  const tccWhere = {
+    ano: parseInt(anoAlvo),
+    semestre: parseInt(semestreAlvo),
+  };
+  if (id_curso) tccWhere.id_curso = parseInt(id_curso);
 
 	// 1) Obter a lista de docentes disponíveis em orientador-curso
 	const whereOrientadorCurso = {};
@@ -422,13 +423,21 @@ const contarDefesasAceitasPorDocente = async (filtros) => {
 	}
 
 	// 2) Agregar convites de banca aceitos por docente
-	const { fn, col } = model.Sequelize;
+	const { fn, col, literal } = model.Sequelize;
+  // Montar where do convite (aceito, banca e fase quando informada)
+  const conviteWhere = { aceito: true, orientacao: false };
+  if (fase) conviteWhere.fase = parseInt(fase);
+
 	const contagens = await model.Convite.findAll({
 		attributes: [
 			"codigo_docente",
-			[fn("COUNT", fn("DISTINCT", col("Convite.id_tcc"))), "quantidade"],
+			[
+				// Quando a fase não é filtrada, contamos defesas distintas por (id_tcc, fase)
+				literal('COUNT(DISTINCT ("Convite"."id_tcc", "Convite"."fase"))'),
+				"quantidade",
+			],
 		],
-		where: { aceito: true, orientacao: false },
+		where: conviteWhere,
 		include: [
 			{
 				model: model.TrabalhoConclusao,
@@ -473,3 +482,122 @@ const contarDefesasAceitasPorDocente = async (filtros) => {
 };
 
 module.exports.contarDefesasAceitasPorDocente = contarDefesasAceitasPorDocente;
+
+/**
+ * Lista defesas agendadas (data_defesa não nula) agregadas por TCC/horário,
+ * com informações para exibição em tabela no dashboard.
+ * Retorna itens com: data, hora, fase, estudante, titulo, orientador, banca[]
+ * Ordenados por data asc, hora asc, estudante asc.
+ * Filtros: ano, semestre, id_curso (opcional), fase (opcional)
+ */
+const listarDefesasAgendadas = async (filtros) => {
+	const { ano, semestre, id_curso, fase } = filtros || {};
+
+	let anoAlvo = ano;
+	let semestreAlvo = semestre;
+
+	if (!anoAlvo || !semestreAlvo) {
+		const atual = await obterAnoSemestreAtual();
+		anoAlvo = atual.ano;
+		semestreAlvo = atual.semestre;
+	}
+
+	const Op = model.Sequelize.Op;
+
+	// where para TCC (oferta)
+	const tccWhere = {
+		ano: parseInt(anoAlvo),
+		semestre: parseInt(semestreAlvo),
+	};
+	if (id_curso) tccWhere.id_curso = parseInt(id_curso);
+
+	// where para Defesa
+	const defesaWhere = { data_defesa: { [Op.ne]: null } };
+	if (fase) defesaWhere.fase = parseInt(fase);
+
+	// Buscar defesas marcadas (data_defesa != null) dentro da oferta
+	const defesas = await model.Defesa.findAll({
+		where: defesaWhere,
+		include: [
+			{
+				model: model.TrabalhoConclusao,
+				required: true,
+				attributes: [
+					"id",
+					"ano",
+					"semestre",
+					"id_curso",
+					"fase",
+					"titulo",
+					"matricula",
+				],
+				where: tccWhere,
+				include: [
+					{
+						model: model.Dicente,
+						attributes: ["matricula", "nome"],
+					},
+				],
+			},
+			{
+				model: model.Docente,
+				as: "membroBanca",
+				attributes: ["codigo", "nome"],
+			},
+		],
+		raw: true,
+		nest: true,
+	});
+
+	// Agregar por (id_tcc, data_defesa)
+	const grupos = new Map();
+	for (const d of defesas) {
+		const idTcc = d.id_tcc;
+		const dataHora = new Date(d.data_defesa);
+		if (Number.isNaN(dataHora.getTime())) continue;
+		const dataISO = dataHora.toISOString();
+		const chave = `${idTcc}|${dataISO}`;
+
+		const nomeEstudante = d.TrabalhoConclusao?.Dicente?.nome || "";
+		const titulo = d.TrabalhoConclusao?.titulo || "";
+		const faseNum = parseInt(d.fase || d.TrabalhoConclusao?.fase || 0) || 0;
+		const faseLabel = String(faseNum) === "1" ? "Projeto" : "TCC";
+
+		if (!grupos.has(chave)) {
+			grupos.set(chave, {
+				id_tcc: idTcc,
+				data: dataISO.slice(0, 10),
+				hora: dataISO.slice(11, 16),
+				fase: faseNum,
+				fase_label: faseLabel,
+				estudante: nomeEstudante,
+				titulo,
+				orientador: "",
+				banca: [],
+			});
+		}
+
+		const item = grupos.get(chave);
+		const nomeDocente = d.membroBanca?.nome || d.membro_banca || "";
+		if (d.orientador) item.orientador = nomeDocente;
+		else if (nomeDocente) item.banca.push(nomeDocente);
+	}
+
+	const itens = Array.from(grupos.values()).sort((a, b) => {
+		if (a.data !== b.data) return a.data.localeCompare(b.data);
+		if (a.hora !== b.hora) return a.hora.localeCompare(b.hora);
+		return String(a.estudante).localeCompare(String(b.estudante), "pt", {
+			sensitivity: "base",
+		});
+	});
+
+	return {
+		ano: anoAlvo,
+		semestre: semestreAlvo,
+		fase: fase ? parseInt(fase) : undefined,
+		id_curso: id_curso ? parseInt(id_curso) : undefined,
+		itens,
+	};
+};
+
+module.exports.listarDefesasAgendadas = listarDefesasAgendadas;

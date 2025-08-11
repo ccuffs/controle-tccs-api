@@ -39,7 +39,36 @@ dashboardController.get(
 	},
 );
 
-module.exports = dashboardController;
+// GET /api/dashboard/defesas-agendadas
+// Retorna lista de defesas agendadas (tabela) para o período/curso/fase
+dashboardController.get(
+	"/defesas-agendadas",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ADMIN,
+		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.ORIENTADOR,
+	]),
+	async (req, res) => {
+		try {
+			const { ano, semestre, id_curso, fase } = req.query;
+			const filtros = {
+				ano: ano ? parseInt(ano) : undefined,
+				semestre: semestre ? parseInt(semestre) : undefined,
+				id_curso: id_curso ? parseInt(id_curso) : undefined,
+				fase: fase ? parseInt(fase) : undefined,
+			};
+
+			const resultado = await dashboardService.listarDefesasAgendadas(
+				filtros,
+			);
+			res.status(200).json(resultado);
+		} catch (error) {
+			console.error("Erro ao obter defesas agendadas:", error);
+			res.status(500).json({ message: "Erro interno do servidor" });
+		}
+	},
+);
 // GET /api/dashboard/tcc-por-etapa
 // Retorna distribuição de TCCs por etapa
 dashboardController.get(
@@ -87,8 +116,9 @@ dashboardController.get(
 				id_curso: id_curso ? parseInt(id_curso) : undefined,
 				fase: fase ? parseInt(fase) : undefined,
 			};
-			const resultado =
-				await dashboardService.contarConvitesPorPeriodo(filtros);
+			const resultado = await dashboardService.contarConvitesPorPeriodo(
+				filtros,
+			);
 			res.status(200).json(resultado);
 		} catch (error) {
 			console.error("Erro ao obter convites por período:", error);
@@ -157,3 +187,5 @@ dashboardController.get(
 		}
 	},
 );
+
+module.exports = dashboardController;
