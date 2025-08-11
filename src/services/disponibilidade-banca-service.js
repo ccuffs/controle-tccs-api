@@ -264,11 +264,9 @@ const retornaGradeDisponibilidade = async (req, res) => {
 			);
 
 		if (!datasDefesa) {
-			return res
-				.status(404)
-				.json({
-					message: "Datas de defesa não encontradas para esta oferta",
-				});
+			return res.status(404).json({
+				message: "Datas de defesa não encontradas para esta oferta",
+			});
 		}
 
 		// Buscar disponibilidades existentes do docente
