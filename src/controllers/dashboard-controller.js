@@ -18,12 +18,13 @@ dashboardController.get(
 	]),
 	async (req, res) => {
 		try {
-			const { ano, semestre, id_curso, fase } = req.query;
+            const { ano, semestre, id_curso, fase, codigo_docente } = req.query;
 			const filtros = {
 				ano: ano ? parseInt(ano) : undefined,
 				semestre: semestre ? parseInt(semestre) : undefined,
 				id_curso: id_curso ? parseInt(id_curso) : undefined,
 				fase: fase ? parseInt(fase) : undefined,
+                codigo_docente: codigo_docente || undefined,
 			};
 
 			const resultado =
@@ -42,33 +43,31 @@ dashboardController.get(
 // GET /api/dashboard/convites-banca-status
 // Retorna contagem agregada de convites de banca por status (respondidos vs pendentes)
 dashboardController.get(
-    "/convites-banca-status",
-    auth.autenticarUsuario,
-    autorizacao.verificarPermissaoGrupo([
-        Permissoes.GRUPOS.ADMIN,
-        Permissoes.GRUPOS.PROFESSOR,
-        Permissoes.GRUPOS.ORIENTADOR,
-    ]),
-    async (req, res) => {
-        try {
-            const { ano, semestre, id_curso, fase } = req.query;
-            const filtros = {
-                ano: ano ? parseInt(ano) : undefined,
-                semestre: semestre ? parseInt(semestre) : undefined,
-                id_curso: id_curso ? parseInt(id_curso) : undefined,
-                fase: fase ? parseInt(fase) : undefined,
-            };
-            const resultado =
-                await dashboardService.contarConvitesBancaStatus(filtros);
-            res.status(200).json(resultado);
-        } catch (error) {
-            console.error(
-                "Erro ao obter status de convites de banca:",
-                error,
-            );
-            res.status(500).json({ message: "Erro interno do servidor" });
-        }
-    },
+	"/convites-banca-status",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ADMIN,
+		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.ORIENTADOR,
+	]),
+	async (req, res) => {
+		try {
+            const { ano, semestre, id_curso, fase, codigo_docente } = req.query;
+			const filtros = {
+				ano: ano ? parseInt(ano) : undefined,
+				semestre: semestre ? parseInt(semestre) : undefined,
+				id_curso: id_curso ? parseInt(id_curso) : undefined,
+				fase: fase ? parseInt(fase) : undefined,
+                codigo_docente: codigo_docente || undefined,
+			};
+			const resultado =
+				await dashboardService.contarConvitesBancaStatus(filtros);
+			res.status(200).json(resultado);
+		} catch (error) {
+			console.error("Erro ao obter status de convites de banca:", error);
+			res.status(500).json({ message: "Erro interno do servidor" });
+		}
+	},
 );
 
 // GET /api/dashboard/defesas-agendadas
@@ -83,17 +82,17 @@ dashboardController.get(
 	]),
 	async (req, res) => {
 		try {
-			const { ano, semestre, id_curso, fase } = req.query;
+            const { ano, semestre, id_curso, fase, codigo_docente } = req.query;
 			const filtros = {
 				ano: ano ? parseInt(ano) : undefined,
 				semestre: semestre ? parseInt(semestre) : undefined,
 				id_curso: id_curso ? parseInt(id_curso) : undefined,
 				fase: fase ? parseInt(fase) : undefined,
+                codigo_docente: codigo_docente || undefined,
 			};
 
-			const resultado = await dashboardService.listarDefesasAgendadas(
-				filtros,
-			);
+			const resultado =
+				await dashboardService.listarDefesasAgendadas(filtros);
 			res.status(200).json(resultado);
 		} catch (error) {
 			console.error("Erro ao obter defesas agendadas:", error);
@@ -113,12 +112,13 @@ dashboardController.get(
 	]),
 	async (req, res) => {
 		try {
-			const { ano, semestre, id_curso, fase } = req.query;
+            const { ano, semestre, id_curso, fase, codigo_docente } = req.query;
 			const filtros = {
 				ano: ano ? parseInt(ano) : undefined,
 				semestre: semestre ? parseInt(semestre) : undefined,
 				id_curso: id_curso ? parseInt(id_curso) : undefined,
 				fase: fase ? parseInt(fase) : undefined,
+                codigo_docente: codigo_docente || undefined,
 			};
 			const resultado = await dashboardService.contarTccPorEtapa(filtros);
 			res.status(200).json(resultado);
@@ -141,16 +141,16 @@ dashboardController.get(
 	]),
 	async (req, res) => {
 		try {
-			const { ano, semestre, id_curso, fase } = req.query;
+            const { ano, semestre, id_curso, fase, codigo_docente } = req.query;
 			const filtros = {
 				ano: ano ? parseInt(ano) : undefined,
 				semestre: semestre ? parseInt(semestre) : undefined,
 				id_curso: id_curso ? parseInt(id_curso) : undefined,
 				fase: fase ? parseInt(fase) : undefined,
+                codigo_docente: codigo_docente || undefined,
 			};
-			const resultado = await dashboardService.contarConvitesPorPeriodo(
-				filtros,
-			);
+			const resultado =
+				await dashboardService.contarConvitesPorPeriodo(filtros);
 			res.status(200).json(resultado);
 		} catch (error) {
 			console.error("Erro ao obter convites por período:", error);
@@ -162,33 +162,33 @@ dashboardController.get(
 // GET /api/dashboard/convites-orientacao-status
 // Retorna contagem agregada de convites de orientação por status (respondidos vs pendentes)
 dashboardController.get(
-    "/convites-orientacao-status",
-    auth.autenticarUsuario,
-    autorizacao.verificarPermissaoGrupo([
-        Permissoes.GRUPOS.ADMIN,
-        Permissoes.GRUPOS.PROFESSOR,
-        Permissoes.GRUPOS.ORIENTADOR,
-    ]),
-    async (req, res) => {
-        try {
-            const { ano, semestre, id_curso, fase } = req.query;
-            const filtros = {
-                ano: ano ? parseInt(ano) : undefined,
-                semestre: semestre ? parseInt(semestre) : undefined,
-                id_curso: id_curso ? parseInt(id_curso) : undefined,
-                fase: fase ? parseInt(fase) : undefined,
-            };
-            const resultado =
-                await dashboardService.contarConvitesOrientacaoStatus(filtros);
-            res.status(200).json(resultado);
-        } catch (error) {
-            console.error(
-                "Erro ao obter status de convites de orientação:",
-                error,
-            );
-            res.status(500).json({ message: "Erro interno do servidor" });
-        }
-    },
+	"/convites-orientacao-status",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ADMIN,
+		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.ORIENTADOR,
+	]),
+	async (req, res) => {
+		try {
+			const { ano, semestre, id_curso, fase } = req.query;
+			const filtros = {
+				ano: ano ? parseInt(ano) : undefined,
+				semestre: semestre ? parseInt(semestre) : undefined,
+				id_curso: id_curso ? parseInt(id_curso) : undefined,
+				fase: fase ? parseInt(fase) : undefined,
+			};
+			const resultado =
+				await dashboardService.contarConvitesOrientacaoStatus(filtros);
+			res.status(200).json(resultado);
+		} catch (error) {
+			console.error(
+				"Erro ao obter status de convites de orientação:",
+				error,
+			);
+			res.status(500).json({ message: "Erro interno do servidor" });
+		}
+	},
 );
 
 // GET /api/dashboard/orientandos-por-docente

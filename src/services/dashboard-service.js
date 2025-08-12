@@ -61,10 +61,11 @@ module.exports = { contarDicentesComOrientador };
 
 /**
  * Retorna distribuição de TCCs por etapa, considerando filtros.
- * Filtros: ano, semestre, id_curso (opcional), fase (default 1)
+ * Filtros: ano, semestre, id_curso (opcional), fase (default 1), codigo_docente (opcional)
+ * Quando codigo_docente é informado, considera apenas TCCs nos quais o docente é orientador principal.
  */
 const contarTccPorEtapa = async (filtros) => {
-	const { ano, semestre, id_curso, fase } = filtros || {};
+    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
 	let anoAlvo = ano;
 	let semestreAlvo = semestre;
@@ -82,19 +83,32 @@ const contarTccPorEtapa = async (filtros) => {
 	if (fase) where.fase = parseInt(fase);
 	if (id_curso) where.id_curso = parseInt(id_curso);
 
-	const resultados = await model.TrabalhoConclusao.findAll({
-		attributes: [
-			"etapa",
-			[
-				model.Sequelize.fn("COUNT", model.Sequelize.col("id")),
-				"quantidade",
-			],
-		],
-		where,
-		group: ["etapa"],
-		order: [["etapa", "ASC"]],
-		raw: true,
-	});
+    const resultados = await model.TrabalhoConclusao.findAll({
+        attributes: [
+            "etapa",
+            [
+                model.Sequelize.fn("COUNT", model.Sequelize.col("TrabalhoConclusao.id")),
+                "quantidade",
+            ],
+        ],
+        where,
+        include: codigo_docente
+            ? [
+                    {
+                        model: model.Orientacao,
+                        required: true,
+                        attributes: [],
+                        where: {
+                            codigo_docente: String(codigo_docente),
+                            orientador: true,
+                        },
+                    },
+                ]
+            : [],
+        group: ["TrabalhoConclusao.etapa"],
+        order: [["etapa", "ASC"]],
+        raw: true,
+    });
 
 	// Normaliza: etapa nula vira 0
 	const distribuicao = resultados.map((r) => ({
@@ -106,7 +120,8 @@ const contarTccPorEtapa = async (filtros) => {
 		ano: anoAlvo,
 		semestre: semestreAlvo,
 		fase: fase ? parseInt(fase) : undefined,
-		id_curso: id_curso ? parseInt(id_curso) : undefined,
+        id_curso: id_curso ? parseInt(id_curso) : undefined,
+        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 		distribuicao,
 	};
 };
@@ -119,10 +134,10 @@ module.exports.contarTccPorEtapa = contarTccPorEtapa;
  * - orientacao: convites para orientação (Convite.orientacao = true)
  * - banca: convites para banca (Convite.orientacao = false)
  *
- * Filtros: ano, semestre, id_curso (opcional), fase (default 1)
+ * Filtros: ano, semestre, id_curso (opcional), fase (default 1), codigo_docente (opcional)
  */
 const contarConvitesPorPeriodo = async (filtros) => {
-	const { ano, semestre, id_curso, fase } = filtros || {};
+    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
 	let anoAlvo = ano;
 	let semestreAlvo = semestre;
@@ -158,12 +173,13 @@ const contarConvitesPorPeriodo = async (filtros) => {
 
 	// Buscar convites enviados dentro do período e vinculados a TCCs que
 	// correspondam aos filtros (ano, semestre, fase e curso)
-	const convites = await model.Convite.findAll({
+    const convites = await model.Convite.findAll({
 		attributes: ["data_envio", "orientacao"],
 		where: {
 			data_envio: {
 				[Op.between]: [inicioPeriodo, fimPeriodo],
 			},
+            ...(codigo_docente ? { codigo_docente: String(codigo_docente) } : {}),
 		},
 		include: [
 			{
@@ -213,7 +229,8 @@ const contarConvitesPorPeriodo = async (filtros) => {
 		ano: anoAlvo,
 		semestre: semestreAlvo,
 		fase: fase ? parseInt(fase) : undefined,
-		id_curso: id_curso ? parseInt(id_curso) : undefined,
+        id_curso: id_curso ? parseInt(id_curso) : undefined,
+        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 		inicio: inicioPeriodo,
 		fim: fimPeriodo,
 		pontos,
@@ -229,102 +246,108 @@ module.exports.contarConvitesPorPeriodo = contarConvitesPorPeriodo;
  * - respondidos: data_feedback != null (inclui aceitos e rejeitados)
  * - pendentes: data_feedback == null
  *
- * Filtros: ano, semestre, id_curso (opcional), fase (opcional)
+ * Filtros: ano, semestre, id_curso (opcional), fase (opcional), codigo_docente (opcional)
  */
 const contarConvitesOrientacaoStatus = async (filtros) => {
-  const { ano, semestre, id_curso, fase } = filtros || {};
+    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
-  let anoAlvo = ano;
-  let semestreAlvo = semestre;
+	let anoAlvo = ano;
+	let semestreAlvo = semestre;
 
-  if (!anoAlvo || !semestreAlvo) {
-    const atual = await obterAnoSemestreAtual();
-    anoAlvo = atual.ano;
-    semestreAlvo = atual.semestre;
-  }
+	if (!anoAlvo || !semestreAlvo) {
+		const atual = await obterAnoSemestreAtual();
+		anoAlvo = atual.ano;
+		semestreAlvo = atual.semestre;
+	}
 
-  // Buscar período (inicio/fim) do semestre
-  const periodo = await model.AnoSemestre.findOne({
-    where: { ano: parseInt(anoAlvo), semestre: parseInt(semestreAlvo) },
-    raw: true,
-  });
+	// Buscar período (inicio/fim) do semestre
+	const periodo = await model.AnoSemestre.findOne({
+		where: { ano: parseInt(anoAlvo), semestre: parseInt(semestreAlvo) },
+		raw: true,
+	});
 
-  if (!periodo) {
-    return {
-      ano: anoAlvo,
-      semestre: semestreAlvo,
-      fase: fase ? parseInt(fase) : undefined,
-      id_curso: id_curso ? parseInt(id_curso) : undefined,
-      inicio: null,
-      fim: null,
-      respondidos: 0,
-      pendentes: 0,
-      total: 0,
-    };
-  }
+	if (!periodo) {
+		return {
+			ano: anoAlvo,
+			semestre: semestreAlvo,
+			fase: fase ? parseInt(fase) : undefined,
+			id_curso: id_curso ? parseInt(id_curso) : undefined,
+			inicio: null,
+			fim: null,
+			respondidos: 0,
+			pendentes: 0,
+			total: 0,
+		};
+	}
 
-  const inicioPeriodo = new Date(periodo.inicio);
-  const fimPeriodo = new Date(periodo.fim);
+	const inicioPeriodo = new Date(periodo.inicio);
+	const fimPeriodo = new Date(periodo.fim);
 
-  const { fn, col, literal, Op } = model.Sequelize;
+	const { fn, col, literal, Op } = model.Sequelize;
 
-  // Agregar convites de orientação no período e vinculados à oferta
-  const resultado = await model.Convite.findAll({
-    attributes: [
-      [
-        fn(
-          "SUM",
-          literal('CASE WHEN "Convite"."data_feedback" IS NOT NULL THEN 1 ELSE 0 END'),
-        ),
-        "respondidos",
-      ],
-      [
-        fn(
-          "SUM",
-          literal('CASE WHEN "Convite"."data_feedback" IS NULL THEN 1 ELSE 0 END'),
-        ),
-        "pendentes",
-      ],
-      [fn("COUNT", col("Convite.id_tcc")), "total"],
-    ],
-    where: {
-      orientacao: true,
-      data_envio: {
-        [Op.between]: [inicioPeriodo, fimPeriodo],
-      },
-    },
-    include: [
-      {
-        model: model.TrabalhoConclusao,
-        required: true,
-        attributes: [],
-        where: {
-          ano: parseInt(anoAlvo),
-          semestre: parseInt(semestreAlvo),
-          ...(fase ? { fase: parseInt(fase) } : {}),
-          ...(id_curso ? { id_curso: parseInt(id_curso) } : {}),
-        },
-      },
-    ],
-    raw: true,
-  });
+	// Agregar convites de orientação no período e vinculados à oferta
+    const resultado = await model.Convite.findAll({
+		attributes: [
+			[
+				fn(
+					"SUM",
+					literal(
+						'CASE WHEN "Convite"."data_feedback" IS NOT NULL THEN 1 ELSE 0 END',
+					),
+				),
+				"respondidos",
+			],
+			[
+				fn(
+					"SUM",
+					literal(
+						'CASE WHEN "Convite"."data_feedback" IS NULL THEN 1 ELSE 0 END',
+					),
+				),
+				"pendentes",
+			],
+			[fn("COUNT", col("Convite.id_tcc")), "total"],
+		],
+		where: {
+			orientacao: true,
+			data_envio: {
+				[Op.between]: [inicioPeriodo, fimPeriodo],
+			},
+            ...(codigo_docente ? { codigo_docente: String(codigo_docente) } : {}),
+		},
+		include: [
+			{
+				model: model.TrabalhoConclusao,
+				required: true,
+				attributes: [],
+				where: {
+					ano: parseInt(anoAlvo),
+					semestre: parseInt(semestreAlvo),
+					...(fase ? { fase: parseInt(fase) } : {}),
+					...(id_curso ? { id_curso: parseInt(id_curso) } : {}),
+				},
+			},
+		],
+		raw: true,
+	});
 
-  const linha = resultado?.[0] || {};
-  const respondidos = parseInt(linha.respondidos || 0);
-  const pendentes = parseInt(linha.pendentes || 0);
-  const total = parseInt(linha.total || 0);
+	const linha = resultado?.[0] || {};
+	const respondidos = parseInt(linha.respondidos || 0);
+	const pendentes = parseInt(linha.pendentes || 0);
+	const total = parseInt(linha.total || 0);
 
-  return {
-    ano: anoAlvo,
-    semestre: semestreAlvo,
-    fase: fase ? parseInt(fase) : undefined,
-    id_curso: id_curso ? parseInt(id_curso) : undefined,
-    inicio: inicioPeriodo,
-    fim: fimPeriodo,
-    respondidos,
-    pendentes,
-    total,
-  };
+	return {
+		ano: anoAlvo,
+		semestre: semestreAlvo,
+		fase: fase ? parseInt(fase) : undefined,
+        id_curso: id_curso ? parseInt(id_curso) : undefined,
+        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+		inicio: inicioPeriodo,
+		fim: fimPeriodo,
+		respondidos,
+		pendentes,
+		total,
+	};
 };
 
 module.exports.contarConvitesOrientacaoStatus = contarConvitesOrientacaoStatus;
@@ -332,100 +355,106 @@ module.exports.contarConvitesOrientacaoStatus = contarConvitesOrientacaoStatus;
 /**
  * Agrega convites de banca por status (respondidos vs pendentes) no período do semestre.
  * Pendentes: data_feedback IS NULL. Respondidos: data_feedback IS NOT NULL.
- * Filtros: ano, semestre, id_curso (opcional), fase (opcional)
+ * Filtros: ano, semestre, id_curso (opcional), fase (opcional), codigo_docente (opcional)
  */
 const contarConvitesBancaStatus = async (filtros) => {
-  const { ano, semestre, id_curso, fase } = filtros || {};
+    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
-  let anoAlvo = ano;
-  let semestreAlvo = semestre;
+	let anoAlvo = ano;
+	let semestreAlvo = semestre;
 
-  if (!anoAlvo || !semestreAlvo) {
-    const atual = await obterAnoSemestreAtual();
-    anoAlvo = atual.ano;
-    semestreAlvo = atual.semestre;
-  }
+	if (!anoAlvo || !semestreAlvo) {
+		const atual = await obterAnoSemestreAtual();
+		anoAlvo = atual.ano;
+		semestreAlvo = atual.semestre;
+	}
 
-  const periodo = await model.AnoSemestre.findOne({
-    where: { ano: parseInt(anoAlvo), semestre: parseInt(semestreAlvo) },
-    raw: true,
-  });
+	const periodo = await model.AnoSemestre.findOne({
+		where: { ano: parseInt(anoAlvo), semestre: parseInt(semestreAlvo) },
+		raw: true,
+	});
 
-  if (!periodo) {
-    return {
-      ano: anoAlvo,
-      semestre: semestreAlvo,
-      fase: fase ? parseInt(fase) : undefined,
-      id_curso: id_curso ? parseInt(id_curso) : undefined,
-      inicio: null,
-      fim: null,
-      respondidos: 0,
-      pendentes: 0,
-      total: 0,
-    };
-  }
+	if (!periodo) {
+		return {
+			ano: anoAlvo,
+			semestre: semestreAlvo,
+			fase: fase ? parseInt(fase) : undefined,
+			id_curso: id_curso ? parseInt(id_curso) : undefined,
+			inicio: null,
+			fim: null,
+			respondidos: 0,
+			pendentes: 0,
+			total: 0,
+		};
+	}
 
-  const inicioPeriodo = new Date(periodo.inicio);
-  const fimPeriodo = new Date(periodo.fim);
+	const inicioPeriodo = new Date(periodo.inicio);
+	const fimPeriodo = new Date(periodo.fim);
 
-  const { fn, col, literal, Op } = model.Sequelize;
+	const { fn, col, literal, Op } = model.Sequelize;
 
-  const resultado = await model.Convite.findAll({
-    attributes: [
-      [
-        fn(
-          "SUM",
-          literal('CASE WHEN "Convite"."data_feedback" IS NOT NULL THEN 1 ELSE 0 END'),
-        ),
-        "respondidos",
-      ],
-      [
-        fn(
-          "SUM",
-          literal('CASE WHEN "Convite"."data_feedback" IS NULL THEN 1 ELSE 0 END'),
-        ),
-        "pendentes",
-      ],
-      [fn("COUNT", col("Convite.id_tcc")), "total"],
-    ],
-    where: {
-      orientacao: false,
-      data_envio: {
-        [Op.between]: [inicioPeriodo, fimPeriodo],
-      },
-    },
-    include: [
-      {
-        model: model.TrabalhoConclusao,
-        required: true,
-        attributes: [],
-        where: {
-          ano: parseInt(anoAlvo),
-          semestre: parseInt(semestreAlvo),
-          ...(fase ? { fase: parseInt(fase) } : {}),
-          ...(id_curso ? { id_curso: parseInt(id_curso) } : {}),
-        },
-      },
-    ],
-    raw: true,
-  });
+    const resultado = await model.Convite.findAll({
+		attributes: [
+			[
+				fn(
+					"SUM",
+					literal(
+						'CASE WHEN "Convite"."data_feedback" IS NOT NULL THEN 1 ELSE 0 END',
+					),
+				),
+				"respondidos",
+			],
+			[
+				fn(
+					"SUM",
+					literal(
+						'CASE WHEN "Convite"."data_feedback" IS NULL THEN 1 ELSE 0 END',
+					),
+				),
+				"pendentes",
+			],
+			[fn("COUNT", col("Convite.id_tcc")), "total"],
+		],
+		where: {
+			orientacao: false,
+			data_envio: {
+				[Op.between]: [inicioPeriodo, fimPeriodo],
+			},
+            ...(codigo_docente ? { codigo_docente: String(codigo_docente) } : {}),
+		},
+		include: [
+			{
+				model: model.TrabalhoConclusao,
+				required: true,
+				attributes: [],
+				where: {
+					ano: parseInt(anoAlvo),
+					semestre: parseInt(semestreAlvo),
+					...(fase ? { fase: parseInt(fase) } : {}),
+					...(id_curso ? { id_curso: parseInt(id_curso) } : {}),
+				},
+			},
+		],
+		raw: true,
+	});
 
-  const linha = resultado?.[0] || {};
-  const respondidos = parseInt(linha.respondidos || 0);
-  const pendentes = parseInt(linha.pendentes || 0);
-  const total = parseInt(linha.total || 0);
+	const linha = resultado?.[0] || {};
+	const respondidos = parseInt(linha.respondidos || 0);
+	const pendentes = parseInt(linha.pendentes || 0);
+	const total = parseInt(linha.total || 0);
 
-  return {
-    ano: anoAlvo,
-    semestre: semestreAlvo,
-    fase: fase ? parseInt(fase) : undefined,
-    id_curso: id_curso ? parseInt(id_curso) : undefined,
-    inicio: inicioPeriodo,
-    fim: fimPeriodo,
-    respondidos,
-    pendentes,
-    total,
-  };
+	return {
+		ano: anoAlvo,
+		semestre: semestreAlvo,
+		fase: fase ? parseInt(fase) : undefined,
+        id_curso: id_curso ? parseInt(id_curso) : undefined,
+        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+		inicio: inicioPeriodo,
+		fim: fimPeriodo,
+		respondidos,
+		pendentes,
+		total,
+	};
 };
 
 module.exports.contarConvitesBancaStatus = contarConvitesBancaStatus;
@@ -577,14 +606,14 @@ const contarDefesasAceitasPorDocente = async (filtros) => {
 		semestreAlvo = atual.semestre;
 	}
 
-  // Montar where do TCC para filtrar pela oferta (ano/semestre/curso)
-  // Importante: não filtrar por fase aqui, pois a fase relevante é a do convite
-  // (o TCC pode ter mudado de fase posteriormente).
-  const tccWhere = {
-    ano: parseInt(anoAlvo),
-    semestre: parseInt(semestreAlvo),
-  };
-  if (id_curso) tccWhere.id_curso = parseInt(id_curso);
+	// Montar where do TCC para filtrar pela oferta (ano/semestre/curso)
+	// Importante: não filtrar por fase aqui, pois a fase relevante é a do convite
+	// (o TCC pode ter mudado de fase posteriormente).
+	const tccWhere = {
+		ano: parseInt(anoAlvo),
+		semestre: parseInt(semestreAlvo),
+	};
+	if (id_curso) tccWhere.id_curso = parseInt(id_curso);
 
 	// 1) Obter a lista de docentes disponíveis em orientador-curso
 	const whereOrientadorCurso = {};
@@ -632,16 +661,18 @@ const contarDefesasAceitasPorDocente = async (filtros) => {
 
 	// 2) Agregar convites de banca aceitos por docente
 	const { fn, col, literal } = model.Sequelize;
-  // Montar where do convite (aceito, banca e fase quando informada)
-  const conviteWhere = { aceito: true, orientacao: false };
-  if (fase) conviteWhere.fase = parseInt(fase);
+	// Montar where do convite (aceito, banca e fase quando informada)
+	const conviteWhere = { aceito: true, orientacao: false };
+	if (fase) conviteWhere.fase = parseInt(fase);
 
 	const contagens = await model.Convite.findAll({
 		attributes: [
 			"codigo_docente",
 			[
 				// Quando a fase não é filtrada, contamos defesas distintas por (id_tcc, fase)
-				literal('COUNT(DISTINCT ("Convite"."id_tcc", "Convite"."fase"))'),
+				literal(
+					'COUNT(DISTINCT ("Convite"."id_tcc", "Convite"."fase"))',
+				),
 				"quantidade",
 			],
 		],
@@ -696,10 +727,10 @@ module.exports.contarDefesasAceitasPorDocente = contarDefesasAceitasPorDocente;
  * com informações para exibição em tabela no dashboard.
  * Retorna itens com: data, hora, fase, estudante, titulo, orientador, banca[]
  * Ordenados por data asc, hora asc, estudante asc.
- * Filtros: ano, semestre, id_curso (opcional), fase (opcional)
+ * Filtros: ano, semestre, id_curso (opcional), fase (opcional), codigo_docente (opcional)
  */
 const listarDefesasAgendadas = async (filtros) => {
-	const { ano, semestre, id_curso, fase } = filtros || {};
+    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
 	let anoAlvo = ano;
 	let semestreAlvo = semestre;
@@ -719,9 +750,10 @@ const listarDefesasAgendadas = async (filtros) => {
 	};
 	if (id_curso) tccWhere.id_curso = parseInt(id_curso);
 
-	// where para Defesa
-	const defesaWhere = { data_defesa: { [Op.ne]: null } };
+    // where para Defesa
+    const defesaWhere = { data_defesa: { [Op.ne]: null } };
 	if (fase) defesaWhere.fase = parseInt(fase);
+    if (codigo_docente) defesaWhere.membro_banca = String(codigo_docente);
 
 	// Buscar defesas marcadas (data_defesa != null) dentro da oferta
 	const defesas = await model.Defesa.findAll({
@@ -803,7 +835,8 @@ const listarDefesasAgendadas = async (filtros) => {
 		ano: anoAlvo,
 		semestre: semestreAlvo,
 		fase: fase ? parseInt(fase) : undefined,
-		id_curso: id_curso ? parseInt(id_curso) : undefined,
+        id_curso: id_curso ? parseInt(id_curso) : undefined,
+        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 		itens,
 	};
 };
