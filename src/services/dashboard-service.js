@@ -65,7 +65,7 @@ module.exports = { contarDicentesComOrientador };
  * Quando codigo_docente é informado, considera apenas TCCs nos quais o docente é orientador principal.
  */
 const contarTccPorEtapa = async (filtros) => {
-    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
+	const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
 	let anoAlvo = ano;
 	let semestreAlvo = semestre;
@@ -83,32 +83,35 @@ const contarTccPorEtapa = async (filtros) => {
 	if (fase) where.fase = parseInt(fase);
 	if (id_curso) where.id_curso = parseInt(id_curso);
 
-    const resultados = await model.TrabalhoConclusao.findAll({
-        attributes: [
-            "etapa",
-            [
-                model.Sequelize.fn("COUNT", model.Sequelize.col("TrabalhoConclusao.id")),
-                "quantidade",
-            ],
-        ],
-        where,
-        include: codigo_docente
-            ? [
-                    {
-                        model: model.Orientacao,
-                        required: true,
-                        attributes: [],
-                        where: {
-                            codigo_docente: String(codigo_docente),
-                            orientador: true,
-                        },
-                    },
-                ]
-            : [],
-        group: ["TrabalhoConclusao.etapa"],
-        order: [["etapa", "ASC"]],
-        raw: true,
-    });
+	const resultados = await model.TrabalhoConclusao.findAll({
+		attributes: [
+			"etapa",
+			[
+				model.Sequelize.fn(
+					"COUNT",
+					model.Sequelize.col("TrabalhoConclusao.id"),
+				),
+				"quantidade",
+			],
+		],
+		where,
+		include: codigo_docente
+			? [
+					{
+						model: model.Orientacao,
+						required: true,
+						attributes: [],
+						where: {
+							codigo_docente: String(codigo_docente),
+							orientador: true,
+						},
+					},
+				]
+			: [],
+		group: ["TrabalhoConclusao.etapa"],
+		order: [["etapa", "ASC"]],
+		raw: true,
+	});
 
 	// Normaliza: etapa nula vira 0
 	const distribuicao = resultados.map((r) => ({
@@ -120,8 +123,8 @@ const contarTccPorEtapa = async (filtros) => {
 		ano: anoAlvo,
 		semestre: semestreAlvo,
 		fase: fase ? parseInt(fase) : undefined,
-        id_curso: id_curso ? parseInt(id_curso) : undefined,
-        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+		id_curso: id_curso ? parseInt(id_curso) : undefined,
+		codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 		distribuicao,
 	};
 };
@@ -137,7 +140,7 @@ module.exports.contarTccPorEtapa = contarTccPorEtapa;
  * Filtros: ano, semestre, id_curso (opcional), fase (default 1), codigo_docente (opcional)
  */
 const contarConvitesPorPeriodo = async (filtros) => {
-    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
+	const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
 	let anoAlvo = ano;
 	let semestreAlvo = semestre;
@@ -173,13 +176,15 @@ const contarConvitesPorPeriodo = async (filtros) => {
 
 	// Buscar convites enviados dentro do período e vinculados a TCCs que
 	// correspondam aos filtros (ano, semestre, fase e curso)
-    const convites = await model.Convite.findAll({
+	const convites = await model.Convite.findAll({
 		attributes: ["data_envio", "orientacao"],
 		where: {
 			data_envio: {
 				[Op.between]: [inicioPeriodo, fimPeriodo],
 			},
-            ...(codigo_docente ? { codigo_docente: String(codigo_docente) } : {}),
+			...(codigo_docente
+				? { codigo_docente: String(codigo_docente) }
+				: {}),
 		},
 		include: [
 			{
@@ -229,8 +234,8 @@ const contarConvitesPorPeriodo = async (filtros) => {
 		ano: anoAlvo,
 		semestre: semestreAlvo,
 		fase: fase ? parseInt(fase) : undefined,
-        id_curso: id_curso ? parseInt(id_curso) : undefined,
-        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+		id_curso: id_curso ? parseInt(id_curso) : undefined,
+		codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 		inicio: inicioPeriodo,
 		fim: fimPeriodo,
 		pontos,
@@ -249,7 +254,7 @@ module.exports.contarConvitesPorPeriodo = contarConvitesPorPeriodo;
  * Filtros: ano, semestre, id_curso (opcional), fase (opcional), codigo_docente (opcional)
  */
 const contarConvitesOrientacaoStatus = async (filtros) => {
-    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
+	const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
 	let anoAlvo = ano;
 	let semestreAlvo = semestre;
@@ -286,7 +291,7 @@ const contarConvitesOrientacaoStatus = async (filtros) => {
 	const { fn, col, literal, Op } = model.Sequelize;
 
 	// Agregar convites de orientação no período e vinculados à oferta
-    const resultado = await model.Convite.findAll({
+	const resultado = await model.Convite.findAll({
 		attributes: [
 			[
 				fn(
@@ -313,7 +318,9 @@ const contarConvitesOrientacaoStatus = async (filtros) => {
 			data_envio: {
 				[Op.between]: [inicioPeriodo, fimPeriodo],
 			},
-            ...(codigo_docente ? { codigo_docente: String(codigo_docente) } : {}),
+			...(codigo_docente
+				? { codigo_docente: String(codigo_docente) }
+				: {}),
 		},
 		include: [
 			{
@@ -340,8 +347,8 @@ const contarConvitesOrientacaoStatus = async (filtros) => {
 		ano: anoAlvo,
 		semestre: semestreAlvo,
 		fase: fase ? parseInt(fase) : undefined,
-        id_curso: id_curso ? parseInt(id_curso) : undefined,
-        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+		id_curso: id_curso ? parseInt(id_curso) : undefined,
+		codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 		inicio: inicioPeriodo,
 		fim: fimPeriodo,
 		respondidos,
@@ -358,7 +365,7 @@ module.exports.contarConvitesOrientacaoStatus = contarConvitesOrientacaoStatus;
  * Filtros: ano, semestre, id_curso (opcional), fase (opcional), codigo_docente (opcional)
  */
 const contarConvitesBancaStatus = async (filtros) => {
-    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
+	const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
 	let anoAlvo = ano;
 	let semestreAlvo = semestre;
@@ -393,7 +400,7 @@ const contarConvitesBancaStatus = async (filtros) => {
 
 	const { fn, col, literal, Op } = model.Sequelize;
 
-    const resultado = await model.Convite.findAll({
+	const resultado = await model.Convite.findAll({
 		attributes: [
 			[
 				fn(
@@ -420,7 +427,9 @@ const contarConvitesBancaStatus = async (filtros) => {
 			data_envio: {
 				[Op.between]: [inicioPeriodo, fimPeriodo],
 			},
-            ...(codigo_docente ? { codigo_docente: String(codigo_docente) } : {}),
+			...(codigo_docente
+				? { codigo_docente: String(codigo_docente) }
+				: {}),
 		},
 		include: [
 			{
@@ -447,8 +456,8 @@ const contarConvitesBancaStatus = async (filtros) => {
 		ano: anoAlvo,
 		semestre: semestreAlvo,
 		fase: fase ? parseInt(fase) : undefined,
-        id_curso: id_curso ? parseInt(id_curso) : undefined,
-        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+		id_curso: id_curso ? parseInt(id_curso) : undefined,
+		codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 		inicio: inicioPeriodo,
 		fim: fimPeriodo,
 		respondidos,
@@ -730,7 +739,7 @@ module.exports.contarDefesasAceitasPorDocente = contarDefesasAceitasPorDocente;
  * Filtros: ano, semestre, id_curso (opcional), fase (opcional), codigo_docente (opcional)
  */
 const listarDefesasAgendadas = async (filtros) => {
-    const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
+	const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
 
 	let anoAlvo = ano;
 	let semestreAlvo = semestre;
@@ -750,10 +759,10 @@ const listarDefesasAgendadas = async (filtros) => {
 	};
 	if (id_curso) tccWhere.id_curso = parseInt(id_curso);
 
-    // where para Defesa
-    const defesaWhere = { data_defesa: { [Op.ne]: null } };
+	// where para Defesa
+	const defesaWhere = { data_defesa: { [Op.ne]: null } };
 	if (fase) defesaWhere.fase = parseInt(fase);
-    if (codigo_docente) defesaWhere.membro_banca = String(codigo_docente);
+	if (codigo_docente) defesaWhere.membro_banca = String(codigo_docente);
 
 	// Buscar defesas marcadas (data_defesa != null) dentro da oferta
 	const defesas = await model.Defesa.findAll({
@@ -835,8 +844,8 @@ const listarDefesasAgendadas = async (filtros) => {
 		ano: anoAlvo,
 		semestre: semestreAlvo,
 		fase: fase ? parseInt(fase) : undefined,
-        id_curso: id_curso ? parseInt(id_curso) : undefined,
-        codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+		id_curso: id_curso ? parseInt(id_curso) : undefined,
+		codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 		itens,
 	};
 };
