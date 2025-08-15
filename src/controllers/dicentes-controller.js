@@ -73,6 +73,20 @@ dicentesService.put(
 	dicenteService.atualizaDicente,
 );
 
+dicentesService.put(
+	"/:matricula",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao(Permissoes.DICENTE.EDITAR),
+	dicenteService.atualizaDicente,
+);
+
+dicentesService.put(
+	"/",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao(Permissoes.DICENTE.EDITAR),
+	dicenteService.atualizaDicente,
+);
+
 dicentesService.delete(
 	"/:matricula",
 	auth.autenticarUsuario,
