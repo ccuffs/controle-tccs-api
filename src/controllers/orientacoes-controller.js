@@ -30,6 +30,13 @@ orientacoesService.put(
 );
 
 orientacoesService.delete(
+	"/:id",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao(Permissoes.ORIENTACAO.DELETAR),
+	orientacaoService.deletaOrientacao,
+);
+
+orientacoesService.delete(
 	"/:codigo/:matricula",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.ORIENTACAO.DELETAR),
