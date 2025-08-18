@@ -45,10 +45,10 @@ const criaConvite = async (req, res) => {
 			data_envio: new Date(),
 			mensagem_envio:
 				formData.mensagem_envio || "Convite para orientação de TCC",
-			aceito: false,
-			mensagem_feedback: "",
-			orientacao:
-				formData.orientacao !== undefined ? formData.orientacao : true, // Usar valor do frontend ou true como padrão
+			aceito: formData.orientacao || false,
+			mensagem_feedback: formData.mensagem_feedback || "",
+			data_feedback: formData.data_feedback || undefined,
+			orientacao: formData.orientacao || true, // Usar valor do frontend ou true como padrão
 			fase: formData.fase !== undefined ? formData.fase : 1, // Usar valor do frontend ou 1 como padrão
 		};
 
