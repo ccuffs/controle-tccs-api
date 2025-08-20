@@ -163,13 +163,14 @@ const deletaDefesa = async (req, res) => {
 	const t = await model.sequelize.transaction();
 
 	try {
-		const { id_tcc, membro_banca } = req.params;
+		const { id_tcc, membro_banca, fase } = req.params;
 
 		// Buscar a defesa antes de deletar para obter os dados necessários
 		const defesa = await model.Defesa.findOne({
 			where: {
 				id_tcc: id_tcc,
 				membro_banca: membro_banca,
+				fase: fase,
 			},
 			include: [
 				{
@@ -188,6 +189,7 @@ const deletaDefesa = async (req, res) => {
 		const sucesso = await defesaRepository.deletarDefesa(
 			id_tcc,
 			membro_banca,
+			fase,
 		);
 
 		if (!sucesso) {
@@ -261,6 +263,179 @@ const deletaDefesa = async (req, res) => {
 	}
 };
 
+// Função para gerenciar banca de defesa com convites em transação única
+const gerenciarBancaDefesa = async (req, res) => {
+	const model = require("../models");
+	const t = await model.sequelize.transaction();
+
+	try {
+		const {
+			id_tcc,
+			fase,
+			membros_novos,
+			membros_existentes,
+			convites_banca_existentes,
+			orientador_codigo
+		} = req.body;
+
+		if (!id_tcc || !fase || !Array.isArray(membros_novos) || !Array.isArray(membros_existentes)) {
+			await t.rollback();
+			return res.status(400).json({ message: "Parâmetros inválidos" });
+		}
+
+		const dataAtual = new Date().toISOString();
+		const mensagemPadrao = "Informado pelo professor do CCR";
+
+		// 1. Remover membros que não estão mais selecionados (exceto orientador)
+		for (const membroExistente of membros_existentes) {
+			if (!membros_novos.includes(membroExistente)) {
+				// Deletar defesa (apenas membros da banca, não orientador)
+				await model.Defesa.destroy({
+					where: {
+						id_tcc: id_tcc,
+						membro_banca: membroExistente,
+						fase: fase,
+						orientador: false, // Apenas membros da banca, não o orientador
+					},
+					transaction: t,
+				});
+
+				// Deletar convite se existir (apenas convites de banca)
+				await model.Convite.destroy({
+					where: {
+						id_tcc: id_tcc,
+						codigo_docente: membroExistente,
+						fase: fase,
+						orientacao: false,
+					},
+					transaction: t,
+				});
+			}
+		}
+
+		// 2. Adicionar novos membros
+		for (const membroNovo of membros_novos) {
+			if (!membros_existentes.includes(membroNovo)) {
+				// Verificar se já existe convite para este membro
+				const conviteExistente = convites_banca_existentes?.find(
+					c => c.codigo_docente === membroNovo
+				);
+
+				// Criar convite se não existir ou se foi recusado
+				if (!conviteExistente || conviteExistente.aceito === false) {
+					const convitePayload = {
+						id_tcc: id_tcc,
+						codigo_docente: membroNovo,
+						fase: parseInt(fase),
+						data_envio: dataAtual,
+						mensagem_envio: mensagemPadrao,
+						data_feedback: dataAtual,
+						aceito: true,
+						mensagem_feedback: mensagemPadrao,
+						orientacao: false,
+					};
+
+					await model.Convite.create(convitePayload, { transaction: t });
+				}
+
+				// Criar defesa para o membro da banca
+				const defesaPayload = {
+					id_tcc: id_tcc,
+					membro_banca: membroNovo,
+					fase: parseInt(fase),
+					orientador: false,
+				};
+
+				await model.Defesa.create(defesaPayload, { transaction: t });
+			}
+		}
+
+		// 2.1 Garantir que o orientador também está na defesa
+		if (orientador_codigo && membros_novos.length > 0) {
+			// Verificar se já existe defesa para o orientador
+			const defesaOrientadorExistente = await model.Defesa.findOne({
+				where: {
+					id_tcc: id_tcc,
+					membro_banca: orientador_codigo,
+					fase: fase,
+					orientador: true,
+				},
+				transaction: t,
+			});
+
+			if (!defesaOrientadorExistente) {
+				// Criar defesa para o orientador
+				const defesaOrientadorPayload = {
+					id_tcc: id_tcc,
+					membro_banca: orientador_codigo,
+					fase: parseInt(fase),
+					orientador: true,
+				};
+
+				await model.Defesa.create(defesaOrientadorPayload, { transaction: t });
+			}
+		}
+
+		// 3. Gerenciar alterações (quando membro é trocado)
+		const alteracoes = req.body.alteracoes || [];
+		for (const alteracao of alteracoes) {
+			const { membro_antigo, membro_novo } = alteracao;
+
+			if (membro_antigo && membro_novo) {
+				const conviteAntigo = convites_banca_existentes?.find(
+					c => c.codigo_docente === membro_antigo
+				);
+
+				if (conviteAntigo && conviteAntigo.aceito === true) {
+					// Deletar convite anterior
+					await model.Convite.destroy({
+						where: {
+							id_tcc: id_tcc,
+							codigo_docente: membro_antigo,
+							fase: fase,
+							orientacao: false,
+						},
+						transaction: t,
+					});
+
+					// Criar novo convite com mensagem de alteração
+					const mensagemAlteracao = `Alteração de banca informada pelo professor do CCR de ${membro_antigo} para ${membro_novo}`;
+
+					const convitePayload = {
+						id_tcc: id_tcc,
+						codigo_docente: membro_novo,
+						fase: parseInt(fase),
+						data_envio: dataAtual,
+						mensagem_envio: mensagemAlteracao,
+						data_feedback: dataAtual,
+						aceito: true,
+						mensagem_feedback: mensagemAlteracao,
+						orientacao: false,
+					};
+
+					await model.Convite.create(convitePayload, { transaction: t });
+				}
+			}
+		}
+
+		await t.commit();
+		res.status(200).json({
+			message: "Banca de defesa gerenciada com sucesso",
+			membros_adicionados: membros_novos.filter(m => !membros_existentes.includes(m)).length,
+			membros_removidos: membros_existentes.filter(m => !membros_novos.includes(m)).length,
+			orientador_incluido: orientador_codigo ? true : false,
+		});
+
+	} catch (error) {
+		await t.rollback();
+		console.error("Erro ao gerenciar banca de defesa:", error);
+		res.status(500).json({
+			message: "Erro interno do servidor",
+			error: error.message,
+		});
+	}
+};
+
 module.exports = {
 	retornaTodasDefesas,
 	retornaDefesasPorTcc,
@@ -268,4 +443,5 @@ module.exports = {
 	atualizaDefesa,
 	registraAvaliacaoDefesa,
 	deletaDefesa,
+	gerenciarBancaDefesa,
 };

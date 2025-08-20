@@ -119,12 +119,19 @@ defesaRepository.registrarAvaliacaoDefesa = async (idTcc, avaliacao) => {
 };
 
 // Deletar defesa
-defesaRepository.deletarDefesa = async (idTcc, membroBanca) => {
+defesaRepository.deletarDefesa = async (idTcc, membroBanca, fase) => {
+	const whereClause = {
+		id_tcc: idTcc,
+		membro_banca: membroBanca,
+	};
+
+	// Adicionar fase apenas se fornecida
+	if (fase !== undefined && fase !== null) {
+		whereClause.fase = fase;
+	}
+
 	const deleted = await model.Defesa.destroy({
-		where: {
-			id_tcc: idTcc,
-			membro_banca: membroBanca,
-		},
+		where: whereClause,
 	});
 	return deleted > 0;
 };

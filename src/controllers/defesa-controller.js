@@ -210,6 +210,22 @@ router.post(
 	},
 );
 
+// POST /api/defesas - Criar nova defesa simples
+router.post(
+	"/",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.CRIAR]),
+	defesaService.criaDefesa,
+);
+
+// POST /api/defesas/gerenciar-banca - Gerenciar banca de defesa com convites em transação única
+router.post(
+	"/gerenciar-banca",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.CRIAR, Permissoes.TRABALHO_CONCLUSAO.EDITAR]),
+	defesaService.gerenciarBancaDefesa,
+);
+
 // PUT /api/defesas/:id_tcc/:membro_banca
 router.put(
 	"/:id_tcc/:membro_banca",
@@ -218,9 +234,9 @@ router.put(
 	defesaService.atualizaDefesa,
 );
 
-// DELETE /api/defesas/:id_tcc/:membro_banca
+// DELETE /api/defesas/:id_tcc/:membro_banca/:fase
 router.delete(
-	"/:id_tcc/:membro_banca",
+	"/:id_tcc/:membro_banca/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.DELETAR]),
 	defesaService.deletaDefesa,
