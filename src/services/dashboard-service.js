@@ -265,32 +265,9 @@ const contarConvitesOrientacaoStatus = async (filtros) => {
 		semestreAlvo = atual.semestre;
 	}
 
-	// Buscar período (inicio/fim) do semestre
-	const periodo = await model.AnoSemestre.findOne({
-		where: { ano: parseInt(anoAlvo), semestre: parseInt(semestreAlvo) },
-		raw: true,
-	});
+	const { fn, col, literal } = model.Sequelize;
 
-	if (!periodo) {
-		return {
-			ano: anoAlvo,
-			semestre: semestreAlvo,
-			fase: fase ? parseInt(fase) : undefined,
-			id_curso: id_curso ? parseInt(id_curso) : undefined,
-			inicio: null,
-			fim: null,
-			respondidos: 0,
-			pendentes: 0,
-			total: 0,
-		};
-	}
-
-	const inicioPeriodo = new Date(periodo.inicio);
-	const fimPeriodo = new Date(periodo.fim);
-
-	const { fn, col, literal, Op } = model.Sequelize;
-
-	// Agregar convites de orientação no período e vinculados à oferta
+	// Agregar convites de orientação vinculados à oferta (sem filtro de data de envio)
 	const resultado = await model.Convite.findAll({
 		attributes: [
 			[
@@ -315,9 +292,6 @@ const contarConvitesOrientacaoStatus = async (filtros) => {
 		],
 		where: {
 			orientacao: true,
-			data_envio: {
-				[Op.between]: [inicioPeriodo, fimPeriodo],
-			},
 			...(codigo_docente
 				? { codigo_docente: String(codigo_docente) }
 				: {}),
@@ -349,8 +323,6 @@ const contarConvitesOrientacaoStatus = async (filtros) => {
 		fase: fase ? parseInt(fase) : undefined,
 		id_curso: id_curso ? parseInt(id_curso) : undefined,
 		codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
-		inicio: inicioPeriodo,
-		fim: fimPeriodo,
 		respondidos,
 		pendentes,
 		total,
@@ -376,29 +348,7 @@ const contarConvitesBancaStatus = async (filtros) => {
 		semestreAlvo = atual.semestre;
 	}
 
-	const periodo = await model.AnoSemestre.findOne({
-		where: { ano: parseInt(anoAlvo), semestre: parseInt(semestreAlvo) },
-		raw: true,
-	});
-
-	if (!periodo) {
-		return {
-			ano: anoAlvo,
-			semestre: semestreAlvo,
-			fase: fase ? parseInt(fase) : undefined,
-			id_curso: id_curso ? parseInt(id_curso) : undefined,
-			inicio: null,
-			fim: null,
-			respondidos: 0,
-			pendentes: 0,
-			total: 0,
-		};
-	}
-
-	const inicioPeriodo = new Date(periodo.inicio);
-	const fimPeriodo = new Date(periodo.fim);
-
-	const { fn, col, literal, Op } = model.Sequelize;
+	const { fn, col, literal } = model.Sequelize;
 
 	const resultado = await model.Convite.findAll({
 		attributes: [
@@ -424,9 +374,6 @@ const contarConvitesBancaStatus = async (filtros) => {
 		],
 		where: {
 			orientacao: false,
-			data_envio: {
-				[Op.between]: [inicioPeriodo, fimPeriodo],
-			},
 			...(codigo_docente
 				? { codigo_docente: String(codigo_docente) }
 				: {}),
@@ -458,8 +405,6 @@ const contarConvitesBancaStatus = async (filtros) => {
 		fase: fase ? parseInt(fase) : undefined,
 		id_curso: id_curso ? parseInt(id_curso) : undefined,
 		codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
-		inicio: inicioPeriodo,
-		fim: fimPeriodo,
 		respondidos,
 		pendentes,
 		total,

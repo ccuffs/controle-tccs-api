@@ -171,12 +171,13 @@ dashboardController.get(
 	]),
 	async (req, res) => {
 		try {
-			const { ano, semestre, id_curso, fase } = req.query;
+			const { ano, semestre, id_curso, fase, codigo_docente } = req.query;
 			const filtros = {
 				ano: ano ? parseInt(ano) : undefined,
 				semestre: semestre ? parseInt(semestre) : undefined,
 				id_curso: id_curso ? parseInt(id_curso) : undefined,
 				fase: fase ? parseInt(fase) : undefined,
+				codigo_docente: codigo_docente || undefined,
 			};
 			const resultado =
 				await dashboardService.contarConvitesOrientacaoStatus(filtros);
