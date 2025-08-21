@@ -38,6 +38,8 @@ const criaConvite = async (req, res) => {
 			});
 		}
 
+		console.log("formData", formData);
+
 		// Preparar dados do convite
 		const dadosConvite = {
 			id_tcc: formData.id_tcc,
@@ -48,8 +50,8 @@ const criaConvite = async (req, res) => {
 			aceito: formData.orientacao || false,
 			mensagem_feedback: formData.mensagem_feedback || "",
 			data_feedback: formData.data_feedback || undefined,
-			orientacao: formData.orientacao || true, // Usar valor do frontend ou true como padrão
-			fase: formData.fase !== undefined ? formData.fase : 1, // Usar valor do frontend ou 1 como padrão
+			orientacao: formData.orientacao === undefined ? true : formData.orientacao, // Usar valor do frontend ou true como padrão
+			fase: formData.fase === undefined ? 1 : formData.fase, // Usar valor do frontend ou 1 como padrão
 		};
 
 		const convite = await conviteRepository.criarConvite(dadosConvite);

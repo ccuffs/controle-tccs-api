@@ -38,6 +38,14 @@ const calcularHorarioPosterior = (hora) => {
 	return `${proximaHora.toString().padStart(2, "0")}:${proximoMinuto.toString().padStart(2, "0")}:00`;
 };
 
+// Função auxiliar para calcular ambos os horários
+const calcularHorarios = (hora) => {
+	return {
+		horaAnterior: calcularHorarioAnterior(hora),
+		horaPosterior: calcularHorarioPosterior(hora)
+	};
+};
+
 // Função para retornar todas as defesas
 const retornaTodasDefesas = async (req, res) => {
 	try {
@@ -48,7 +56,7 @@ const retornaTodasDefesas = async (req, res) => {
 		res.status(200).json({ defesas: defesas });
 	} catch (error) {
 		console.log("Erro ao buscar defesas:", error);
-		res.sendStatus(500);
+		res.status(500).json({ message: "Erro ao buscar defesas" });
 	}
 };
 
@@ -59,16 +67,11 @@ const retornaDefesasPorTcc = async (req, res) => {
 
 		const defesas = await defesaRepository.obterDefesasPorTcc(id_tcc);
 
-		if (!defesas || defesas.length === 0) {
-			return res
-				.status(404)
-				.json({ message: "Nenhuma defesa encontrada para este TCC" });
-		}
-
-		res.status(200).json({ defesas: defesas });
+		// Retorna array vazio se não houver defesas ao invés de erro 404
+		res.status(200).json({ defesas: defesas || [] });
 	} catch (error) {
 		console.log("Erro ao buscar defesas:", error);
-		res.sendStatus(500);
+		res.status(500).json({ message: "Erro ao buscar defesas" });
 	}
 };
 
@@ -77,6 +80,13 @@ const criaDefesa = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
+		// Verificar se foi fornecido um membro da banca
+		if (!formData.membro_banca) {
+			return res.status(400).json({
+				message: "É necessário informar um membro da banca",
+			});
+		}
+
 		// Verificar se já existe defesa para este TCC com este membro da banca
 		const defesaExiste = await defesaRepository.verificarDefesaExiste(
 			formData.id_tcc,
@@ -90,13 +100,6 @@ const criaDefesa = async (req, res) => {
 			});
 		}
 
-		// Verificar se foi fornecido um membro da banca
-		if (!formData.membro_banca) {
-			return res.status(400).json({
-				message: "É necessário informar um membro da banca",
-			});
-		}
-
 		const defesa = await defesaRepository.criarDefesa(formData);
 
 		res.status(201).json({
@@ -105,7 +108,7 @@ const criaDefesa = async (req, res) => {
 	} catch (error) {
 		console.log("Erro ao criar defesa:", error);
 		console.log("Dados que causaram erro:", formData);
-		res.status(500).json({ error: error.message });
+		res.status(500).json({ message: "Erro ao criar defesa" });
 	}
 };
 
@@ -129,7 +132,7 @@ const atualizaDefesa = async (req, res) => {
 	} catch (error) {
 		console.log("Erro ao atualizar defesa:", error);
 		console.log("Dados que causaram erro:", formData);
-		res.status(500).json({ error: error.message });
+		res.status(500).json({ message: "Erro ao atualizar defesa" });
 	}
 };
 
@@ -153,111 +156,31 @@ const registraAvaliacaoDefesa = async (req, res) => {
 		}
 	} catch (error) {
 		console.log("Erro ao registrar avaliação:", error);
-		res.status(500).json({ error: error.message });
+		res.status(500).json({ message: "Erro ao registrar avaliação" });
 	}
 };
 
 // Função para deletar uma defesa
 const deletaDefesa = async (req, res) => {
-	const model = require("../models");
-	const t = await model.sequelize.transaction();
-
 	try {
 		const { id_tcc, membro_banca, fase } = req.params;
 
-		// Buscar a defesa antes de deletar para obter os dados necessários
-		const defesa = await model.Defesa.findOne({
-			where: {
-				id_tcc: id_tcc,
-				membro_banca: membro_banca,
-				fase: fase,
-			},
-			include: [
-				{
-					model: model.TrabalhoConclusao,
-					attributes: ["ano", "semestre", "id_curso", "fase"],
-				},
-			],
-		});
-
-		if (!defesa) {
-			await t.rollback();
-			return res.status(404).json({ message: "Defesa não encontrada" });
-		}
-
-		// Deletar a defesa
-		const sucesso = await defesaRepository.deletarDefesa(
+		const resultado = await defesaRepository.deletarDefesaComRestauracao(
 			id_tcc,
 			membro_banca,
 			fase,
+			calcularHorarios
 		);
 
-		if (!sucesso) {
-			await t.rollback();
-			return res.status(404).json({ message: "Defesa não encontrada" });
+		if (resultado.sucesso) {
+			res.status(200).json({
+				message: "Defesa deletada com sucesso",
+				disponibilidadesRestauradas: resultado.disponibilidadesRestauradas,
+			});
+		} else {
+			res.status(404).json({ message: resultado.motivo });
 		}
-
-		// Se a defesa tinha data e hora, restaurar as disponibilidades
-		if (defesa.data_defesa) {
-			const data = defesa.data_defesa.toISOString().split("T")[0];
-			const hora = defesa.data_defesa.toTimeString().split(" ")[0];
-			const horaAnterior = calcularHorarioAnterior(hora);
-			const horaPosterior = calcularHorarioPosterior(hora);
-
-			// Restaurar disponibilidade do horário da defesa
-			await model.DocenteDisponibilidadeBanca.create(
-				{
-					ano: defesa.TrabalhoConclusao.ano,
-					semestre: defesa.TrabalhoConclusao.semestre,
-					id_curso: defesa.TrabalhoConclusao.id_curso,
-					fase: defesa.TrabalhoConclusao.fase,
-					codigo_docente: membro_banca,
-					data_defesa: data,
-					hora_defesa: hora,
-				},
-				{ transaction: t },
-			);
-
-			// Restaurar disponibilidade do horário anterior se existir
-			if (horaAnterior) {
-				await model.DocenteDisponibilidadeBanca.create(
-					{
-						ano: defesa.TrabalhoConclusao.ano,
-						semestre: defesa.TrabalhoConclusao.semestre,
-						id_curso: defesa.TrabalhoConclusao.id_curso,
-						fase: defesa.TrabalhoConclusao.fase,
-						codigo_docente: membro_banca,
-						data_defesa: data,
-						hora_defesa: horaAnterior,
-					},
-					{ transaction: t },
-				);
-			}
-
-			// Restaurar disponibilidade do próximo horário se existir
-			if (horaPosterior) {
-				await model.DocenteDisponibilidadeBanca.create(
-					{
-						ano: defesa.TrabalhoConclusao.ano,
-						semestre: defesa.TrabalhoConclusao.semestre,
-						id_curso: defesa.TrabalhoConclusao.id_curso,
-						fase: defesa.TrabalhoConclusao.fase,
-						codigo_docente: membro_banca,
-						data_defesa: data,
-						hora_defesa: horaPosterior,
-					},
-					{ transaction: t },
-				);
-			}
-		}
-
-		await t.commit();
-		res.status(200).json({
-			message: "Defesa deletada com sucesso",
-			disponibilidadesRestauradas: defesa.data_defesa ? true : false,
-		});
 	} catch (error) {
-		await t.rollback();
 		console.error("Erro ao deletar defesa:", error);
 		res.status(500).json({ message: "Erro ao deletar defesa" });
 	}
@@ -265,9 +188,6 @@ const deletaDefesa = async (req, res) => {
 
 // Função para gerenciar banca de defesa com convites em transação única
 const gerenciarBancaDefesa = async (req, res) => {
-	const model = require("../models");
-	const t = await model.sequelize.transaction();
-
 	try {
 		const {
 			id_tcc,
@@ -276,187 +196,93 @@ const gerenciarBancaDefesa = async (req, res) => {
 			membros_existentes,
 			convites_banca_existentes,
 			orientador_codigo,
-			data_hora_defesa
+			data_hora_defesa,
+			alteracoes
 		} = req.body;
 
 		if (!id_tcc || !fase || !Array.isArray(membros_novos) || !Array.isArray(membros_existentes)) {
-			await t.rollback();
 			return res.status(400).json({ message: "Parâmetros inválidos" });
 		}
 
-		const dataAtual = new Date().toISOString();
-		const mensagemPadrao = "Informado pelo professor do CCR";
-
-		// 1. Remover membros que não estão mais selecionados (exceto orientador)
-		for (const membroExistente of membros_existentes) {
-			if (!membros_novos.includes(membroExistente)) {
-				// Deletar defesa (apenas membros da banca, não orientador)
-				await model.Defesa.destroy({
-					where: {
-						id_tcc: id_tcc,
-						membro_banca: membroExistente,
-						fase: fase,
-						orientador: false, // Apenas membros da banca, não o orientador
-					},
-					transaction: t,
-				});
-
-				// Deletar convite se existir (apenas convites de banca)
-				await model.Convite.destroy({
-					where: {
-						id_tcc: id_tcc,
-						codigo_docente: membroExistente,
-						fase: fase,
-						orientacao: false,
-					},
-					transaction: t,
-				});
-			}
-		}
-
-		// 2. Adicionar novos membros
-		for (const membroNovo of membros_novos) {
-			if (!membros_existentes.includes(membroNovo)) {
-				// Verificar se já existe convite para este membro
-				const conviteExistente = convites_banca_existentes?.find(
-					c => c.codigo_docente === membroNovo
-				);
-
-				// Criar convite se não existir ou se foi recusado
-				if (!conviteExistente || conviteExistente.aceito === false) {
-					const convitePayload = {
-						id_tcc: id_tcc,
-						codigo_docente: membroNovo,
-						fase: parseInt(fase),
-						data_envio: dataAtual,
-						mensagem_envio: mensagemPadrao,
-						data_feedback: dataAtual,
-						aceito: true,
-						mensagem_feedback: mensagemPadrao,
-						orientacao: false,
-					};
-
-					await model.Convite.create(convitePayload, { transaction: t });
-				}
-
-				// Criar defesa para o membro da banca
-				const defesaPayload = {
-					id_tcc: id_tcc,
-					membro_banca: membroNovo,
-					fase: parseInt(fase),
-					orientador: false,
-					data_defesa: data_hora_defesa ? new Date(data_hora_defesa) : null,
-				};
-
-				await model.Defesa.create(defesaPayload, { transaction: t });
-			}
-		}
-
-		// 2.1 Garantir que o orientador também está na defesa
-		if (orientador_codigo && membros_novos.length > 0) {
-			// Verificar se já existe defesa para o orientador
-			const defesaOrientadorExistente = await model.Defesa.findOne({
-				where: {
-					id_tcc: id_tcc,
-					membro_banca: orientador_codigo,
-					fase: fase,
-					orientador: true,
-				},
-				transaction: t,
-			});
-
-			if (!defesaOrientadorExistente) {
-				// Criar defesa para o orientador
-				const defesaOrientadorPayload = {
-					id_tcc: id_tcc,
-					membro_banca: orientador_codigo,
-					fase: parseInt(fase),
-					orientador: true,
-					data_defesa: data_hora_defesa ? new Date(data_hora_defesa) : null,
-				};
-
-				await model.Defesa.create(defesaOrientadorPayload, { transaction: t });
-			}
-		}
-
-		// 3. Gerenciar alterações (quando membro é trocado)
-		const alteracoes = req.body.alteracoes || [];
-		for (const alteracao of alteracoes) {
-			const { membro_antigo, membro_novo } = alteracao;
-
-			if (membro_antigo && membro_novo) {
-				const conviteAntigo = convites_banca_existentes?.find(
-					c => c.codigo_docente === membro_antigo
-				);
-
-				if (conviteAntigo && conviteAntigo.aceito === true) {
-					// Deletar convite anterior
-					await model.Convite.destroy({
-						where: {
-							id_tcc: id_tcc,
-							codigo_docente: membro_antigo,
-							fase: fase,
-							orientacao: false,
-						},
-						transaction: t,
-					});
-
-					// Criar novo convite com mensagem de alteração
-					const mensagemAlteracao = `Alteração de banca informada pelo professor do CCR de ${membro_antigo} para ${membro_novo}`;
-
-					const convitePayload = {
-						id_tcc: id_tcc,
-						codigo_docente: membro_novo,
-						fase: parseInt(fase),
-						data_envio: dataAtual,
-						mensagem_envio: mensagemAlteracao,
-						data_feedback: dataAtual,
-						aceito: true,
-						mensagem_feedback: mensagemAlteracao,
-						orientacao: false,
-					};
-
-					await model.Convite.create(convitePayload, { transaction: t });
-				}
-			}
-		}
-
-		// 4. Atualizar data da defesa em todas as defesas do TCC nesta fase
-		if (data_hora_defesa !== undefined) {
-			// Converter data_hora_defesa para formato adequado do banco
-			let dataDefesa = null;
-			if (data_hora_defesa) {
-				dataDefesa = new Date(data_hora_defesa);
-			}
-
-			// Atualizar todas as defesas existentes deste TCC e fase com a nova data
-			await model.Defesa.update(
-				{ data_defesa: dataDefesa },
-				{
-					where: {
-						id_tcc: id_tcc,
-						fase: fase,
-					},
-					transaction: t,
-				}
-			);
-		}
-
-		await t.commit();
-		res.status(200).json({
-			message: "Banca de defesa gerenciada com sucesso",
-			membros_adicionados: membros_novos.filter(m => !membros_existentes.includes(m)).length,
-			membros_removidos: membros_existentes.filter(m => !membros_novos.includes(m)).length,
-			orientador_incluido: orientador_codigo ? true : false,
-			data_defesa_atualizada: data_hora_defesa !== undefined ? true : false,
+		const resultado = await defesaRepository.gerenciarBancaDefesa({
+			id_tcc,
+			fase,
+			membros_novos,
+			membros_existentes,
+			convites_banca_existentes,
+			orientador_codigo,
+			data_hora_defesa,
+			alteracoes
 		});
 
+		if (resultado.sucesso) {
+			res.status(200).json({
+				message: "Banca de defesa gerenciada com sucesso",
+				membros_adicionados: resultado.membros_adicionados,
+				membros_removidos: resultado.membros_removidos,
+				orientador_incluido: resultado.orientador_incluido,
+				data_defesa_atualizada: resultado.data_defesa_atualizada,
+			});
+		} else {
+			res.status(400).json({ message: "Erro ao gerenciar banca de defesa" });
+		}
+
 	} catch (error) {
-		await t.rollback();
 		console.error("Erro ao gerenciar banca de defesa:", error);
 		res.status(500).json({
 			message: "Erro interno do servidor",
-			error: error.message,
+		});
+	}
+};
+
+// Função para agendar uma defesa
+const agendarDefesa = async (req, res) => {
+	try {
+		const {
+			id_tcc,
+			fase,
+			data,
+			hora,
+			codigo_orientador,
+			membros_banca,
+		} = req.body;
+
+		if (
+			!id_tcc ||
+			!fase ||
+			!data ||
+			!hora ||
+			!codigo_orientador ||
+			!Array.isArray(membros_banca) ||
+			membros_banca.length !== 2
+		) {
+			return res
+				.status(400)
+				.json({ message: "Parâmetros inválidos" });
+		}
+
+		const resultado = await defesaRepository.agendarDefesa({
+			id_tcc,
+			fase,
+			data,
+			hora,
+			codigo_orientador,
+			membros_banca,
+		}, calcularHorarios);
+
+		if (resultado.sucesso) {
+			return res.status(201).json({
+				message: "Defesa agendada com sucesso",
+				horarioAnteriorRemovido: resultado.horarioAnteriorRemovido,
+				horarioPosteriorRemovido: resultado.horarioPosteriorRemovido,
+			});
+		} else {
+			return res.status(400).json({ message: "Erro ao agendar defesa" });
+		}
+	} catch (error) {
+		console.error("Erro ao agendar defesa:", error);
+		return res.status(500).json({
+			message: "Erro ao agendar defesa",
 		});
 	}
 };
@@ -469,4 +295,5 @@ module.exports = {
 	registraAvaliacaoDefesa,
 	deletaDefesa,
 	gerenciarBancaDefesa,
+	agendarDefesa,
 };

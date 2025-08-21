@@ -79,6 +79,7 @@ conviteRepository.verificarConviteExiste = async (
 
 // Criar novo convite
 conviteRepository.criarConvite = async (dadosConvite) => {
+	console.log("dadosConvite", dadosConvite);
 	const convite = model.Convite.build(dadosConvite);
 	await convite.save();
 	return convite;
