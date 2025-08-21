@@ -137,7 +137,12 @@ defesaRepository.deletarDefesa = async (idTcc, membroBanca, fase) => {
 };
 
 // Deletar defesa com restauração de disponibilidades (transação)
-defesaRepository.deletarDefesaComRestauracao = async (idTcc, membroBanca, fase, calcularHorarios) => {
+defesaRepository.deletarDefesaComRestauracao = async (
+	idTcc,
+	membroBanca,
+	fase,
+	calcularHorarios,
+) => {
 	const t = await model.sequelize.transaction();
 
 	try {
@@ -233,7 +238,7 @@ defesaRepository.deletarDefesaComRestauracao = async (idTcc, membroBanca, fase, 
 		await t.commit();
 		return {
 			sucesso: true,
-			disponibilidadesRestauradas: defesa.data_defesa ? true : false
+			disponibilidadesRestauradas: defesa.data_defesa ? true : false,
 		};
 	} catch (error) {
 		await t.rollback();
@@ -246,14 +251,8 @@ defesaRepository.agendarDefesa = async (dadosAgendamento, calcularHorarios) => {
 	const t = await model.sequelize.transaction();
 
 	try {
-		const {
-			id_tcc,
-			fase,
-			data,
-			hora,
-			codigo_orientador,
-			membros_banca,
-		} = dadosAgendamento;
+		const { id_tcc, fase, data, hora, codigo_orientador, membros_banca } =
+			dadosAgendamento;
 
 		// Criar/validar registros de defesa: orientador + 2 membros
 		const docentes = [
@@ -369,7 +368,7 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 			convites_banca_existentes,
 			orientador_codigo,
 			data_hora_defesa,
-			alteracoes = []
+			alteracoes = [],
 		} = dadosBanca;
 
 		const dataAtual = new Date().toISOString();
@@ -407,7 +406,7 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 			if (!membros_existentes.includes(membroNovo)) {
 				// Verificar se já existe convite para este membro
 				const conviteExistente = convites_banca_existentes?.find(
-					c => c.codigo_docente === membroNovo
+					(c) => c.codigo_docente === membroNovo,
 				);
 
 				// Criar convite se não existir ou se foi recusado
@@ -424,7 +423,9 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 						orientacao: false,
 					};
 
-					await model.Convite.create(convitePayload, { transaction: t });
+					await model.Convite.create(convitePayload, {
+						transaction: t,
+					});
 				}
 
 				// Criar defesa para o membro da banca
@@ -433,7 +434,9 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 					membro_banca: membroNovo,
 					fase: parseInt(fase),
 					orientador: false,
-					data_defesa: data_hora_defesa ? new Date(data_hora_defesa) : null,
+					data_defesa: data_hora_defesa
+						? new Date(data_hora_defesa)
+						: null,
 				};
 
 				await model.Defesa.create(defesaPayload, { transaction: t });
@@ -460,10 +463,14 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 					membro_banca: orientador_codigo,
 					fase: parseInt(fase),
 					orientador: true,
-					data_defesa: data_hora_defesa ? new Date(data_hora_defesa) : null,
+					data_defesa: data_hora_defesa
+						? new Date(data_hora_defesa)
+						: null,
 				};
 
-				await model.Defesa.create(defesaOrientadorPayload, { transaction: t });
+				await model.Defesa.create(defesaOrientadorPayload, {
+					transaction: t,
+				});
 			}
 		}
 
@@ -473,7 +480,7 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 
 			if (membro_antigo && membro_novo) {
 				const conviteAntigo = convites_banca_existentes?.find(
-					c => c.codigo_docente === membro_antigo
+					(c) => c.codigo_docente === membro_antigo,
 				);
 
 				if (conviteAntigo && conviteAntigo.aceito === true) {
@@ -503,7 +510,9 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 						orientacao: false,
 					};
 
-					await model.Convite.create(convitePayload, { transaction: t });
+					await model.Convite.create(convitePayload, {
+						transaction: t,
+					});
 				}
 			}
 		}
@@ -525,7 +534,7 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 						fase: fase,
 					},
 					transaction: t,
-				}
+				},
 			);
 
 			// 4.1. Se data de defesa foi definida, verificar se deve atualizar etapa do TCC
@@ -543,7 +552,7 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 						{
 							where: { id: id_tcc },
 							transaction: t,
-						}
+						},
 					);
 				}
 			}
@@ -552,12 +561,16 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 		await t.commit();
 		return {
 			sucesso: true,
-			membros_adicionados: membros_novos.filter(m => !membros_existentes.includes(m)).length,
-			membros_removidos: membros_existentes.filter(m => !membros_novos.includes(m)).length,
+			membros_adicionados: membros_novos.filter(
+				(m) => !membros_existentes.includes(m),
+			).length,
+			membros_removidos: membros_existentes.filter(
+				(m) => !membros_novos.includes(m),
+			).length,
 			orientador_incluido: orientador_codigo ? true : false,
-			data_defesa_atualizada: data_hora_defesa !== undefined ? true : false,
+			data_defesa_atualizada:
+				data_hora_defesa !== undefined ? true : false,
 		};
-
 	} catch (error) {
 		await t.rollback();
 		throw error;

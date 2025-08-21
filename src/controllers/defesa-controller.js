@@ -51,7 +51,10 @@ router.post(
 router.post(
 	"/gerenciar-banca",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.CRIAR, Permissoes.TRABALHO_CONCLUSAO.EDITAR]),
+	autorizacao.verificarPermissao([
+		Permissoes.TRABALHO_CONCLUSAO.CRIAR,
+		Permissoes.TRABALHO_CONCLUSAO.EDITAR,
+	]),
 	defesaService.gerenciarBancaDefesa,
 );
 

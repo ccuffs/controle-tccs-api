@@ -1,4 +1,26 @@
-const model = require("../models");
+const anoSemestreRepository = require("../repository/ano-semestre-repository");
+
+// Função para obter ano/semestre atual baseado nas regras de negócio
+const obterAnoSemestreAtual = async (req, res) => {
+	try {
+		const atual = await calcularAnoSemestreAtual();
+		res.status(200).json(atual);
+	} catch (error) {
+		console.error("Erro ao obter ano/semestre atual:", error);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
+
+// Função para listar todos os períodos cadastrados
+const listarTodosAnoSemestres = async (req, res) => {
+	try {
+		const lista = await anoSemestreRepository.obterTodosAnoSemestres();
+		res.status(200).json(lista);
+	} catch (error) {
+		console.error("Erro ao listar ano/semestre:", error);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
 
 /**
  * Função utilitária para calcular ano/semestre atual baseado na tabela ano_semestre
@@ -20,17 +42,12 @@ const model = require("../models");
  *
  * @returns {Promise<{ano: number, semestre: number}>} Objeto com ano e semestre
  */
-const obterAnoSemestreAtual = async () => {
+const calcularAnoSemestreAtual = async () => {
 	try {
 		const dataAtual = new Date();
 
 		// Buscar todos os períodos ordenados por ano e semestre
-		const periodos = await model.AnoSemestre.findAll({
-			order: [
-				["ano", "ASC"],
-				["semestre", "ASC"],
-			],
-		});
+		const periodos = await anoSemestreRepository.obterTodosAnoSemestres();
 
 		if (periodos.length === 0) {
 			// Fallback para lógica simples se não houver dados
@@ -95,4 +112,7 @@ const obterAnoSemestreAtual = async () => {
 	}
 };
 
-module.exports = { obterAnoSemestreAtual };
+module.exports = {
+	obterAnoSemestreAtual,
+	listarTodosAnoSemestres,
+};

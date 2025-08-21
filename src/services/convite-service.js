@@ -50,7 +50,8 @@ const criaConvite = async (req, res) => {
 			aceito: formData.orientacao || false,
 			mensagem_feedback: formData.mensagem_feedback || "",
 			data_feedback: formData.data_feedback || undefined,
-			orientacao: formData.orientacao === undefined ? true : formData.orientacao, // Usar valor do frontend ou true como padrão
+			orientacao:
+				formData.orientacao === undefined ? true : formData.orientacao, // Usar valor do frontend ou true como padrão
 			fase: formData.fase === undefined ? 1 : formData.fase, // Usar valor do frontend ou 1 como padrão
 		};
 

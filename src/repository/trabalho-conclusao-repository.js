@@ -1,4 +1,4 @@
-const model = require("@backend/models");
+const model = require("../models");
 const trabalhoConclusaoRepository = {};
 
 // Buscar todos os trabalhos de conclusão com filtros

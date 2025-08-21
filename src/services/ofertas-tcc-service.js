@@ -1,4 +1,4 @@
-const model = require("../models");
+const ofertasTccRepository = require("../repository/ofertas-tcc-repository");
 const { obterAnoSemestreAtual } = require("./ano-semestre-service");
 
 // Função para retornar todas as ofertas de TCC
@@ -14,20 +14,24 @@ const retornaTodasOfertasTcc = async (req, res) => {
 		if (id_curso) whereClause.id_curso = parseInt(id_curso);
 		if (fase) whereClause.fase = parseInt(fase);
 
-		const ofertas = await model.OfertaTcc.findAll({
-			where: whereClause,
-			include: [
-				{
-					model: model.Curso,
-					attributes: ["id", "nome", "codigo"],
-				},
-			],
-			order: [
-				["ano", "DESC"],
-				["semestre", "DESC"],
-				["fase", "ASC"],
-			],
-		});
+		const include = [
+			{
+				model: require("../models").Curso,
+				attributes: ["id", "nome", "codigo"],
+			},
+		];
+
+		const order = [
+			["ano", "DESC"],
+			["semestre", "DESC"],
+			["fase", "ASC"],
+		];
+
+		const ofertas = await ofertasTccRepository.buscarOfertasTcc(
+			whereClause,
+			include,
+			order,
+		);
 
 		res.status(200).json({ ofertas: ofertas });
 	} catch (error) {
@@ -41,20 +45,24 @@ const retornaOfertaTccPorChave = async (req, res) => {
 	try {
 		const { ano, semestre, id_curso, fase } = req.params;
 
-		const oferta = await model.OfertaTcc.findOne({
-			where: {
-				ano: parseInt(ano),
-				semestre: parseInt(semestre),
-				id_curso: parseInt(id_curso),
-				fase: parseInt(fase),
+		const where = {
+			ano: parseInt(ano),
+			semestre: parseInt(semestre),
+			id_curso: parseInt(id_curso),
+			fase: parseInt(fase),
+		};
+
+		const include = [
+			{
+				model: require("../models").Curso,
+				attributes: ["id", "nome", "codigo"],
 			},
-			include: [
-				{
-					model: model.Curso,
-					attributes: ["id", "nome", "codigo"],
-				},
-			],
-		});
+		];
+
+		const oferta = await ofertasTccRepository.buscarOfertaTccPorChave(
+			where,
+			include,
+		);
 
 		if (!oferta) {
 			return res
@@ -75,14 +83,15 @@ const criaOfertaTcc = async (req, res) => {
 
 	try {
 		// Verificar se já existe oferta com a mesma chave
-		const ofertaExistente = await model.OfertaTcc.findOne({
-			where: {
-				ano: formData.ano,
-				semestre: formData.semestre,
-				id_curso: formData.id_curso,
-				fase: formData.fase,
-			},
-		});
+		const where = {
+			ano: formData.ano,
+			semestre: formData.semestre,
+			id_curso: formData.id_curso,
+			fase: formData.fase,
+		};
+
+		const ofertaExistente =
+			await ofertasTccRepository.verificarOfertaExistente(where);
 
 		if (ofertaExistente) {
 			return res.status(400).json({
@@ -91,8 +100,7 @@ const criaOfertaTcc = async (req, res) => {
 			});
 		}
 
-		const oferta = model.OfertaTcc.build(formData);
-		await oferta.save();
+		await ofertasTccRepository.criarOfertaTcc(formData);
 
 		res.status(201).json({
 			message: "Oferta TCC criada com sucesso",
@@ -110,14 +118,17 @@ const atualizaOfertaTcc = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
-		const [updatedRowsCount] = await model.OfertaTcc.update(formData, {
-			where: {
-				ano: parseInt(ano),
-				semestre: parseInt(semestre),
-				id_curso: parseInt(id_curso),
-				fase: parseInt(fase),
-			},
-		});
+		const where = {
+			ano: parseInt(ano),
+			semestre: parseInt(semestre),
+			id_curso: parseInt(id_curso),
+			fase: parseInt(fase),
+		};
+
+		const updatedRowsCount = await ofertasTccRepository.atualizarOfertaTcc(
+			where,
+			formData,
+		);
 
 		if (updatedRowsCount === 0) {
 			return res
@@ -138,15 +149,16 @@ const deletaOfertaTcc = async (req, res) => {
 	try {
 		const { ano, semestre, id_curso, fase } = req.params;
 
+		const where = {
+			ano: parseInt(ano),
+			semestre: parseInt(semestre),
+			id_curso: parseInt(id_curso),
+			fase: parseInt(fase),
+		};
+
 		// Verificar se há trabalhos de conclusão vinculados a esta oferta
-		const trabalhosVinculados = await model.TrabalhoConclusao.count({
-			where: {
-				ano: parseInt(ano),
-				semestre: parseInt(semestre),
-				id_curso: parseInt(id_curso),
-				fase: parseInt(fase),
-			},
-		});
+		const trabalhosVinculados =
+			await ofertasTccRepository.contarTrabalhosVinculados(where);
 
 		if (trabalhosVinculados > 0) {
 			return res.status(400).json({
@@ -154,14 +166,7 @@ const deletaOfertaTcc = async (req, res) => {
 			});
 		}
 
-		const deleted = await model.OfertaTcc.destroy({
-			where: {
-				ano: parseInt(ano),
-				semestre: parseInt(semestre),
-				id_curso: parseInt(id_curso),
-				fase: parseInt(fase),
-			},
-		});
+		const deleted = await ofertasTccRepository.deletarOfertaTcc(where);
 
 		if (deleted) {
 			res.status(200).json({
@@ -183,24 +188,24 @@ const retornaOfertasAtivas = async (req, res) => {
 		const { ano: anoAtual, semestre: semestreAtual } =
 			await obterAnoSemestreAtual();
 
-		const ofertas = await model.OfertaTcc.findAll({
-			where: {
-				ano: {
-					[model.Sequelize.Op.gte]: anoAtual - 1, // Últimos 2 anos
-				},
+		const include = [
+			{
+				model: require("../models").Curso,
+				attributes: ["id", "nome", "codigo"],
 			},
-			include: [
-				{
-					model: model.Curso,
-					attributes: ["id", "nome", "codigo"],
-				},
-			],
-			order: [
-				["ano", "DESC"],
-				["semestre", "DESC"],
-				["fase", "ASC"],
-			],
-		});
+		];
+
+		const order = [
+			["ano", "DESC"],
+			["semestre", "DESC"],
+			["fase", "ASC"],
+		];
+
+		const ofertas = await ofertasTccRepository.buscarOfertasAtivas(
+			anoAtual - 1,
+			include,
+			order,
+		);
 
 		res.status(200).json({ ofertas: ofertas });
 	} catch (error) {
@@ -210,25 +215,36 @@ const retornaOfertasAtivas = async (req, res) => {
 };
 
 // Função para buscar a última oferta TCC
-const buscarUltimaOfertaTcc = async () => {
+const buscarUltimaOfertaTcc = async (req, res) => {
 	try {
-		const ultimaOferta = await model.OfertaTcc.findOne({
-			include: [
-				{
-					model: model.Curso,
-					attributes: ["id", "nome", "codigo"],
-				},
-			],
-			order: [
-				["ano", "DESC"],
-				["semestre", "DESC"],
-				["fase", "ASC"],
-			],
-		});
-		return ultimaOferta;
+		const include = [
+			{
+				model: require("../models").Curso,
+				attributes: ["id", "nome", "codigo"],
+			},
+		];
+
+		const order = [
+			["ano", "DESC"],
+			["semestre", "DESC"],
+			["fase", "ASC"],
+		];
+
+		const ultimaOferta = await ofertasTccRepository.buscarUltimaOfertaTcc(
+			include,
+			order,
+		);
+
+		if (ultimaOferta) {
+			res.json(ultimaOferta);
+		} else {
+			res.status(404).json({
+				message: "Nenhuma oferta TCC encontrada",
+			});
+		}
 	} catch (error) {
 		console.error("Erro ao buscar última oferta TCC:", error);
-		throw error;
+		res.status(500).json({ message: "Erro interno do servidor" });
 	}
 };
 

@@ -39,6 +39,51 @@ const retornaTrabalhoConlusaoPorId = async (req, res) => {
 	}
 };
 
+// Função para buscar trabalho por discente (mais recente)
+const buscarPorDiscente = async (req, res) => {
+	try {
+		const { matricula } = req.params;
+		const trabalho =
+			await trabalhoConclusaoRepository.buscarPorDiscente(matricula);
+
+		if (trabalho) {
+			res.json(trabalho);
+		} else {
+			res.status(404).json({
+				message: "Trabalho de conclusão não encontrado",
+			});
+		}
+	} catch (error) {
+		console.error(
+			"Erro ao buscar trabalho de conclusão por discente:",
+			error,
+		);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
+
+// Função para buscar trabalho por discente na oferta atual
+const buscarPorDiscenteOfertaAtual = async (req, res) => {
+	try {
+		const { matricula } = req.params;
+		const trabalho = await buscarTrabalhoPorDiscenteOfertaAtual(matricula);
+
+		if (trabalho) {
+			res.json(trabalho);
+		} else {
+			res.status(404).json({
+				message: "Trabalho de conclusão não encontrado na oferta atual",
+			});
+		}
+	} catch (error) {
+		console.error(
+			"Erro ao buscar trabalho de conclusão por discente na oferta atual:",
+			error,
+		);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
+
 // Função para criar um novo trabalho de conclusão
 const criaTrabalhoConlusao = async (req, res) => {
 	const dadosTrabalho = req.body; // Usar req.body diretamente
@@ -142,22 +187,10 @@ const atualizaEtapaTrabalho = async (req, res) => {
 	}
 };
 
-// Métodos para o TccStepper
-const buscarPorDiscente = async (matricula) => {
-	try {
-		// Buscar o trabalho de conclusão mais recente do discente (qualquer oferta)
-		const trabalho =
-			await trabalhoConclusaoRepository.buscarPorDiscente(matricula);
-
-		return trabalho;
-	} catch (error) {
-		console.error("Erro ao buscar trabalho por discente:", error);
-		throw error;
-	}
-};
-
-// Nova função para buscar TCC da oferta atual específica
-const buscarPorDiscenteOfertaAtual = async (matricula) => {
+/**
+ * Função utilitária para buscar trabalho por discente na oferta atual
+ */
+const buscarTrabalhoPorDiscenteOfertaAtual = async (matricula) => {
 	try {
 		// Primeiro, buscar a última oferta TCC
 		const ultimaOferta = await ofertasTccService.buscarUltimaOfertaTcc();
@@ -186,6 +219,9 @@ const buscarPorDiscenteOfertaAtual = async (matricula) => {
 	}
 };
 
+/**
+ * Função utilitária para criar trabalho de conclusão
+ */
 const criar = async (dadosTcc) => {
 	try {
 		// Se não foram fornecidos ano/semestre/curso/fase, buscar da última oferta
@@ -217,6 +253,9 @@ const criar = async (dadosTcc) => {
 	}
 };
 
+/**
+ * Função utilitária para atualizar trabalho de conclusão
+ */
 const atualizar = async (id, dadosAtualizados) => {
 	try {
 		const sucesso =
@@ -237,6 +276,9 @@ const atualizar = async (id, dadosAtualizados) => {
 	}
 };
 
+/**
+ * Função utilitária para buscar trabalho por ID
+ */
 const buscarPorId = async (id) => {
 	try {
 		const trabalho =
@@ -251,12 +293,12 @@ const buscarPorId = async (id) => {
 module.exports = {
 	retornaTodosTrabalhosConlusao,
 	retornaTrabalhoConlusaoPorId,
+	buscarPorDiscente,
+	buscarPorDiscenteOfertaAtual,
 	criaTrabalhoConlusao,
 	atualizaTrabalhoConlusao,
 	deletaTrabalhoConlusao,
 	atualizaEtapaTrabalho,
-	buscarPorDiscente,
-	buscarPorDiscenteOfertaAtual,
 	criar,
 	atualizar,
 	buscarPorId,

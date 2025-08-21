@@ -36,27 +36,7 @@ trabalhoConclusaoRouter.get(
 		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR,
 		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
 	]),
-	async (req, res) => {
-		try {
-			const { matricula } = req.params;
-			const trabalhoConclusao =
-				await trabalhoConclusaoService.buscarPorDiscente(matricula);
-
-			if (trabalhoConclusao) {
-				res.json(trabalhoConclusao);
-			} else {
-				res.status(404).json({
-					message: "Trabalho de conclusão não encontrado",
-				});
-			}
-		} catch (error) {
-			console.error(
-				"Erro ao buscar trabalho de conclusão por discente:",
-				error,
-			);
-			res.status(500).json({ message: "Erro interno do servidor" });
-		}
-	},
+	trabalhoConclusaoService.buscarPorDiscente,
 );
 
 // Buscar trabalho de conclusão por discente na oferta atual
@@ -67,30 +47,7 @@ trabalhoConclusaoRouter.get(
 		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR,
 		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
 	]),
-	async (req, res) => {
-		try {
-			const { matricula } = req.params;
-			const trabalhoConclusao =
-				await trabalhoConclusaoService.buscarPorDiscenteOfertaAtual(
-					matricula,
-				);
-
-			if (trabalhoConclusao) {
-				res.json(trabalhoConclusao);
-			} else {
-				res.status(404).json({
-					message:
-						"Trabalho de conclusão não encontrado na oferta atual",
-				});
-			}
-		} catch (error) {
-			console.error(
-				"Erro ao buscar trabalho de conclusão por discente na oferta atual:",
-				error,
-			);
-			res.status(500).json({ message: "Erro interno do servidor" });
-		}
-	},
+	trabalhoConclusaoService.buscarPorDiscenteOfertaAtual,
 );
 
 // Criar novo trabalho de conclusão

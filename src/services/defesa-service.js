@@ -42,7 +42,7 @@ const calcularHorarioPosterior = (hora) => {
 const calcularHorarios = (hora) => {
 	return {
 		horaAnterior: calcularHorarioAnterior(hora),
-		horaPosterior: calcularHorarioPosterior(hora)
+		horaPosterior: calcularHorarioPosterior(hora),
 	};
 };
 
@@ -169,13 +169,14 @@ const deletaDefesa = async (req, res) => {
 			id_tcc,
 			membro_banca,
 			fase,
-			calcularHorarios
+			calcularHorarios,
 		);
 
 		if (resultado.sucesso) {
 			res.status(200).json({
 				message: "Defesa deletada com sucesso",
-				disponibilidadesRestauradas: resultado.disponibilidadesRestauradas,
+				disponibilidadesRestauradas:
+					resultado.disponibilidadesRestauradas,
 			});
 		} else {
 			res.status(404).json({ message: resultado.motivo });
@@ -197,10 +198,15 @@ const gerenciarBancaDefesa = async (req, res) => {
 			convites_banca_existentes,
 			orientador_codigo,
 			data_hora_defesa,
-			alteracoes
+			alteracoes,
 		} = req.body;
 
-		if (!id_tcc || !fase || !Array.isArray(membros_novos) || !Array.isArray(membros_existentes)) {
+		if (
+			!id_tcc ||
+			!fase ||
+			!Array.isArray(membros_novos) ||
+			!Array.isArray(membros_existentes)
+		) {
 			return res.status(400).json({ message: "Parâmetros inválidos" });
 		}
 
@@ -212,7 +218,7 @@ const gerenciarBancaDefesa = async (req, res) => {
 			convites_banca_existentes,
 			orientador_codigo,
 			data_hora_defesa,
-			alteracoes
+			alteracoes,
 		});
 
 		if (resultado.sucesso) {
@@ -224,9 +230,10 @@ const gerenciarBancaDefesa = async (req, res) => {
 				data_defesa_atualizada: resultado.data_defesa_atualizada,
 			});
 		} else {
-			res.status(400).json({ message: "Erro ao gerenciar banca de defesa" });
+			res.status(400).json({
+				message: "Erro ao gerenciar banca de defesa",
+			});
 		}
-
 	} catch (error) {
 		console.error("Erro ao gerenciar banca de defesa:", error);
 		res.status(500).json({
@@ -238,14 +245,8 @@ const gerenciarBancaDefesa = async (req, res) => {
 // Função para agendar uma defesa
 const agendarDefesa = async (req, res) => {
 	try {
-		const {
-			id_tcc,
-			fase,
-			data,
-			hora,
-			codigo_orientador,
-			membros_banca,
-		} = req.body;
+		const { id_tcc, fase, data, hora, codigo_orientador, membros_banca } =
+			req.body;
 
 		if (
 			!id_tcc ||
@@ -256,19 +257,20 @@ const agendarDefesa = async (req, res) => {
 			!Array.isArray(membros_banca) ||
 			membros_banca.length !== 2
 		) {
-			return res
-				.status(400)
-				.json({ message: "Parâmetros inválidos" });
+			return res.status(400).json({ message: "Parâmetros inválidos" });
 		}
 
-		const resultado = await defesaRepository.agendarDefesa({
-			id_tcc,
-			fase,
-			data,
-			hora,
-			codigo_orientador,
-			membros_banca,
-		}, calcularHorarios);
+		const resultado = await defesaRepository.agendarDefesa(
+			{
+				id_tcc,
+				fase,
+				data,
+				hora,
+				codigo_orientador,
+				membros_banca,
+			},
+			calcularHorarios,
+		);
 
 		if (resultado.sucesso) {
 			return res.status(201).json({
