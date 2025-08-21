@@ -275,7 +275,8 @@ const gerenciarBancaDefesa = async (req, res) => {
 			membros_novos,
 			membros_existentes,
 			convites_banca_existentes,
-			orientador_codigo
+			orientador_codigo,
+			data_hora_defesa
 		} = req.body;
 
 		if (!id_tcc || !fase || !Array.isArray(membros_novos) || !Array.isArray(membros_existentes)) {
@@ -344,6 +345,7 @@ const gerenciarBancaDefesa = async (req, res) => {
 					membro_banca: membroNovo,
 					fase: parseInt(fase),
 					orientador: false,
+					data_defesa: data_hora_defesa ? new Date(data_hora_defesa) : null,
 				};
 
 				await model.Defesa.create(defesaPayload, { transaction: t });
@@ -370,6 +372,7 @@ const gerenciarBancaDefesa = async (req, res) => {
 					membro_banca: orientador_codigo,
 					fase: parseInt(fase),
 					orientador: true,
+					data_defesa: data_hora_defesa ? new Date(data_hora_defesa) : null,
 				};
 
 				await model.Defesa.create(defesaOrientadorPayload, { transaction: t });
@@ -418,12 +421,34 @@ const gerenciarBancaDefesa = async (req, res) => {
 			}
 		}
 
+		// 4. Atualizar data da defesa em todas as defesas do TCC nesta fase
+		if (data_hora_defesa !== undefined) {
+			// Converter data_hora_defesa para formato adequado do banco
+			let dataDefesa = null;
+			if (data_hora_defesa) {
+				dataDefesa = new Date(data_hora_defesa);
+			}
+
+			// Atualizar todas as defesas existentes deste TCC e fase com a nova data
+			await model.Defesa.update(
+				{ data_defesa: dataDefesa },
+				{
+					where: {
+						id_tcc: id_tcc,
+						fase: fase,
+					},
+					transaction: t,
+				}
+			);
+		}
+
 		await t.commit();
 		res.status(200).json({
 			message: "Banca de defesa gerenciada com sucesso",
 			membros_adicionados: membros_novos.filter(m => !membros_existentes.includes(m)).length,
 			membros_removidos: membros_existentes.filter(m => !membros_novos.includes(m)).length,
 			orientador_incluido: orientador_codigo ? true : false,
+			data_defesa_atualizada: data_hora_defesa !== undefined ? true : false,
 		});
 
 	} catch (error) {
