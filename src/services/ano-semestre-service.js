@@ -1,6 +1,6 @@
 const anoSemestreRepository = require("../repository/ano-semestre-repository");
 
-// Função para obter ano/semestre atual baseado nas regras de negócio
+// Função handler para rota da API
 const obterAnoSemestreAtual = async (req, res) => {
 	try {
 		const atual = await calcularAnoSemestreAtual();
@@ -115,4 +115,5 @@ const calcularAnoSemestreAtual = async () => {
 module.exports = {
 	obterAnoSemestreAtual,
 	listarTodosAnoSemestres,
+	calcularAnoSemestreAtual, // Exportar a função utilitária para uso interno
 };

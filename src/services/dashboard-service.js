@@ -1,5 +1,5 @@
 const dashboardRepository = require("../repository/dashboard-repository");
-const { obterAnoSemestreAtual } = require("./ano-semestre-service");
+const { calcularAnoSemestreAtual } = require("./ano-semestre-service");
 
 // Função para contar dicentes com orientador definido
 const contarDicentesComOrientador = async (req, res) => {
@@ -172,7 +172,7 @@ const calcularDicentesComOrientador = async (filtros) => {
 	let semestreAlvo = semestre;
 
 	if (!anoAlvo || !semestreAlvo) {
-		const atual = await obterAnoSemestreAtual();
+		const atual = await calcularAnoSemestreAtual();
 		anoAlvo = atual.ano;
 		semestreAlvo = atual.semestre;
 	}
@@ -223,7 +223,7 @@ const calcularTccPorEtapa = async (filtros) => {
 	let semestreAlvo = semestre;
 
 	if (!anoAlvo || !semestreAlvo) {
-		const atual = await obterAnoSemestreAtual();
+		const atual = await calcularAnoSemestreAtual();
 		anoAlvo = atual.ano;
 		semestreAlvo = atual.semestre;
 	}
@@ -282,7 +282,7 @@ const calcularConvitesPorPeriodo = async (filtros) => {
 	let semestreAlvo = semestre;
 
 	if (!anoAlvo || !semestreAlvo) {
-		const atual = await obterAnoSemestreAtual();
+		const atual = await calcularAnoSemestreAtual();
 		anoAlvo = atual.ano;
 		semestreAlvo = atual.semestre;
 	}
@@ -387,7 +387,7 @@ const calcularConvitesOrientacaoStatus = async (filtros) => {
 	let semestreAlvo = semestre;
 
 	if (!anoAlvo || !semestreAlvo) {
-		const atual = await obterAnoSemestreAtual();
+		const atual = await calcularAnoSemestreAtual();
 		anoAlvo = atual.ano;
 		semestreAlvo = atual.semestre;
 	}
@@ -444,7 +444,7 @@ const calcularConvitesBancaStatus = async (filtros) => {
 	let semestreAlvo = semestre;
 
 	if (!anoAlvo || !semestreAlvo) {
-		const atual = await obterAnoSemestreAtual();
+		const atual = await calcularAnoSemestreAtual();
 		anoAlvo = atual.ano;
 		semestreAlvo = atual.semestre;
 	}
@@ -500,7 +500,7 @@ const calcularOrientandosPorDocente = async (filtros) => {
 	let semestreAlvo = semestre;
 
 	if (!anoAlvo || !semestreAlvo) {
-		const atual = await obterAnoSemestreAtual();
+		const atual = await calcularAnoSemestreAtual();
 		anoAlvo = atual.ano;
 		semestreAlvo = atual.semestre;
 	}
@@ -617,7 +617,7 @@ const calcularDefesasAceitasPorDocente = async (filtros) => {
 	let semestreAlvo = semestre;
 
 	if (!anoAlvo || !semestreAlvo) {
-		const atual = await obterAnoSemestreAtual();
+		const atual = await calcularAnoSemestreAtual();
 		anoAlvo = atual.ano;
 		semestreAlvo = atual.semestre;
 	}
@@ -736,7 +736,7 @@ const buscarDefesasAgendadas = async (filtros) => {
 	let semestreAlvo = semestre;
 
 	if (!anoAlvo || !semestreAlvo) {
-		const atual = await obterAnoSemestreAtual();
+		const atual = await calcularAnoSemestreAtual();
 		anoAlvo = atual.ano;
 		semestreAlvo = atual.semestre;
 	}

@@ -1,5 +1,5 @@
 const ofertasTccRepository = require("../repository/ofertas-tcc-repository");
-const { obterAnoSemestreAtual } = require("./ano-semestre-service");
+const { calcularAnoSemestreAtual } = require("./ano-semestre-service");
 
 // Função para retornar todas as ofertas de TCC
 const retornaTodasOfertasTcc = async (req, res) => {
@@ -186,7 +186,7 @@ const retornaOfertasAtivas = async (req, res) => {
 	try {
 		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
 		const { ano: anoAtual, semestre: semestreAtual } =
-			await obterAnoSemestreAtual();
+			await calcularAnoSemestreAtual();
 
 		const include = [
 			{

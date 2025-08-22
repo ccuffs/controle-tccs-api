@@ -28,7 +28,7 @@ trabalhoConclusaoRouter.get(
 	trabalhoConclusaoService.retornaTrabalhoConlusaoPorId,
 );
 
-// Buscar trabalho de conclusão mais recente por discente (qualquer oferta)
+// Buscar trabalho de conclusão mais recente por discente (qual	quer oferta)
 trabalhoConclusaoRouter.get(
 	"/discente/:matricula",
 	auth.autenticarUsuario,

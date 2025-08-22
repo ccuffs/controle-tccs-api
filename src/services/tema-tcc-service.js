@@ -1,5 +1,5 @@
 const temaTccRepository = require("../repository/tema-tcc-repository");
-const { obterAnoSemestreAtual } = require("./ano-semestre-service");
+const { calcularAnoSemestreAtual } = require("./ano-semestre-service");
 const ofertaTccService = require("./ofertas-tcc-service");
 
 const retornaTodosTemasTcc = async (req, res) => {
@@ -18,7 +18,7 @@ const retornaTemasTccPorCurso = async (req, res) => {
 	try {
 		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
 		const { ano: anoAtual, semestre: semestreAtual } =
-			await obterAnoSemestreAtual();
+			await calcularAnoSemestreAtual();
 
 		// Primeiro, buscar os temas TCC com docente e área
 		const temas = await temaTccRepository.obterTemasTccPorCurso(id_curso);
@@ -88,7 +88,7 @@ const retornaTemasTccPorDocenteECurso = async (req, res) => {
 	try {
 		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
 		const { ano: anoAtual, semestre: semestreAtual } =
-			await obterAnoSemestreAtual();
+			await calcularAnoSemestreAtual();
 
 		// Buscar temas do docente no curso específico
 		const temas = await temaTccRepository.obterTemasTccPorDocenteECurso(
@@ -218,7 +218,7 @@ const atualizaVagasOfertaDocente = async (req, res) => {
 
 		// Obter ano e semestre atual usando a lógica baseada em ano_semestre
 		const { ano: anoAtual, semestre: semestreAtual } =
-			await obterAnoSemestreAtual();
+			await calcularAnoSemestreAtual();
 
 		// Buscar ou criar a oferta do docente
 		const docenteOferta =
