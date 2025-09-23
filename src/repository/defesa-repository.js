@@ -99,12 +99,19 @@ defesaRepository.criarDefesa = async (dadosDefesa) => {
 };
 
 // Atualizar defesa
-defesaRepository.atualizarDefesa = async (idTcc, membroBanca, dadosDefesa) => {
+defesaRepository.atualizarDefesa = async (idTcc, membroBanca, dadosDefesa, fase = null) => {
+	const whereClause = {
+		id_tcc: idTcc,
+		membro_banca: membroBanca,
+	};
+
+	// Adicionar fase apenas se fornecida
+	if (fase !== undefined && fase !== null) {
+		whereClause.fase = fase;
+	}
+
 	const [linhasAfetadas] = await model.Defesa.update(dadosDefesa, {
-		where: {
-			id_tcc: idTcc,
-			membro_banca: membroBanca,
-		},
+		where: whereClause,
 	});
 	return linhasAfetadas > 0;
 };

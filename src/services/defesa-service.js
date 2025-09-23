@@ -118,10 +118,14 @@ const atualizaDefesa = async (req, res) => {
 	const formData = req.body.formData;
 
 	try {
+		// Extrair fase do formData se presente
+		const fase = formData.fase;
+
 		const sucesso = await defesaRepository.atualizarDefesa(
 			id_tcc,
 			membro_banca,
 			formData,
+			fase,
 		);
 
 		if (sucesso) {
