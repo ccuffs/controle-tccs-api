@@ -33,6 +33,9 @@ orientacaoRepository.obterTodasOrientacoes = async (filtros) => {
 						"titulo",
 						"resumo",
 						"etapa",
+						"aprovado_projeto",
+						"aprovado_tcc",
+						"comentarios_tcc",
 					],
 					include: [
 						{

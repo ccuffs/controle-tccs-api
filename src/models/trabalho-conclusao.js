@@ -61,6 +61,10 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				defaultValue: false,
 			},
+			comentarios_tcc: {
+				type: DataTypes.TEXT,
+				allowNull: true,
+			},
 		},
 		{
 			tableName: "trabalho_conclusao",
