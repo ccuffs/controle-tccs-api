@@ -25,6 +25,7 @@ const disponibilidadeBancaController = require("./controllers/disponibilidade-ba
 const defesaController = require("./controllers/defesa-controller");
 const anoSemestreController = require("./controllers/ano-semestre-controller");
 const dashboardController = require("./controllers/dashboard-controller");
+const certidoesController = require("./controllers/certidoes-controller");
 
 // Configuração do Passport para autenticação JWT
 const { passport } = require("./middleware/auth");
@@ -65,3 +66,4 @@ app.use("/api/disponibilidade-banca", disponibilidadeBancaController);
 app.use("/api/defesas", defesaController);
 app.use("/api/ano-semestre", anoSemestreController);
 app.use("/api/dashboard", dashboardController);
+app.use("/api/certidoes", certidoesController);
