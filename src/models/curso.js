@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 			codigo: DataTypes.INTEGER,
 			nome: DataTypes.TEXT,
 			turno: DataTypes.TEXT,
+			coordenador: DataTypes.STRING,
 		},
 		{
 			sequelize,
@@ -23,6 +24,13 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	Curso.associate = function (models) {
+		// Associação com Docente (coordenador)
+		Curso.belongsTo(models.Docente, {
+			foreignKey: "coordenador",
+			targetKey: "codigo",
+			as: "coordenadorDocente",
+		});
+
 		// Associação many-to-many com Docente através da tabela docente_curso
 		Curso.belongsToMany(models.Docente, {
 			through: models.DocenteCurso,
