@@ -31,6 +31,7 @@ certidoesRepository.buscarCertidoes = async (idUsuario, filtros = {}) => {
 			{
 				model: model.Docente,
 				required: true,
+				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 				where: {
 					id_usuario: idUsuario
 				}
@@ -59,6 +60,7 @@ certidoesRepository.buscarCertidoes = async (idUsuario, filtros = {}) => {
 			{
 				model: model.Docente,
 				required: true,
+				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 				where: {
 					id_usuario: idUsuario
 				}
@@ -79,6 +81,8 @@ certidoesRepository.buscarCertidoes = async (idUsuario, filtros = {}) => {
 		titulo_tcc: orientacao.TrabalhoConclusao.titulo || 'Sem título',
 		matricula: orientacao.TrabalhoConclusao.matricula,
 		nome_dicente: orientacao.TrabalhoConclusao.Dicente.nome,
+		nome_docente: orientacao.Docente.nome,
+		siape_docente: orientacao.Docente.siape,
 		foi_orientador: true,
 		tipo_participacao: 'orientacao'
 	}));
@@ -92,6 +96,8 @@ certidoesRepository.buscarCertidoes = async (idUsuario, filtros = {}) => {
 		titulo_tcc: convite.TrabalhoConclusao.titulo || 'Sem título',
 		matricula: convite.TrabalhoConclusao.matricula,
 		nome_dicente: convite.TrabalhoConclusao.Dicente.nome,
+		nome_docente: convite.Docente.nome,
+		siape_docente: convite.Docente.siape,
 		foi_orientador: false,
 		tipo_participacao: 'banca'
 	}));
@@ -125,6 +131,7 @@ certidoesRepository.buscarAnosDisponiveis = async (idUsuario) => {
 			{
 				model: model.Docente,
 				required: true,
+				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 				where: {
 					id_usuario: idUsuario
 				}
@@ -146,6 +153,7 @@ certidoesRepository.buscarAnosDisponiveis = async (idUsuario) => {
 			{
 				model: model.Docente,
 				required: true,
+				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 				where: {
 					id_usuario: idUsuario
 				}
@@ -188,6 +196,7 @@ certidoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
 			{
 				model: model.Docente,
 				required: true,
+				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 				where: {
 					id_usuario: idUsuario
 				}
@@ -209,6 +218,7 @@ certidoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
 			{
 				model: model.Docente,
 				required: true,
+				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 				where: {
 					id_usuario: idUsuario
 				}

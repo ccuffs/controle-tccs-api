@@ -4,6 +4,7 @@ const docenteRepository = {};
 // Buscar todos os docentes
 docenteRepository.obterTodosDocentes = async () => {
 	const docentes = await model.Docente.findAll({
+		attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 		order: [["nome", "ASC"]],
 	});
 	return docentes;
@@ -12,6 +13,7 @@ docenteRepository.obterTodosDocentes = async () => {
 // Buscar docente por código
 docenteRepository.obterDocentePorCodigo = async (codigo) => {
 	const docente = await model.Docente.findOne({
+		attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 		where: { codigo: codigo },
 	});
 	return docente;
@@ -43,6 +45,7 @@ docenteRepository.deletarDocente = async (codigo) => {
 // Buscar docente por id_usuario
 docenteRepository.obterDocentePorUsuario = async (id_usuario) => {
 	const docente = await model.Docente.findOne({
+		attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
 		where: { id_usuario: id_usuario },
 	});
 	return docente;

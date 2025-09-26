@@ -521,7 +521,7 @@ const calcularOrientandosPorDocente = async (filtros) => {
 		{
 			model: require("../models").Docente,
 			as: "docente",
-			attributes: ["codigo", "nome"],
+			attributes: ["codigo", "nome", "siape"],
 		},
 	];
 
@@ -639,7 +639,7 @@ const calcularDefesasAceitasPorDocente = async (filtros) => {
 		{
 			model: require("../models").Docente,
 			as: "docente",
-			attributes: ["codigo", "nome"],
+			attributes: ["codigo", "nome", "siape"],
 		},
 	];
 

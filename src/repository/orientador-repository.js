@@ -8,7 +8,7 @@ orientadorRepository.obterTodasOrientacoes = async () => {
 			{
 				model: model.Docente,
 				as: "docente",
-				attributes: ["codigo", "nome", "email"],
+				attributes: ["codigo", "nome", "email", "siape"],
 			},
 			{
 				model: model.Curso,
@@ -45,7 +45,7 @@ orientadorRepository.obterOrientacoesPorCurso = async (idCurso) => {
 			{
 				model: model.Docente,
 				as: "docente",
-				attributes: ["codigo", "nome", "email"],
+				attributes: ["codigo", "nome", "email", "siape"],
 			},
 		],
 		order: [[{ model: model.Docente, as: "docente" }, "nome", "ASC"]],

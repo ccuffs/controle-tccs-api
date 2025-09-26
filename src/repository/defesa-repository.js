@@ -38,7 +38,7 @@ defesaRepository.obterTodasDefesas = async (filtros) => {
 			{
 				model: model.Docente,
 				as: "membroBanca",
-				attributes: ["codigo", "nome", "email"],
+				attributes: ["codigo", "nome", "email", "siape"],
 			},
 		],
 		order: [["data_defesa", "DESC"]],
@@ -68,7 +68,7 @@ defesaRepository.obterDefesasPorTcc = async (idTcc) => {
 			{
 				model: model.Docente,
 				as: "membroBanca",
-				attributes: ["codigo", "nome", "email"],
+				attributes: ["codigo", "nome", "email", "siape"],
 			},
 		],
 		order: [["membro_banca", "ASC"]],

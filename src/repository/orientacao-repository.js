@@ -19,7 +19,7 @@ orientacaoRepository.obterTodasOrientacoes = async (filtros) => {
 			include: [
 				{
 					model: model.Docente,
-					attributes: ["codigo", "nome", "email"],
+					attributes: ["codigo", "nome", "email", "siape"],
 				},
 				{
 					model: model.TrabalhoConclusao,

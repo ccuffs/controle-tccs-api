@@ -30,7 +30,7 @@ conviteRepository.obterTodosConvites = async (filtros) => {
 			},
 			{
 				model: model.Docente,
-				attributes: ["codigo", "nome", "email"],
+				attributes: ["codigo", "nome", "email", "siape"],
 			},
 		],
 		order: [["data_envio", "DESC"]],
@@ -54,7 +54,7 @@ conviteRepository.obterConvitePorIdEDocente = async (
 		include: [
 			{
 				model: model.Docente,
-				attributes: ["codigo", "nome", "email"],
+				attributes: ["codigo", "nome", "email", "siape"],
 			},
 		],
 	});
@@ -139,7 +139,7 @@ conviteRepository.obterConvitesDocente = async (codigoDocente) => {
 			},
 			{
 				model: model.Docente,
-				attributes: ["codigo", "nome", "email"],
+				attributes: ["codigo", "nome", "email", "siape"],
 			},
 		],
 		order: [["data_envio", "DESC"]],
