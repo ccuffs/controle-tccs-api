@@ -248,4 +248,150 @@ certidoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
 	return Array.from(semestresSet).sort((a, b) => a - b); // Ordenar crescente
 };
 
+// Buscar dados completos para gerar uma certidão específica
+certidoesRepository.buscarDadosCertidao = async (idUsuario, idTcc, tipoParticipacao) => {
+	try {
+		let dadosCertidao = null;
+
+		if (tipoParticipacao === 'orientacao') {
+			// Buscar orientação
+			const orientacao = await model.Orientacao.findOne({
+				include: [
+					{
+						model: model.TrabalhoConclusao,
+						required: true,
+						where: { id: idTcc },
+						include: [
+							{
+								model: model.Dicente,
+								required: true,
+								attributes: ['nome']
+							},
+							{
+								model: model.Curso,
+								required: true,
+								attributes: ['id', 'nome'],
+								include: [
+									{
+										model: model.Docente,
+										as: 'coordenadorDocente',
+										required: true,
+										attributes: ['nome', 'siape']
+									}
+								]
+							}
+						]
+					},
+					{
+						model: model.Docente,
+						required: true,
+						attributes: ['nome', 'siape'],
+						where: {
+							id_usuario: idUsuario
+						}
+					}
+				],
+				where: {
+					orientador: true
+				}
+			});
+
+			if (orientacao) {
+				dadosCertidao = {
+					id_tcc: orientacao.TrabalhoConclusao.id,
+					ano: orientacao.TrabalhoConclusao.ano,
+					semestre: orientacao.TrabalhoConclusao.semestre,
+					fase: orientacao.TrabalhoConclusao.fase,
+					titulo_tcc: orientacao.TrabalhoConclusao.titulo || 'Sem título',
+					nome_dicente: orientacao.TrabalhoConclusao.Dicente.nome,
+					nome_docente: orientacao.Docente.nome,
+					siape_docente: orientacao.Docente.siape,
+					nome_curso: orientacao.TrabalhoConclusao.Curso.nome,
+					nome_coordenador: orientacao.TrabalhoConclusao.Curso.coordenadorDocente.nome,
+					siape_coordenador: orientacao.TrabalhoConclusao.Curso.coordenadorDocente.siape,
+					tipo_participacao: 'orientacao',
+					foi_orientador: true
+				};
+			}
+		} else if (tipoParticipacao === 'banca') {
+			// Buscar convite de banca
+			const convite = await model.Convite.findOne({
+				include: [
+					{
+						model: model.TrabalhoConclusao,
+						required: true,
+						where: { id: idTcc },
+						include: [
+							{
+								model: model.Dicente,
+								required: true,
+								attributes: ['nome']
+							},
+							{
+								model: model.Curso,
+								required: true,
+								attributes: ['id', 'nome'],
+								include: [
+									{
+										model: model.Docente,
+										as: 'coordenadorDocente',
+										required: true,
+										attributes: ['nome', 'siape']
+									}
+								]
+							}
+						]
+					},
+					{
+						model: model.Docente,
+						required: true,
+						attributes: ['nome', 'siape', 'codigo'],
+						where: {
+							id_usuario: idUsuario
+						}
+					}
+				],
+				where: {
+					aceito: true,
+					orientacao: false
+				}
+			});
+
+			if (convite) {
+				// Buscar dados da defesa
+				const defesa = await model.Defesa.findOne({
+					where: {
+						id_tcc: idTcc,
+						membro_banca: convite.Docente.codigo,
+						fase: convite.TrabalhoConclusao.fase
+					},
+					attributes: ['data_defesa']
+				});
+
+				dadosCertidao = {
+					id_tcc: convite.TrabalhoConclusao.id,
+					ano: convite.TrabalhoConclusao.ano,
+					semestre: convite.TrabalhoConclusao.semestre,
+					fase: convite.TrabalhoConclusao.fase,
+					titulo_tcc: convite.TrabalhoConclusao.titulo || 'Sem título',
+					nome_dicente: convite.TrabalhoConclusao.Dicente.nome,
+					nome_docente: convite.Docente.nome,
+					siape_docente: convite.Docente.siape,
+					nome_curso: convite.TrabalhoConclusao.Curso.nome,
+					nome_coordenador: convite.TrabalhoConclusao.Curso.coordenadorDocente.nome,
+					siape_coordenador: convite.TrabalhoConclusao.Curso.coordenadorDocente.siape,
+					tipo_participacao: 'banca',
+					foi_orientador: false,
+					data_defesa: defesa?.data_defesa
+				};
+			}
+		}
+
+		return dadosCertidao;
+	} catch (error) {
+		console.error('Erro ao buscar dados da certidão:', error);
+		throw error;
+	}
+};
+
 module.exports = certidoesRepository;

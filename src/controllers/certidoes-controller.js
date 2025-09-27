@@ -19,4 +19,17 @@ certidoesController.get(
 	certidoesService.listarCertidoes,
 );
 
+// GET /api/certidoes/gerar/:idTcc/:tipoParticipacao
+// Gerar certidão específica em HTML
+certidoesController.get(
+	"/gerar/:idTcc/:tipoParticipacao",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ORIENTADOR,
+		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.ADMIN,
+	]),
+	certidoesService.gerarCertidao,
+);
+
 module.exports = certidoesController;
