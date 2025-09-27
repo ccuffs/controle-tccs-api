@@ -118,6 +118,7 @@ const gerarHtmlCertidao = async (dados) => {
 
 		// Converter imagens para base64
 		const logoBase64 = await converterImagemParaBase64(path.join(__dirname, '..', 'reports', 'logo.png'));
+		const coordenadorBase64 = await converterImagemParaBase64(path.join(__dirname, '..', 'reports', 'coordenador.png'));
 
 		// Substituir placeholders
 		let htmlPreenchido = templateHtml
@@ -135,6 +136,7 @@ const gerarHtmlCertidao = async (dados) => {
 			.replace(/#anoem#/g, ano)
 			// Substituir referências de imagens por base64
 			.replace(/src="logo\.png"/g, `src="${logoBase64}"`)
+			.replace(/src="coordenador\.png"/g, `src="${coordenadorBase64}"`)
 			.replace(/src="images\/image2\.png"/g, 'style="display: none;"'); // Ocultar image2 que não existe
 
 		// Para certidões de banca, adicionar informações específicas (data e hora da defesa)
