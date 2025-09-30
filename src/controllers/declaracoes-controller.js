@@ -2,13 +2,13 @@ const express = require("express");
 const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
-const certidoesService = require("../services/certidoes-service");
+const declaracoesService = require("../services/declaracoes-service");
 
-const certidoesController = express.Router();
+const declaracoesController = express.Router();
 
-// GET /api/certidoes
-// Listar certidões do docente (trabalhos onde foi orientador ou membro de banca)
-certidoesController.get(
+// GET /api/declaracoes
+// Listar declarações do docente (trabalhos onde foi orientador ou membro de banca)
+declaracoesController.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
@@ -16,12 +16,12 @@ certidoesController.get(
 		Permissoes.GRUPOS.PROFESSOR,
 		Permissoes.GRUPOS.ADMIN,
 	]),
-	certidoesService.listarCertidoes,
+	declaracoesService.listarDeclaracoes,
 );
 
-// GET /api/certidoes/gerar/:idTcc/:tipoParticipacao
-// Gerar certidão específica em HTML
-certidoesController.get(
+// GET /api/declaracoes/gerar/:idTcc/:tipoParticipacao
+// Gerar declaração específica em HTML
+declaracoesController.get(
 	"/gerar/:idTcc/:tipoParticipacao",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
@@ -29,7 +29,7 @@ certidoesController.get(
 		Permissoes.GRUPOS.PROFESSOR,
 		Permissoes.GRUPOS.ADMIN,
 	]),
-	certidoesService.gerarCertidao,
+	declaracoesService.gerarDeclaracao,
 );
 
-module.exports = certidoesController;
+module.exports = declaracoesController;

@@ -1,9 +1,9 @@
 const model = require("../models");
 
-const certidoesRepository = {};
+const declaracoesRepository = {};
 
 // Buscar trabalhos onde o docente foi orientador ou membro de banca
-certidoesRepository.buscarCertidoes = async (idUsuario, filtros = {}) => {
+declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 	const { ano, semestre, id_curso, fase } = filtros;
 
 	// Construir filtros para trabalhos
@@ -73,7 +73,7 @@ certidoesRepository.buscarCertidoes = async (idUsuario, filtros = {}) => {
 	});
 
 	// Processar orientações
-	const certidoesOrientacao = orientacoes.map(orientacao => ({
+	const declaracoesOrientacao = orientacoes.map(orientacao => ({
 		id_tcc: orientacao.TrabalhoConclusao.id,
 		ano: orientacao.TrabalhoConclusao.ano,
 		semestre: orientacao.TrabalhoConclusao.semestre,
@@ -88,7 +88,7 @@ certidoesRepository.buscarCertidoes = async (idUsuario, filtros = {}) => {
 	}));
 
 	// Processar bancas
-	const certidoesBanca = bancas.map(convite => ({
+	const declaracoesBanca = bancas.map(convite => ({
 		id_tcc: convite.TrabalhoConclusao.id,
 		ano: convite.TrabalhoConclusao.ano,
 		semestre: convite.TrabalhoConclusao.semestre,
@@ -103,23 +103,23 @@ certidoesRepository.buscarCertidoes = async (idUsuario, filtros = {}) => {
 	}));
 
 	// Combinar e remover duplicatas
-	const certidoes = [...certidoesOrientacao, ...certidoesBanca];
-	const certidoesUnicas = [];
+	const declaracoes = [...declaracoesOrientacao, ...declaracoesBanca];
+	const declaracoesUnicas = [];
 	const chaves = new Set();
 
-	for (const cert of certidoes) {
-		const chave = `${cert.id_tcc}_${cert.tipo_participacao}`;
+	for (const decl of declaracoes) {
+		const chave = `${decl.id_tcc}_${decl.tipo_participacao}`;
 		if (!chaves.has(chave)) {
 			chaves.add(chave);
-			certidoesUnicas.push(cert);
+			declaracoesUnicas.push(decl);
 		}
 	}
 
-	return certidoesUnicas;
+	return declaracoesUnicas;
 };
 
 // Buscar anos disponíveis para o docente
-certidoesRepository.buscarAnosDisponiveis = async (idUsuario) => {
+declaracoesRepository.buscarAnosDisponiveis = async (idUsuario) => {
 	// Buscar orientações
 	const orientacoes = await model.Orientacao.findAll({
 		include: [
@@ -184,7 +184,7 @@ certidoesRepository.buscarAnosDisponiveis = async (idUsuario) => {
 };
 
 // Buscar semestres disponíveis para o docente
-certidoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
+declaracoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
 	// Buscar orientações
 	const orientacoes = await model.Orientacao.findAll({
 		include: [
@@ -248,10 +248,10 @@ certidoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
 	return Array.from(semestresSet).sort((a, b) => a - b); // Ordenar crescente
 };
 
-// Buscar dados completos para gerar uma certidão específica
-certidoesRepository.buscarDadosCertidao = async (idUsuario, idTcc, tipoParticipacao) => {
+// Buscar dados completos para gerar uma declaração específica
+declaracoesRepository.buscarDadosDeclaracao = async (idUsuario, idTcc, tipoParticipacao) => {
 	try {
-		let dadosCertidao = null;
+		let dadosDeclaracao = null;
 
 		if (tipoParticipacao === 'orientacao') {
 			// Buscar orientação
@@ -297,7 +297,7 @@ certidoesRepository.buscarDadosCertidao = async (idUsuario, idTcc, tipoParticipa
 			});
 
 			if (orientacao) {
-				dadosCertidao = {
+				dadosDeclaracao = {
 					id_tcc: orientacao.TrabalhoConclusao.id,
 					ano: orientacao.TrabalhoConclusao.ano,
 					semestre: orientacao.TrabalhoConclusao.semestre,
@@ -368,7 +368,7 @@ certidoesRepository.buscarDadosCertidao = async (idUsuario, idTcc, tipoParticipa
 					attributes: ['data_defesa']
 				});
 
-				dadosCertidao = {
+				dadosDeclaracao = {
 					id_tcc: convite.TrabalhoConclusao.id,
 					ano: convite.TrabalhoConclusao.ano,
 					semestre: convite.TrabalhoConclusao.semestre,
@@ -387,11 +387,11 @@ certidoesRepository.buscarDadosCertidao = async (idUsuario, idTcc, tipoParticipa
 			}
 		}
 
-		return dadosCertidao;
+		return dadosDeclaracao;
 	} catch (error) {
-		console.error('Erro ao buscar dados da certidão:', error);
+		console.error('Erro ao buscar dados da declaração:', error);
 		throw error;
 	}
 };
 
-module.exports = certidoesRepository;
+module.exports = declaracoesRepository;

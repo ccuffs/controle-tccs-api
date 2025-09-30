@@ -1,15 +1,15 @@
-const certidoesRepository = require("../repository/certidoes-repository");
+const declaracoesRepository = require("../repository/declaracoes-repository");
 const fs = require('fs').promises;
 const path = require('path');
 
-// Função para listar certidões do docente
-const listarCertidoes = async (req, res) => {
+// Função para listar declarações do docente
+const listarDeclaracoes = async (req, res) => {
 	try {
 		// Obter ID do usuário autenticado
 		const idUsuario = req.usuario?.id;
 
 		if (!idUsuario) {
-			console.log("listarCertidoes - usuário não autenticado");
+			console.log("listarDeclaracoes - usuário não autenticado");
 			return res.status(400).json({
 				message: "Usuário não autenticado"
 			});
@@ -24,36 +24,36 @@ const listarCertidoes = async (req, res) => {
 			...(fase && { fase: parseInt(fase) })
 		};
 
-		// Buscar certidões, anos e semestres em paralelo
-		const [certidoes, anosDisponiveis, semestresDisponiveis] = await Promise.all([
-			certidoesRepository.buscarCertidoes(idUsuario, filtros),
-			certidoesRepository.buscarAnosDisponiveis(idUsuario),
-			certidoesRepository.buscarSemestresDisponiveis(idUsuario)
+		// Buscar declarações, anos e semestres em paralelo
+		const [declaracoes, anosDisponiveis, semestresDisponiveis] = await Promise.all([
+			declaracoesRepository.buscarDeclaracoes(idUsuario, filtros),
+			declaracoesRepository.buscarAnosDisponiveis(idUsuario),
+			declaracoesRepository.buscarSemestresDisponiveis(idUsuario)
 		]);
 
 		res.status(200).json({
-			certidoes,
+			declaracoes,
 			anosDisponiveis,
 			semestresDisponiveis,
-			total: certidoes.length
+			total: declaracoes.length
 		});
 
 	} catch (error) {
-		console.error("Erro ao buscar certidões:", error);
+		console.error("Erro ao buscar declarações:", error);
 		res.status(500).json({
-			message: "Erro interno do servidor ao buscar certidões"
+			message: "Erro interno do servidor ao buscar declarações"
 		});
 	}
 };
 
-// Função para gerar HTML da certidão
-const gerarCertidao = async (req, res) => {
+// Função para gerar HTML da declaração
+const gerarDeclaracao = async (req, res) => {
 	try {
 		const idUsuario = req.usuario?.id;
 		const { idTcc, tipoParticipacao } = req.params;
 
 		if (!idUsuario) {
-			console.log("gerarCertidao - usuário não autenticado");
+			console.log("gerarDeclaracao - usuário não autenticado");
 			return res.status(400).json({
 				message: "Usuário não autenticado"
 			});
@@ -65,36 +65,36 @@ const gerarCertidao = async (req, res) => {
 			});
 		}
 
-		// Buscar dados da certidão
-		const dadosCertidao = await certidoesRepository.buscarDadosCertidao(
+		// Buscar dados da declaração
+		const dadosDeclaracao = await declaracoesRepository.buscarDadosDeclaracao(
 			idUsuario,
 			parseInt(idTcc),
 			tipoParticipacao
 		);
 
-		if (!dadosCertidao) {
+		if (!dadosDeclaracao) {
 			return res.status(404).json({
-				message: "Certidão não encontrada ou usuário não autorizado"
+				message: "Declaração não encontrada ou usuário não autorizado"
 			});
 		}
 
-		// Gerar HTML da certidão
-		const htmlCertidao = await gerarHtmlCertidao(dadosCertidao);
+		// Gerar HTML da declaração
+		const htmlDeclaracao = await gerarHtmlDeclaracao(dadosDeclaracao);
 
 		// Retornar HTML
 		res.setHeader('Content-Type', 'text/html; charset=utf-8');
-		res.send(htmlCertidao);
+		res.send(htmlDeclaracao);
 
 	} catch (error) {
-		console.error("Erro ao gerar certidão:", error);
+		console.error("Erro ao gerar declaração:", error);
 		res.status(500).json({
-			message: "Erro interno do servidor ao gerar certidão"
+			message: "Erro interno do servidor ao gerar declaração"
 		});
 	}
 };
 
-// Função auxiliar para gerar o HTML da certidão
-const gerarHtmlCertidao = async (dados) => {
+// Função auxiliar para gerar o HTML da declaração
+const gerarHtmlDeclaracao = async (dados) => {
 	try {
 		// Determinar qual template usar
 		const nomeTemplate = dados.foi_orientador
@@ -139,7 +139,7 @@ const gerarHtmlCertidao = async (dados) => {
 			.replace(/src="coordenador\.png"/g, `src="${coordenadorBase64}"`)
 			.replace(/src="images\/image2\.png"/g, 'style="display: none;"'); // Ocultar image2 que não existe
 
-		// Para certidões de banca, adicionar informações específicas (data e hora da defesa)
+		// Para declarações de banca, adicionar informações específicas (data e hora da defesa)
 		if (!dados.foi_orientador) {
 			let dataDefesa = 'data a ser definida';
 			let horaDefesa = 'horário a definir';
@@ -161,7 +161,7 @@ const gerarHtmlCertidao = async (dados) => {
 		return htmlPreenchido;
 
 	} catch (error) {
-		console.error('Erro ao gerar HTML da certidão:', error);
+		console.error('Erro ao gerar HTML da declaração:', error);
 		throw error;
 	}
 };
@@ -217,6 +217,6 @@ const converterImagemParaBase64 = async (caminhoImagem) => {
 };
 
 module.exports = {
-	listarCertidoes,
-	gerarCertidao
+	listarDeclaracoes,
+	gerarDeclaracao
 };
