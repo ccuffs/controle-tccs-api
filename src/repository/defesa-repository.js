@@ -99,7 +99,12 @@ defesaRepository.criarDefesa = async (dadosDefesa) => {
 };
 
 // Atualizar defesa
-defesaRepository.atualizarDefesa = async (idTcc, membroBanca, dadosDefesa, fase = null) => {
+defesaRepository.atualizarDefesa = async (
+	idTcc,
+	membroBanca,
+	dadosDefesa,
+	fase = null,
+) => {
 	const whereClause = {
 		id_tcc: idTcc,
 		membro_banca: membroBanca,

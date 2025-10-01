@@ -12,7 +12,14 @@ temaTccRepository.obterTodosTemasTcc = async () => {
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 			},
 		],
 	});
@@ -61,7 +68,14 @@ temaTccRepository.obterTemasTccPorDocente = async (codigoDocente) => {
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 			},
 		],
 	});
@@ -113,7 +127,14 @@ temaTccRepository.obterTemaTccPorId = async (id) => {
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 			},
 		],
 	});

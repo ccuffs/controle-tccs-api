@@ -1,6 +1,6 @@
 const declaracoesRepository = require("../repository/declaracoes-repository");
-const fs = require('fs').promises;
-const path = require('path');
+const fs = require("fs").promises;
+const path = require("path");
 
 // Função para listar declarações do docente
 const listarDeclaracoes = async (req, res) => {
@@ -11,7 +11,7 @@ const listarDeclaracoes = async (req, res) => {
 		if (!idUsuario) {
 			console.log("listarDeclaracoes - usuário não autenticado");
 			return res.status(400).json({
-				message: "Usuário não autenticado"
+				message: "Usuário não autenticado",
 			});
 		}
 
@@ -21,27 +21,27 @@ const listarDeclaracoes = async (req, res) => {
 			...(curso && { id_curso: parseInt(curso) }),
 			...(ano && { ano: parseInt(ano) }),
 			...(semestre && { semestre: parseInt(semestre) }),
-			...(fase && { fase: parseInt(fase) })
+			...(fase && { fase: parseInt(fase) }),
 		};
 
 		// Buscar declarações, anos e semestres em paralelo
-		const [declaracoes, anosDisponiveis, semestresDisponiveis] = await Promise.all([
-			declaracoesRepository.buscarDeclaracoes(idUsuario, filtros),
-			declaracoesRepository.buscarAnosDisponiveis(idUsuario),
-			declaracoesRepository.buscarSemestresDisponiveis(idUsuario)
-		]);
+		const [declaracoes, anosDisponiveis, semestresDisponiveis] =
+			await Promise.all([
+				declaracoesRepository.buscarDeclaracoes(idUsuario, filtros),
+				declaracoesRepository.buscarAnosDisponiveis(idUsuario),
+				declaracoesRepository.buscarSemestresDisponiveis(idUsuario),
+			]);
 
 		res.status(200).json({
 			declaracoes,
 			anosDisponiveis,
 			semestresDisponiveis,
-			total: declaracoes.length
+			total: declaracoes.length,
 		});
-
 	} catch (error) {
 		console.error("Erro ao buscar declarações:", error);
 		res.status(500).json({
-			message: "Erro interno do servidor ao buscar declarações"
+			message: "Erro interno do servidor ao buscar declarações",
 		});
 	}
 };
@@ -55,26 +55,27 @@ const gerarDeclaracao = async (req, res) => {
 		if (!idUsuario) {
 			console.log("gerarDeclaracao - usuário não autenticado");
 			return res.status(400).json({
-				message: "Usuário não autenticado"
+				message: "Usuário não autenticado",
 			});
 		}
 
 		if (!idTcc || !tipoParticipacao) {
 			return res.status(400).json({
-				message: "ID do TCC e tipo de participação são obrigatórios"
+				message: "ID do TCC e tipo de participação são obrigatórios",
 			});
 		}
 
 		// Buscar dados da declaração
-		const dadosDeclaracao = await declaracoesRepository.buscarDadosDeclaracao(
-			idUsuario,
-			parseInt(idTcc),
-			tipoParticipacao
-		);
+		const dadosDeclaracao =
+			await declaracoesRepository.buscarDadosDeclaracao(
+				idUsuario,
+				parseInt(idTcc),
+				tipoParticipacao,
+			);
 
 		if (!dadosDeclaracao) {
 			return res.status(404).json({
-				message: "Declaração não encontrada ou usuário não autorizado"
+				message: "Declaração não encontrada ou usuário não autorizado",
 			});
 		}
 
@@ -82,13 +83,12 @@ const gerarDeclaracao = async (req, res) => {
 		const htmlDeclaracao = await gerarHtmlDeclaracao(dadosDeclaracao);
 
 		// Retornar HTML
-		res.setHeader('Content-Type', 'text/html; charset=utf-8');
+		res.setHeader("Content-Type", "text/html; charset=utf-8");
 		res.send(htmlDeclaracao);
-
 	} catch (error) {
 		console.error("Erro ao gerar declaração:", error);
 		res.status(500).json({
-			message: "Erro interno do servidor ao gerar declaração"
+			message: "Erro interno do servidor ao gerar declaração",
 		});
 	}
 };
@@ -98,14 +98,19 @@ const gerarHtmlDeclaracao = async (dados) => {
 	try {
 		// Determinar qual template usar
 		const nomeTemplate = dados.foi_orientador
-			? 'declaracaoorientacoesTCCs.html'
-			: 'declaracaobancasTCCs.html';
+			? "declaracaoorientacoesTCCs.html"
+			: "declaracaobancasTCCs.html";
 
 		// Caminho para o template
-		const caminhoTemplate = path.join(__dirname, '..', 'reports', nomeTemplate);
+		const caminhoTemplate = path.join(
+			__dirname,
+			"..",
+			"reports",
+			nomeTemplate,
+		);
 
 		// Ler o template
-		const templateHtml = await fs.readFile(caminhoTemplate, 'utf8');
+		const templateHtml = await fs.readFile(caminhoTemplate, "utf8");
 
 		// Obter data atual
 		const dataAtual = new Date();
@@ -117,8 +122,12 @@ const gerarHtmlDeclaracao = async (dados) => {
 		const faseDescricao = obterDescricaoFase(dados.fase);
 
 		// Converter imagens para base64
-		const logoBase64 = await converterImagemParaBase64(path.join(__dirname, '..', 'reports', 'logo.png'));
-		const coordenadorBase64 = await converterImagemParaBase64(path.join(__dirname, '..', 'reports', 'coordenador.png'));
+		const logoBase64 = await converterImagemParaBase64(
+			path.join(__dirname, "..", "reports", "logo.png"),
+		);
+		const coordenadorBase64 = await converterImagemParaBase64(
+			path.join(__dirname, "..", "reports", "coordenador.png"),
+		);
 
 		// Substituir placeholders
 		let htmlPreenchido = templateHtml
@@ -141,15 +150,15 @@ const gerarHtmlDeclaracao = async (dados) => {
 
 		// Para declarações de banca, adicionar informações específicas (data e hora da defesa)
 		if (!dados.foi_orientador) {
-			let dataDefesa = 'data a ser definida';
-			let horaDefesa = 'horário a definir';
+			let dataDefesa = "data a ser definida";
+			let horaDefesa = "horário a definir";
 
 			if (dados.data_defesa) {
 				const dataDefesaObj = new Date(dados.data_defesa);
-				dataDefesa = dataDefesaObj.toLocaleDateString('pt-BR');
-				horaDefesa = dataDefesaObj.toLocaleTimeString('pt-BR', {
-					hour: '2-digit',
-					minute: '2-digit'
+				dataDefesa = dataDefesaObj.toLocaleDateString("pt-BR");
+				horaDefesa = dataDefesaObj.toLocaleTimeString("pt-BR", {
+					hour: "2-digit",
+					minute: "2-digit",
 				});
 			}
 
@@ -159,9 +168,8 @@ const gerarHtmlDeclaracao = async (dados) => {
 		}
 
 		return htmlPreenchido;
-
 	} catch (error) {
-		console.error('Erro ao gerar HTML da declaração:', error);
+		console.error("Erro ao gerar HTML da declaração:", error);
 		throw error;
 	}
 };
@@ -169,18 +177,28 @@ const gerarHtmlDeclaracao = async (dados) => {
 // Função auxiliar para obter nome do mês
 const obterNomeMes = (numeroMes) => {
 	const meses = [
-		'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-		'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+		"janeiro",
+		"fevereiro",
+		"março",
+		"abril",
+		"maio",
+		"junho",
+		"julho",
+		"agosto",
+		"setembro",
+		"outubro",
+		"novembro",
+		"dezembro",
 	];
-	return meses[numeroMes] || 'mês inválido';
+	return meses[numeroMes] || "mês inválido";
 };
 
 // Função auxiliar para obter descrição da fase
 const obterDescricaoFase = (fase) => {
 	const fases = {
-		0: 'Orientação',
-		1: 'Projeto',
-		2: 'TCC'
+		0: "Orientação",
+		1: "Projeto",
+		2: "TCC",
 	};
 	return fases[fase] || `Fase ${fase}`;
 };
@@ -189,34 +207,34 @@ const obterDescricaoFase = (fase) => {
 const converterImagemParaBase64 = async (caminhoImagem) => {
 	try {
 		const imagemBuffer = await fs.readFile(caminhoImagem);
-		const base64 = imagemBuffer.toString('base64');
+		const base64 = imagemBuffer.toString("base64");
 		const extensao = path.extname(caminhoImagem).toLowerCase();
 
 		let mimeType;
 		switch (extensao) {
-			case '.png':
-				mimeType = 'image/png';
+			case ".png":
+				mimeType = "image/png";
 				break;
-			case '.jpg':
-			case '.jpeg':
-				mimeType = 'image/jpeg';
+			case ".jpg":
+			case ".jpeg":
+				mimeType = "image/jpeg";
 				break;
-			case '.gif':
-				mimeType = 'image/gif';
+			case ".gif":
+				mimeType = "image/gif";
 				break;
 			default:
-				mimeType = 'image/png';
+				mimeType = "image/png";
 		}
 
 		return `data:${mimeType};base64,${base64}`;
 	} catch (error) {
-		console.error('Erro ao converter imagem para base64:', error);
+		console.error("Erro ao converter imagem para base64:", error);
 		// Retornar um pixel transparente como fallback
-		return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+		return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 	}
 };
 
 module.exports = {
 	listarDeclaracoes,
-	gerarDeclaracao
+	gerarDeclaracao,
 };

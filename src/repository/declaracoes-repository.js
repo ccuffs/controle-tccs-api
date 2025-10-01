@@ -24,22 +24,29 @@ declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 					{
 						model: model.Dicente,
 						required: true,
-						attributes: ['nome']
-					}
-				]
+						attributes: ["nome"],
+					},
+				],
 			},
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 				where: {
-					id_usuario: idUsuario
-				}
-			}
+					id_usuario: idUsuario,
+				},
+			},
 		],
 		where: {
-			orientador: true
-		}
+			orientador: true,
+		},
 	});
 
 	// Buscar convites de banca aceitos
@@ -53,53 +60,60 @@ declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 					{
 						model: model.Dicente,
 						required: true,
-						attributes: ['nome']
-					}
-				]
+						attributes: ["nome"],
+					},
+				],
 			},
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 				where: {
-					id_usuario: idUsuario
-				}
-			}
+					id_usuario: idUsuario,
+				},
+			},
 		],
 		where: {
 			aceito: true,
-			orientacao: false
-		}
+			orientacao: false,
+		},
 	});
 
 	// Processar orientações
-	const declaracoesOrientacao = orientacoes.map(orientacao => ({
+	const declaracoesOrientacao = orientacoes.map((orientacao) => ({
 		id_tcc: orientacao.TrabalhoConclusao.id,
 		ano: orientacao.TrabalhoConclusao.ano,
 		semestre: orientacao.TrabalhoConclusao.semestre,
 		fase: orientacao.TrabalhoConclusao.fase,
-		titulo_tcc: orientacao.TrabalhoConclusao.titulo || 'Sem título',
+		titulo_tcc: orientacao.TrabalhoConclusao.titulo || "Sem título",
 		matricula: orientacao.TrabalhoConclusao.matricula,
 		nome_dicente: orientacao.TrabalhoConclusao.Dicente.nome,
 		nome_docente: orientacao.Docente.nome,
 		siape_docente: orientacao.Docente.siape,
 		foi_orientador: true,
-		tipo_participacao: 'orientacao'
+		tipo_participacao: "orientacao",
 	}));
 
 	// Processar bancas
-	const declaracoesBanca = bancas.map(convite => ({
+	const declaracoesBanca = bancas.map((convite) => ({
 		id_tcc: convite.TrabalhoConclusao.id,
 		ano: convite.TrabalhoConclusao.ano,
 		semestre: convite.TrabalhoConclusao.semestre,
 		fase: convite.TrabalhoConclusao.fase,
-		titulo_tcc: convite.TrabalhoConclusao.titulo || 'Sem título',
+		titulo_tcc: convite.TrabalhoConclusao.titulo || "Sem título",
 		matricula: convite.TrabalhoConclusao.matricula,
 		nome_dicente: convite.TrabalhoConclusao.Dicente.nome,
 		nome_docente: convite.Docente.nome,
 		siape_docente: convite.Docente.siape,
 		foi_orientador: false,
-		tipo_participacao: 'banca'
+		tipo_participacao: "banca",
 	}));
 
 	// Combinar e remover duplicatas
@@ -126,20 +140,27 @@ declaracoesRepository.buscarAnosDisponiveis = async (idUsuario) => {
 			{
 				model: model.TrabalhoConclusao,
 				required: true,
-				attributes: ['ano']
+				attributes: ["ano"],
 			},
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 				where: {
-					id_usuario: idUsuario
-				}
-			}
+					id_usuario: idUsuario,
+				},
+			},
 		],
 		where: {
-			orientador: true
-		}
+			orientador: true,
+		},
 	});
 
 	// Buscar convites de banca aceitos
@@ -148,33 +169,40 @@ declaracoesRepository.buscarAnosDisponiveis = async (idUsuario) => {
 			{
 				model: model.TrabalhoConclusao,
 				required: true,
-				attributes: ['ano']
+				attributes: ["ano"],
 			},
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 				where: {
-					id_usuario: idUsuario
-				}
-			}
+					id_usuario: idUsuario,
+				},
+			},
 		],
 		where: {
 			aceito: true,
-			orientacao: false
-		}
+			orientacao: false,
+		},
 	});
 
 	// Extrair anos únicos
 	const anosSet = new Set();
 
-	orientacoes.forEach(orientacao => {
+	orientacoes.forEach((orientacao) => {
 		if (orientacao.TrabalhoConclusao.ano) {
 			anosSet.add(orientacao.TrabalhoConclusao.ano);
 		}
 	});
 
-	bancas.forEach(convite => {
+	bancas.forEach((convite) => {
 		if (convite.TrabalhoConclusao.ano) {
 			anosSet.add(convite.TrabalhoConclusao.ano);
 		}
@@ -191,20 +219,27 @@ declaracoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
 			{
 				model: model.TrabalhoConclusao,
 				required: true,
-				attributes: ['semestre']
+				attributes: ["semestre"],
 			},
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 				where: {
-					id_usuario: idUsuario
-				}
-			}
+					id_usuario: idUsuario,
+				},
+			},
 		],
 		where: {
-			orientador: true
-		}
+			orientador: true,
+		},
 	});
 
 	// Buscar convites de banca aceitos
@@ -213,33 +248,40 @@ declaracoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
 			{
 				model: model.TrabalhoConclusao,
 				required: true,
-				attributes: ['semestre']
+				attributes: ["semestre"],
 			},
 			{
 				model: model.Docente,
 				required: true,
-				attributes: ['codigo', 'email', 'nome', 'sala', 'siape', 'id_usuario'],
+				attributes: [
+					"codigo",
+					"email",
+					"nome",
+					"sala",
+					"siape",
+					"id_usuario",
+				],
 				where: {
-					id_usuario: idUsuario
-				}
-			}
+					id_usuario: idUsuario,
+				},
+			},
 		],
 		where: {
 			aceito: true,
-			orientacao: false
-		}
+			orientacao: false,
+		},
 	});
 
 	// Extrair semestres únicos
 	const semestresSet = new Set();
 
-	orientacoes.forEach(orientacao => {
+	orientacoes.forEach((orientacao) => {
 		if (orientacao.TrabalhoConclusao.semestre) {
 			semestresSet.add(orientacao.TrabalhoConclusao.semestre);
 		}
 	});
 
-	bancas.forEach(convite => {
+	bancas.forEach((convite) => {
 		if (convite.TrabalhoConclusao.semestre) {
 			semestresSet.add(convite.TrabalhoConclusao.semestre);
 		}
@@ -249,11 +291,15 @@ declaracoesRepository.buscarSemestresDisponiveis = async (idUsuario) => {
 };
 
 // Buscar dados completos para gerar uma declaração específica
-declaracoesRepository.buscarDadosDeclaracao = async (idUsuario, idTcc, tipoParticipacao) => {
+declaracoesRepository.buscarDadosDeclaracao = async (
+	idUsuario,
+	idTcc,
+	tipoParticipacao,
+) => {
 	try {
 		let dadosDeclaracao = null;
 
-		if (tipoParticipacao === 'orientacao') {
+		if (tipoParticipacao === "orientacao") {
 			// Buscar orientação
 			const orientacao = await model.Orientacao.findOne({
 				include: [
@@ -265,35 +311,35 @@ declaracoesRepository.buscarDadosDeclaracao = async (idUsuario, idTcc, tipoParti
 							{
 								model: model.Dicente,
 								required: true,
-								attributes: ['nome']
+								attributes: ["nome"],
 							},
 							{
 								model: model.Curso,
 								required: true,
-								attributes: ['id', 'nome'],
+								attributes: ["id", "nome"],
 								include: [
 									{
 										model: model.Docente,
-										as: 'coordenadorDocente',
+										as: "coordenadorDocente",
 										required: true,
-										attributes: ['nome', 'siape']
-									}
-								]
-							}
-						]
+										attributes: ["nome", "siape"],
+									},
+								],
+							},
+						],
 					},
 					{
 						model: model.Docente,
 						required: true,
-						attributes: ['nome', 'siape'],
+						attributes: ["nome", "siape"],
 						where: {
-							id_usuario: idUsuario
-						}
-					}
+							id_usuario: idUsuario,
+						},
+					},
 				],
 				where: {
-					orientador: true
-				}
+					orientador: true,
+				},
 			});
 
 			if (orientacao) {
@@ -302,18 +348,23 @@ declaracoesRepository.buscarDadosDeclaracao = async (idUsuario, idTcc, tipoParti
 					ano: orientacao.TrabalhoConclusao.ano,
 					semestre: orientacao.TrabalhoConclusao.semestre,
 					fase: orientacao.TrabalhoConclusao.fase,
-					titulo_tcc: orientacao.TrabalhoConclusao.titulo || 'Sem título',
+					titulo_tcc:
+						orientacao.TrabalhoConclusao.titulo || "Sem título",
 					nome_dicente: orientacao.TrabalhoConclusao.Dicente.nome,
 					nome_docente: orientacao.Docente.nome,
 					siape_docente: orientacao.Docente.siape,
 					nome_curso: orientacao.TrabalhoConclusao.Curso.nome,
-					nome_coordenador: orientacao.TrabalhoConclusao.Curso.coordenadorDocente.nome,
-					siape_coordenador: orientacao.TrabalhoConclusao.Curso.coordenadorDocente.siape,
-					tipo_participacao: 'orientacao',
-					foi_orientador: true
+					nome_coordenador:
+						orientacao.TrabalhoConclusao.Curso.coordenadorDocente
+							.nome,
+					siape_coordenador:
+						orientacao.TrabalhoConclusao.Curso.coordenadorDocente
+							.siape,
+					tipo_participacao: "orientacao",
+					foi_orientador: true,
 				};
 			}
-		} else if (tipoParticipacao === 'banca') {
+		} else if (tipoParticipacao === "banca") {
 			// Buscar convite de banca
 			const convite = await model.Convite.findOne({
 				include: [
@@ -325,36 +376,36 @@ declaracoesRepository.buscarDadosDeclaracao = async (idUsuario, idTcc, tipoParti
 							{
 								model: model.Dicente,
 								required: true,
-								attributes: ['nome']
+								attributes: ["nome"],
 							},
 							{
 								model: model.Curso,
 								required: true,
-								attributes: ['id', 'nome'],
+								attributes: ["id", "nome"],
 								include: [
 									{
 										model: model.Docente,
-										as: 'coordenadorDocente',
+										as: "coordenadorDocente",
 										required: true,
-										attributes: ['nome', 'siape']
-									}
-								]
-							}
-						]
+										attributes: ["nome", "siape"],
+									},
+								],
+							},
+						],
 					},
 					{
 						model: model.Docente,
 						required: true,
-						attributes: ['nome', 'siape', 'codigo'],
+						attributes: ["nome", "siape", "codigo"],
 						where: {
-							id_usuario: idUsuario
-						}
-					}
+							id_usuario: idUsuario,
+						},
+					},
 				],
 				where: {
 					aceito: true,
-					orientacao: false
-				}
+					orientacao: false,
+				},
 			});
 
 			if (convite) {
@@ -363,9 +414,9 @@ declaracoesRepository.buscarDadosDeclaracao = async (idUsuario, idTcc, tipoParti
 					where: {
 						id_tcc: idTcc,
 						membro_banca: convite.Docente.codigo,
-						fase: convite.TrabalhoConclusao.fase
+						fase: convite.TrabalhoConclusao.fase,
 					},
-					attributes: ['data_defesa']
+					attributes: ["data_defesa"],
 				});
 
 				dadosDeclaracao = {
@@ -373,23 +424,27 @@ declaracoesRepository.buscarDadosDeclaracao = async (idUsuario, idTcc, tipoParti
 					ano: convite.TrabalhoConclusao.ano,
 					semestre: convite.TrabalhoConclusao.semestre,
 					fase: convite.TrabalhoConclusao.fase,
-					titulo_tcc: convite.TrabalhoConclusao.titulo || 'Sem título',
+					titulo_tcc:
+						convite.TrabalhoConclusao.titulo || "Sem título",
 					nome_dicente: convite.TrabalhoConclusao.Dicente.nome,
 					nome_docente: convite.Docente.nome,
 					siape_docente: convite.Docente.siape,
 					nome_curso: convite.TrabalhoConclusao.Curso.nome,
-					nome_coordenador: convite.TrabalhoConclusao.Curso.coordenadorDocente.nome,
-					siape_coordenador: convite.TrabalhoConclusao.Curso.coordenadorDocente.siape,
-					tipo_participacao: 'banca',
+					nome_coordenador:
+						convite.TrabalhoConclusao.Curso.coordenadorDocente.nome,
+					siape_coordenador:
+						convite.TrabalhoConclusao.Curso.coordenadorDocente
+							.siape,
+					tipo_participacao: "banca",
 					foi_orientador: false,
-					data_defesa: defesa?.data_defesa
+					data_defesa: defesa?.data_defesa,
 				};
 			}
 		}
 
 		return dadosDeclaracao;
 	} catch (error) {
-		console.error('Erro ao buscar dados da declaração:', error);
+		console.error("Erro ao buscar dados da declaração:", error);
 		throw error;
 	}
 };

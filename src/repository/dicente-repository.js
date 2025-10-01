@@ -73,7 +73,12 @@ dicenteRepository.obterDicentePorMatricula = async (matricula) => {
 						include: [
 							{
 								model: model.Docente,
-								attributes: ["codigo", "nome", "email", "siape"],
+								attributes: [
+									"codigo",
+									"nome",
+									"email",
+									"siape",
+								],
 							},
 						],
 					},
@@ -105,7 +110,12 @@ dicenteRepository.obterDicentePorUsuario = async (id_usuario) => {
 						include: [
 							{
 								model: model.Docente,
-								attributes: ["codigo", "nome", "email", "siape"],
+								attributes: [
+									"codigo",
+									"nome",
+									"email",
+									"siape",
+								],
 							},
 						],
 					},
