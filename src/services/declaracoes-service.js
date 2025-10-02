@@ -101,9 +101,10 @@ const gerarHtmlDeclaracao = async (dados) => {
 			? "declaracaoorientacoesTCCs.html"
 			: "declaracaobancasTCCs.html";
 
-		// Caminho para o template - usando process.cwd() em vez de __dirname
+		// Caminho para o template
 		const caminhoTemplate = path.join(
-			process.cwd(),
+			__dirname,
+			"..",
 			"reports",
 			nomeTemplate,
 		);
@@ -122,10 +123,10 @@ const gerarHtmlDeclaracao = async (dados) => {
 
 		// Converter imagens para base64
 		const logoBase64 = await converterImagemParaBase64(
-			path.join(process.cwd(), "reports", "logo.png"),
+			path.join(__dirname, "..", "reports", "logo.png"),
 		);
 		const coordenadorBase64 = await converterImagemParaBase64(
-			path.join(process.cwd(), "reports", "coordenador.png"),
+			path.join(__dirname, "..", "reports", "coordenador.png"),
 		);
 
 		// Substituir placeholders
