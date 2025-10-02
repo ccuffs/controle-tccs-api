@@ -26,23 +26,8 @@ dicentesService.post(
 );
 
 dicentesService.put(
-	"/",
-	auth.autenticarUsuario,
-	autorizacao.verificarPermissao(Permissoes.DICENTE.EDITAR),
-	dicenteService.atualizaDicente,
-);
-
-dicentesService.put(
 	"/:matricula",
 	auth.autenticarUsuario,
-	autorizacao.verificarPermissao(Permissoes.DICENTE.EDITAR),
-	dicenteService.atualizaDicente,
-);
-
-dicentesService.put(
-	"/",
-	auth.autenticarUsuario,
-	autorizacao.verificarPermissao(Permissoes.DICENTE.EDITAR),
 	dicenteService.atualizaDicente,
 );
 
@@ -53,7 +38,7 @@ dicentesService.delete(
 	dicenteService.deletaDicente,
 );
 
-// Nova rota para buscar dicente por usuário
+// Rota para buscar dicente por usuário (administrativa)
 dicentesService.get(
 	"/usuario/:id_usuario",
 	auth.autenticarUsuario,
@@ -61,6 +46,13 @@ dicentesService.get(
 		Permissoes.DICENTE.VISUALIZAR,
 		Permissoes.DICENTE.VISUALIZAR_TODOS,
 	]),
+	dicenteService.retornaDicentePorUsuario,
+);
+
+// Rota para o dicente obter seus próprios dados
+dicentesService.get(
+	"/meu-perfil",
+	auth.autenticarUsuario,
 	dicenteService.retornaDicentePorUsuario,
 );
 

@@ -116,10 +116,58 @@ const criaDicente = async (req, res) => {
 const atualizaDicente = async (req, res) => {
 	const { matricula } = req.params;
 	const formData = req.body.formData;
+	const id_usuario = req.usuario.id;
+	const permissoesService = require("./permissoes-service");
 
 	try {
+		// Verificar se o usuário está editando seus próprios dados
+		const dicenteUsuario =
+			await dicenteRepository.obterDicentePorUsuario(id_usuario);
+
+		if (
+			dicenteUsuario &&
+			dicenteUsuario.matricula === parseInt(matricula || formData.matricula)
+		) {
+			// Dicente editando seus próprios dados - permitir apenas email
+			const dadosPermitidos = {
+				email: formData.email,
+			};
+
+			const sucesso = await dicenteRepository.atualizarDicente(
+				matricula || formData.matricula,
+				dadosPermitidos,
+			);
+
+			if (!sucesso) {
+				return res
+					.status(404)
+					.json({ message: "Dicente não encontrado" });
+			}
+
+			return res
+				.status(200)
+				.json({ message: "Dicente atualizado com sucesso" });
+		}
+
+		// Caso contrário, verificar se tem permissão administrativa
+		const permissoesUsuario =
+			await permissoesService.buscarPermissoesDoUsuario(id_usuario);
+		const { Permissoes } = require("../enums/permissoes");
+
+		const temPermissao = permissoesUsuario.some(
+			(permissao) => permissao.id === Permissoes.DICENTE.EDITAR,
+		);
+
+		if (!temPermissao) {
+			return res.status(403).json({
+				message:
+					"Permissão negada: você só pode editar seus próprios dados",
+			});
+		}
+
+		// Atualização administrativa completa
 		const sucesso = await dicenteRepository.atualizarDicente(
-			matricula,
+			matricula || formData.matricula,
 			formData,
 		);
 
@@ -528,7 +576,8 @@ const processarEInserirPDFDicentes = async (req, res) => {
 // Função para buscar dicente por id_usuario
 const retornaDicentePorUsuario = async (req, res) => {
 	try {
-		const { id_usuario } = req.params;
+		// Se vier de /meu-perfil, usa o id do usuário logado
+		const id_usuario = req.params.id_usuario || req.usuario.id;
 
 		const dicente =
 			await dicenteRepository.obterDicentePorUsuario(id_usuario);
