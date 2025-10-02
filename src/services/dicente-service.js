@@ -126,7 +126,8 @@ const atualizaDicente = async (req, res) => {
 
 		if (
 			dicenteUsuario &&
-			dicenteUsuario.matricula === parseInt(matricula || formData.matricula)
+			dicenteUsuario.matricula ===
+				parseInt(matricula || formData.matricula)
 		) {
 			// Dicente editando seus próprios dados - permitir apenas email
 			const dadosPermitidos = {

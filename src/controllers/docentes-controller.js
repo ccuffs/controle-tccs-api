@@ -23,7 +23,11 @@ docentesService.post(
 	docenteService.criaDocente,
 );
 
-docentesService.put("/", auth.autenticarUsuario, docenteService.atualizaDocente);
+docentesService.put(
+	"/",
+	auth.autenticarUsuario,
+	docenteService.atualizaDocente,
+);
 
 docentesService.delete(
 	"/:codigo",
