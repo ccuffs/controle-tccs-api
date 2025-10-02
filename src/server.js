@@ -27,6 +27,8 @@ const anoSemestreController = require("./controllers/ano-semestre-controller");
 const dashboardController = require("./controllers/dashboard-controller");
 const declaracoesController = require("./controllers/declaracoes-controller");
 
+const port = process.env.SERVERPORT || 3010;
+
 // Configuração do Passport para autenticação JWT
 const { passport } = require("./middleware/auth");
 
@@ -39,7 +41,7 @@ app.use(morgan("combined"));
 // Inicializar Passport
 app.use(passport.initialize());
 
-app.listen(3010, () => console.log("Servidor rodando na porta 3010."));
+app.listen(port, () => console.log(`Servidor rodando na porta ${port}.`));
 
 app.get("/", (req, res) => {
 	res.send("Hello, world!");
