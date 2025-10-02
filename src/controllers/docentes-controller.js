@@ -23,18 +23,20 @@ docentesService.post(
 	docenteService.criaDocente,
 );
 
-docentesService.put(
-	"/",
-	auth.autenticarUsuario,
-	autorizacao.verificarPermissao(Permissoes.DOCENTE.EDITAR),
-	docenteService.atualizaDocente,
-);
+docentesService.put("/", auth.autenticarUsuario, docenteService.atualizaDocente);
 
 docentesService.delete(
 	"/:codigo",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.DOCENTE.DELETAR),
 	docenteService.deletaDocente,
+);
+
+// Rota para o docente obter seus próprios dados
+docentesService.get(
+	"/meu-perfil",
+	auth.autenticarUsuario,
+	docenteService.retornaDocentePorUsuario,
 );
 
 module.exports = docentesService;

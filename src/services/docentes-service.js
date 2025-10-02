@@ -26,7 +26,52 @@ const criaDocente = async (req, res) => {
 // Função para atualizar um docente
 const atualizaDocente = async (req, res) => {
 	const formData = req.body.formData;
+	const id_usuario = req.usuario.id;
+	const permissoesService = require("./permissoes-service");
+
 	try {
+		// Verificar se o usuário está editando seus próprios dados
+		const docenteUsuario =
+			await docenteRepository.obterDocentePorUsuario(id_usuario);
+
+		if (docenteUsuario && docenteUsuario.codigo === formData.codigo) {
+			// Docente editando seus próprios dados - permitir apenas sala e siape
+			const dadosPermitidos = {
+				siape: formData.siape,
+				sala: formData.sala,
+			};
+
+			const sucesso = await docenteRepository.atualizarDocente(
+				formData.codigo,
+				dadosPermitidos,
+			);
+
+			if (sucesso) {
+				return res.sendStatus(200);
+			} else {
+				return res
+					.status(404)
+					.send({ message: "Docente não encontrado" });
+			}
+		}
+
+		// Caso contrário, verificar se tem permissão administrativa
+		const permissoesUsuario =
+			await permissoesService.buscarPermissoesDoUsuario(id_usuario);
+		const { Permissoes } = require("../enums/permissoes");
+
+		const temPermissao = permissoesUsuario.some(
+			(permissao) => permissao.id === Permissoes.DOCENTE.EDITAR,
+		);
+
+		if (!temPermissao) {
+			return res.status(403).json({
+				message:
+					"Permissão negada: você só pode editar seus próprios dados",
+			});
+		}
+
+		// Atualização administrativa completa
 		const sucesso = await docenteRepository.atualizarDocente(
 			formData.codigo,
 			formData,
@@ -60,9 +105,28 @@ const deletaDocente = async (req, res) => {
 	}
 };
 
+// Função para retornar dados do docente pelo usuário logado
+const retornaDocentePorUsuario = async (req, res) => {
+	try {
+		const id_usuario = req.usuario.id;
+		const docente =
+			await docenteRepository.obterDocentePorUsuario(id_usuario);
+
+		if (!docente) {
+			return res.status(404).json({ message: "Docente não encontrado" });
+		}
+
+		res.status(200).json({ docente: docente });
+	} catch (error) {
+		console.log("Erro ao buscar docente por usuário:", error);
+		res.sendStatus(500);
+	}
+};
+
 module.exports = {
 	retornaTodosDocentes,
 	criaDocente,
 	atualizaDocente,
 	deletaDocente,
+	retornaDocentePorUsuario,
 };
