@@ -141,4 +141,4 @@ exemplos/
 .idea
 coordenador.png
 src/public/*
-!src/public/
+!src/public/.gitkeep
