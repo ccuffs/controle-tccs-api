@@ -141,3 +141,4 @@ exemplos/
 .idea
 coordenador.png
 src/public/*
+!src/public/
