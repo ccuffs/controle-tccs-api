@@ -140,3 +140,4 @@ exemplos/
 .DS_Store
 .idea
 coordenador.png
+src/public/*
