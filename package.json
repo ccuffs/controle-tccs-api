@@ -30,6 +30,10 @@
     "sequelize-cli": "^6.6.2",
     "sequelize-interval-postgres": "^1.0.0"
   },
+  "scripts": {
+    "dev": "nodemon ./server.js",
+    "start": "nodemon ./server.js"
+  },
   "_moduleAliases": {
     "@backend": "./src"
   }
