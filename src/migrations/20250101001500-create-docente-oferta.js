@@ -51,13 +51,27 @@ module.exports = {
 				onUpdate: "CASCADE",
 				onDelete: "CASCADE",
 			},
-			vagas: {
-				type: Sequelize.INTEGER,
-				allowNull: false,
-				defaultValue: 0,
-			},
-		};
-	},
+		vagas: {
+			type: Sequelize.INTEGER,
+			allowNull: false,
+			defaultValue: 0,
+		},
+		createdAt: {
+			type: Sequelize.DATE,
+			allowNull: false,
+			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+		},
+		updatedAt: {
+			type: Sequelize.DATE,
+			allowNull: false,
+			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+		},
+		deletedAt: {
+			type: Sequelize.DATE,
+			allowNull: true,
+		},
+	};
+},
 
 	async up(queryInterface, Sequelize) {
 		await queryInterface.createTable(
@@ -82,9 +96,22 @@ module.exports = {
 			REFERENCES public.ano_semestre(ano, semestre)
 			ON UPDATE CASCADE ON DELETE CASCADE;
 		`);
+
+		// Criar trigger para esta tabela
+		await queryInterface.sequelize.query(`
+			CREATE TRIGGER update_docente_oferta_updated_at
+			BEFORE UPDATE ON public.docente_oferta
+			FOR EACH ROW
+			EXECUTE FUNCTION update_updated_at_column();
+		`);
 	},
 
 	async down(queryInterface, Sequelize) {
+		// Remover trigger
+		await queryInterface.sequelize.query(`
+			DROP TRIGGER IF EXISTS update_docente_oferta_updated_at ON public.docente_oferta;
+		`);
+
 		await queryInterface.dropTable(this.table);
 	},
 };
