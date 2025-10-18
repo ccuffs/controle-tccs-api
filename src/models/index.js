@@ -2,11 +2,27 @@
 
 const fs = require("fs");
 const path = require("path");
-const sequelize = require("../config/localConnection");
 const Sequelize = require("sequelize");
-
+const cls = require("cls-hooked");
+const transactionNamespace = cls.createNamespace("transaction_namespace");
 const basename = path.basename(__filename);
+const env = process.env.NODE_ENV || "development";
+const config = require("../config/database.js")[env];
 const db = {};
+
+Sequelize.useCLS(transactionNamespace);
+
+let sequelize;
+if (config.use_env_variable) {
+	sequelize = new Sequelize(process.env[config.use_env_variable], config);
+} else {
+	sequelize = new Sequelize(
+		config.database,
+		config.username,
+		config.password,
+		config,
+	);
+}
 
 fs.readdirSync(__dirname)
 	.filter((file) => {
@@ -32,5 +48,12 @@ Object.keys(db).forEach((modelName) => {
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
+
+// Adicionando o hook global beforeUpdate
+db.sequelize.addHook("beforeUpdate", async (entity, options) => {
+	if (entity.beforeUpdate) {
+		entity.beforeUpdate(entity, options);
+	}
+});
 
 module.exports = db;

@@ -142,3 +142,4 @@ exemplos/
 coordenador.png
 src/public/*
 !src/public/.gitkeep
+.vscode

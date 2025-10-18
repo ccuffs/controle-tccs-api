@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		{
 			tableName: "datas_defesa_tccs",
-			schema: "tccs",
+			schema: "public",
 			freezeTableName: true,
 			timestamps: false,
 		},

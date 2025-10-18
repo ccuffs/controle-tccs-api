@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		{
 			tableName: "docente_disponibilidade_banca",
-			schema: "tccs",
+			schema: "public",
 			freezeTableName: true,
 			timestamps: false,
 		},

@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		{
 			tableName: "convite",
-			schema: "tccs",
+			schema: "public",
 			freezeTableName: true,
 			timestamps: false,
 		},

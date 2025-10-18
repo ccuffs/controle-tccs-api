@@ -68,7 +68,7 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		{
 			tableName: "trabalho_conclusao",
-			schema: "tccs",
+			schema: "public",
 			freezeTableName: true,
 			timestamps: false,
 			indexes: [
