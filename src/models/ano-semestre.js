@@ -24,12 +24,32 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				defaultValue: DataTypes.NOW,
 			},
+			publicado: {
+				type: DataTypes.BOOLEAN,
+				allowNull: true,
+				defaultValue: false,
+			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+			},
+			deletedAt: {
+				allowNull: true,
+				type: DataTypes.DATE,
+			},
 		},
 		{
 			tableName: "ano_semestre",
 			schema: "public",
 			freezeTableName: true,
-			timestamps: false,
+			timestamps: true,
+			paranoid: true,
 		},
 	);
 

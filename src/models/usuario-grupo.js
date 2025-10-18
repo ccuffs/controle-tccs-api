@@ -22,13 +22,28 @@ module.exports = (sequelize, DataTypes) => {
 					key: "id",
 				},
 			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+			},
+			deletedAt: {
+				allowNull: true,
+				type: DataTypes.DATE,
+			},
 		},
 		{
 			sequelize,
 			tableName: "usuario_grupo",
 			schema: "public",
 			freezeTableName: true,
-			timestamps: false,
+			timestamps: true,
+			paranoid: true,
 		},
 	);
 

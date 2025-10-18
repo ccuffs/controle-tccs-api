@@ -19,17 +19,32 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				primaryKey: true,
 			},
-			fase: {
-				type: DataTypes.INTEGER,
-				allowNull: false,
-				primaryKey: true,
-			},
+		fase: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			primaryKey: true,
 		},
-		{
-			tableName: "oferta_tcc",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
+		createdAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		updatedAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		deletedAt: {
+			allowNull: true,
+			type: DataTypes.DATE,
+		},
+	},
+	{
+		tableName: "oferta_tcc",
+		schema: "public",
+		freezeTableName: true,
+		timestamps: true,
+		paranoid: true,
 		},
 	);
 

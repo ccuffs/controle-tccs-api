@@ -61,16 +61,31 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				defaultValue: false,
 			},
-			comentarios_tcc: {
-				type: DataTypes.TEXT,
-				allowNull: true,
-			},
+		comentarios_tcc: {
+			type: DataTypes.TEXT,
+			allowNull: true,
 		},
-		{
-			tableName: "trabalho_conclusao",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
+		createdAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		updatedAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		deletedAt: {
+			allowNull: true,
+			type: DataTypes.DATE,
+		},
+	},
+	{
+		tableName: "trabalho_conclusao",
+		schema: "public",
+		freezeTableName: true,
+		timestamps: true,
+		paranoid: true,
 			indexes: [
 				{
 					unique: true,

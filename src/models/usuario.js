@@ -4,20 +4,35 @@ module.exports = (sequelize, DataTypes) => {
 	const Usuario = sequelize.define(
 		"Usuario",
 		{
-			id: {
-				type: DataTypes.STRING,
-				primaryKey: true,
-				allowNull: false,
-			},
-			nome: DataTypes.STRING,
-			email: DataTypes.STRING,
+		id: {
+			type: DataTypes.STRING,
+			primaryKey: true,
+			allowNull: false,
 		},
-		{
-			sequelize,
-			tableName: "usuario",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
+		nome: DataTypes.STRING,
+		email: DataTypes.STRING,
+		createdAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		updatedAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		deletedAt: {
+			allowNull: true,
+			type: DataTypes.DATE,
+		},
+	},
+	{
+		sequelize,
+		tableName: "usuario",
+		schema: "public",
+		freezeTableName: true,
+		timestamps: true,
+		paranoid: true,
 		},
 	);
 

@@ -9,23 +9,38 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 				autoIncrement: true,
 			},
-			nome: {
-				type: DataTypes.STRING,
-				allowNull: false,
-			},
-			descricao: DataTypes.STRING,
-			sistema: {
-				type: DataTypes.INTEGER,
-				allowNull: false,
-				defaultValue: 2,
-			},
+		nome: {
+			type: DataTypes.STRING,
+			allowNull: false,
 		},
-		{
-			sequelize,
-			tableName: "grupo",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
+		descricao: DataTypes.STRING,
+		sistema: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 2,
+		},
+		createdAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		updatedAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		deletedAt: {
+			allowNull: true,
+			type: DataTypes.DATE,
+		},
+	},
+	{
+		sequelize,
+		tableName: "grupo",
+		schema: "public",
+		freezeTableName: true,
+		timestamps: true,
+		paranoid: true,
 		},
 	);
 

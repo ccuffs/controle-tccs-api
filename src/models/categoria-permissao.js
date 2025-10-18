@@ -4,22 +4,37 @@ module.exports = (sequelize, DataTypes) => {
 	const CategoriaPermissao = sequelize.define(
 		"CategoriaPermissao",
 		{
-			codigo: {
-				type: DataTypes.STRING,
-				primaryKey: true,
-				allowNull: false,
-			},
-			descricao: {
-				type: DataTypes.STRING,
-				allowNull: false,
-			},
+		codigo: {
+			type: DataTypes.STRING,
+			primaryKey: true,
+			allowNull: false,
 		},
-		{
-			sequelize,
-			tableName: "categoria_permissao",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
+		descricao: {
+			type: DataTypes.STRING,
+			allowNull: false,
+		},
+		createdAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		updatedAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		deletedAt: {
+			allowNull: true,
+			type: DataTypes.DATE,
+		},
+	},
+	{
+		sequelize,
+		tableName: "categoria_permissao",
+		schema: "public",
+		freezeTableName: true,
+		timestamps: true,
+		paranoid: true,
 		},
 	);
 

@@ -41,17 +41,32 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
-			orientacao: {
-				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: false,
-			},
+		orientacao: {
+			type: DataTypes.BOOLEAN,
+			allowNull: false,
+			defaultValue: false,
 		},
-		{
-			tableName: "convite",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
+		createdAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		updatedAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
+		},
+		deletedAt: {
+			allowNull: true,
+			type: DataTypes.DATE,
+		},
+	},
+	{
+		tableName: "convite",
+		schema: "public",
+		freezeTableName: true,
+		timestamps: true,
+		paranoid: true,
 		},
 	);
 
