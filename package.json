@@ -32,7 +32,11 @@
   },
   "scripts": {
     "dev": "nodemon ./server.js",
-    "start": "nodemon ./server.js"
+    "start": "nodemon ./server.js",
+    "migrate": "npx sequelize-cli db:migrate",
+    "migrate:safe": "node scripts/migrate-safe.js",
+    "migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "migrate:status": "npx sequelize-cli db:migrate:status"
   },
   "_moduleAliases": {
     "@backend": "./src"
