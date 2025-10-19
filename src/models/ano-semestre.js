@@ -29,16 +29,16 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: true,
 				defaultValue: false,
 			},
-			createdAt: {
-				allowNull: false,
-				type: DataTypes.DATE,
-				defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
-			},
-			updatedAt: {
-				allowNull: false,
-				type: DataTypes.DATE,
-				defaultValue: DataTypes.literal("CURRENT_TIMESTAMP"),
-			},
+		createdAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.NOW,
+		},
+		updatedAt: {
+			allowNull: false,
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.NOW,
+		},
 			deletedAt: {
 				allowNull: true,
 				type: DataTypes.DATE,
