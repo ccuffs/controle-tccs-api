@@ -4,9 +4,9 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const ofertasTccRouter = express.Router();
+const ofertasTccResource = express.Router();
 
-ofertasTccRouter.get(
+ofertasTccResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -17,7 +17,7 @@ ofertasTccRouter.get(
 );
 
 // Endpoint para buscar a última oferta TCC
-ofertasTccRouter.get(
+ofertasTccResource.get(
 	"/ultima",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -27,4 +27,4 @@ ofertasTccRouter.get(
 	ofertaTccService.buscarUltimaOfertaTcc,
 );
 
-module.exports = ofertasTccRouter;
+module.exports = ofertasTccResource;

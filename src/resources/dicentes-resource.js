@@ -5,10 +5,10 @@ const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 const { upload } = require("../services/dicente-service");
 
-const dicentesService = express.Router();
+const dicentesResource = express.Router();
 
 // Rotas existentes
-dicentesService.get(
+dicentesResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -18,20 +18,20 @@ dicentesService.get(
 	dicenteService.retornaTodosDicentes,
 );
 
-dicentesService.post(
+dicentesResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.DICENTE.CRIAR),
 	dicenteService.criaDicente,
 );
 
-dicentesService.put(
+dicentesResource.put(
 	"/:matricula",
 	auth.autenticarUsuario,
 	dicenteService.atualizaDicente,
 );
 
-dicentesService.delete(
+dicentesResource.delete(
 	"/:matricula",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.DICENTE.DELETAR),
@@ -39,7 +39,7 @@ dicentesService.delete(
 );
 
 // Rota para buscar dicente por usuário (administrativa)
-dicentesService.get(
+dicentesResource.get(
 	"/usuario/:id_usuario",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -50,14 +50,14 @@ dicentesService.get(
 );
 
 // Rota para o dicente obter seus próprios dados
-dicentesService.get(
+dicentesResource.get(
 	"/meu-perfil",
 	auth.autenticarUsuario,
 	dicenteService.retornaDicentePorUsuario,
 );
 
 // Nova rota para processar PDF
-dicentesService.post(
+dicentesResource.post(
 	"/processar-pdf",
 	upload.single("pdf"),
 	auth.autenticarUsuario,
@@ -65,4 +65,4 @@ dicentesService.post(
 	dicenteService.processarEInserirPDFDicentes,
 );
 
-module.exports = dicentesService;
+module.exports = dicentesResource;

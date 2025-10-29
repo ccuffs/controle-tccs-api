@@ -1,16 +1,14 @@
 const express = require("express");
-const router = express.Router();
 const conviteService = require("../services/convite-service");
-const { passport } = require("../middleware/auth");
 const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-// Middleware de autenticação para todas as rotas
-router.use(passport.authenticate("jwt", { session: false }));
+
+const conviteResource = express.Router();
 
 // GET /api/convites - Retorna todos os convites com filtros
-router.get(
+conviteResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -21,7 +19,7 @@ router.get(
 );
 
 // POST /api/convites - Cria um novo convite
-router.post(
+conviteResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.CONVITE.CRIAR]),
@@ -29,7 +27,7 @@ router.post(
 );
 
 // PUT /api/convites/:id/:codigo_docente/:fase - Responde a um convite (aceitar/rejeitar)
-router.put(
+conviteResource.put(
 	"/:id/:codigo_docente/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.CONVITE.EDITAR]),
@@ -37,7 +35,7 @@ router.put(
 );
 
 // DELETE /api/convites/:id/:codigo_docente/:fase - Deleta um convite
-router.delete(
+conviteResource.delete(
 	"/:id/:codigo_docente/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.CONVITE.DELETAR]),
@@ -45,7 +43,7 @@ router.delete(
 );
 
 // GET /api/convites/docente/:codigo - Retorna convites de um docente
-router.get(
+conviteResource.get(
 	"/docente/:codigo",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -55,4 +53,4 @@ router.get(
 	conviteService.retornaConvitesDocente,
 );
 
-module.exports = router;
+module.exports = conviteResource;

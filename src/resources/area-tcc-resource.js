@@ -4,9 +4,9 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const areaTccController = express.Router();
+const areaTccResource = express.Router();
 
-areaTccController.get(
+areaTccResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -16,7 +16,7 @@ areaTccController.get(
 	areaTccService.retornaTodasAreasTcc,
 );
 
-areaTccController.get(
+areaTccResource.get(
 	"/docente/:codigo",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -26,25 +26,25 @@ areaTccController.get(
 	areaTccService.retornaAreasTccPorDocente,
 );
 
-areaTccController.post(
+areaTccResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.AREA_TCC.CRIAR),
 	areaTccService.criaAreaTcc,
 );
 
-areaTccController.put(
+areaTccResource.put(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.AREA_TCC.EDITAR),
 	areaTccService.atualizaAreaTcc,
 );
 
-areaTccController.delete(
+areaTccResource.delete(
 	"/:id",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.AREA_TCC.DELETAR),
 	areaTccService.deletaAreaTcc,
 );
 
-module.exports = areaTccController;
+module.exports = areaTccResource;

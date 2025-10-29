@@ -3,10 +3,11 @@ const bancaCursoService = require("../services/banca-curso-service");
 const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
-const bancaCursoRouter = express.Router();
+
+const bancaCursoResource = express.Router();
 
 // Listar docentes de banca por curso
-bancaCursoRouter.get(
+bancaCursoResource.get(
 	"/curso/:id",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -19,7 +20,7 @@ bancaCursoRouter.get(
 );
 
 // Listar cursos por docente de banca
-bancaCursoRouter.get(
+bancaCursoResource.get(
 	"/docente/:codigo",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -30,7 +31,7 @@ bancaCursoRouter.get(
 );
 
 // Verificar se docente pode participar de banca
-bancaCursoRouter.get(
+bancaCursoResource.get(
 	"/verificar/:idCurso/:codigoDocente",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -40,4 +41,4 @@ bancaCursoRouter.get(
 	bancaCursoService.verificarDocenteBanca,
 );
 
-module.exports = bancaCursoRouter;
+module.exports = bancaCursoResource;

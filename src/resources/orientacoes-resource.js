@@ -3,9 +3,11 @@ const orientacaoService = require("../services/orientacao-service");
 const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
-const orientacoesService = express.Router();
 
-orientacoesService.get(
+
+const orientacoesResource = express.Router();
+
+orientacoesResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -15,32 +17,32 @@ orientacoesService.get(
 	orientacaoService.retornaTodasOrientacoes,
 );
 
-orientacoesService.post(
+orientacoesResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.ORIENTACAO.CRIAR),
 	orientacaoService.criaOrientacao,
 );
 
-orientacoesService.put(
+orientacoesResource.put(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.ORIENTACAO.EDITAR),
 	orientacaoService.atualizaOrientacao,
 );
 
-orientacoesService.delete(
+orientacoesResource.delete(
 	"/:id",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.ORIENTACAO.DELETAR),
 	orientacaoService.deletaOrientacao,
 );
 
-orientacoesService.delete(
+orientacoesResource.delete(
 	"/:codigo/:matricula",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.ORIENTACAO.DELETAR),
 	orientacaoService.deletaOrientacao,
 );
 
-module.exports = orientacoesService;
+module.exports = orientacoesResource;

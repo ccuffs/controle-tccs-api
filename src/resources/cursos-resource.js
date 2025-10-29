@@ -4,9 +4,9 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const cursosService = express.Router();
+const cursosResource = express.Router();
 
-cursosService.get(
+cursosResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -16,25 +16,25 @@ cursosService.get(
 	cursoService.retornaTodosCursos,
 );
 
-cursosService.post(
+cursosResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.CURSO.CRIAR),
 	cursoService.criaCurso,
 );
 
-cursosService.put(
+cursosResource.put(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.CURSO.EDITAR),
 	cursoService.atualizaCurso,
 );
 
-cursosService.delete(
+cursosResource.delete(
 	"/:id",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.CURSO.DELETAR),
 	cursoService.deletaCurso,
 );
 
-module.exports = cursosService;
+module.exports = cursosResource;

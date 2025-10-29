@@ -4,10 +4,10 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const trabalhoConclusaoRouter = express.Router();
+const trabalhoConclusaoResource = express.Router();
 
 // Listar todos os trabalhos de conclusão
-trabalhoConclusaoRouter.get(
+trabalhoConclusaoResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -18,7 +18,7 @@ trabalhoConclusaoRouter.get(
 );
 
 // Buscar trabalho de conclusão por ID
-trabalhoConclusaoRouter.get(
+trabalhoConclusaoResource.get(
 	"/:id",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -29,7 +29,7 @@ trabalhoConclusaoRouter.get(
 );
 
 // Buscar trabalho de conclusão mais recente por discente (qual	quer oferta)
-trabalhoConclusaoRouter.get(
+trabalhoConclusaoResource.get(
 	"/discente/:matricula",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -40,7 +40,7 @@ trabalhoConclusaoRouter.get(
 );
 
 // Buscar trabalho de conclusão por discente na oferta atual
-trabalhoConclusaoRouter.get(
+trabalhoConclusaoResource.get(
 	"/discente/:matricula/oferta-atual",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -51,7 +51,7 @@ trabalhoConclusaoRouter.get(
 );
 
 // Criar novo trabalho de conclusão
-trabalhoConclusaoRouter.post(
+trabalhoConclusaoResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.TRABALHO_CONCLUSAO.CRIAR),
@@ -59,7 +59,7 @@ trabalhoConclusaoRouter.post(
 );
 
 // Atualizar trabalho de conclusão
-trabalhoConclusaoRouter.put(
+trabalhoConclusaoResource.put(
 	"/:id",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.TRABALHO_CONCLUSAO.EDITAR),
@@ -67,11 +67,11 @@ trabalhoConclusaoRouter.put(
 );
 
 // Deletar trabalho de conclusão
-trabalhoConclusaoRouter.delete(
+trabalhoConclusaoResource.delete(
 	"/:id",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.TRABALHO_CONCLUSAO.DELETAR),
 	trabalhoConclusaoService.deletaTrabalhoConlusao,
 );
 
-module.exports = trabalhoConclusaoRouter;
+module.exports = trabalhoConclusaoResource;

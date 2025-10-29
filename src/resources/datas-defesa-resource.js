@@ -4,10 +4,10 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const datasDefesaRouter = express.Router();
+const datasDefesaResource = express.Router();
 
 // Buscar todas as datas de defesa
-datasDefesaRouter.get(
+datasDefesaResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -18,7 +18,7 @@ datasDefesaRouter.get(
 );
 
 // Buscar datas de defesa por oferta específica
-datasDefesaRouter.get(
+datasDefesaResource.get(
 	"/:ano/:semestre/:id_curso/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -29,7 +29,7 @@ datasDefesaRouter.get(
 );
 
 // Criar nova data de defesa
-datasDefesaRouter.post(
+datasDefesaResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -40,7 +40,7 @@ datasDefesaRouter.post(
 );
 
 // Atualizar data de defesa
-datasDefesaRouter.put(
+datasDefesaResource.put(
 	"/:ano/:semestre/:id_curso/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.OFERTA_TCC.EDITAR]),
@@ -48,11 +48,11 @@ datasDefesaRouter.put(
 );
 
 // Deletar data de defesa
-datasDefesaRouter.delete(
+datasDefesaResource.delete(
 	"/:ano/:semestre/:id_curso/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.OFERTA_TCC.DELETAR]),
 	datasDefesaService.deletaDataDefesa,
 );
 
-module.exports = datasDefesaRouter;
+module.exports = datasDefesaResource;

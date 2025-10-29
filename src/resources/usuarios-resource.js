@@ -1,11 +1,11 @@
 const express = require("express");
 const usuarioService = require("../services/usuarios-service");
 const { auth } = require("../middleware/auth");
-const { autorizacao } = require("../middleware/autorizacao");
-const usuariosService = express.Router();
+
+const usuariosResource = express.Router();
 
 // GET /api/usuarios - Buscar todos os usuários
-usuariosService.get(
+usuariosResource.get(
 	"/",
 	auth.autenticarUsuario,
 	usuarioService.retornaTodosUsuarios,
@@ -13,34 +13,34 @@ usuariosService.get(
 
 // GET /api/usuarios/:userId/cursos - Buscar cursos vinculados ao usuário
 // IMPORTANTE: Esta rota deve vir ANTES da rota /:userId para evitar conflitos
-usuariosService.get(
+usuariosResource.get(
 	"/:userId/cursos",
 	auth.autenticarUsuario,
 	usuarioService.retornaCursosDoUsuario,
 );
 
 // GET /api/usuarios/:userId - Buscar usuário específico
-usuariosService.get(
+usuariosResource.get(
 	"/:userId",
 	auth.autenticarUsuario,
 	usuarioService.retornaUsuarioPorId,
 );
 
 // POST /api/usuarios - Criar novo usuário
-usuariosService.post("/", auth.autenticarUsuario, usuarioService.criaUsuario);
+usuariosResource.post("/", auth.autenticarUsuario, usuarioService.criaUsuario);
 
 // PUT /api/usuarios - Atualizar usuário
-usuariosService.put(
+usuariosResource.put(
 	"/",
 	auth.autenticarUsuario,
 	usuarioService.atualizaUsuario,
 );
 
 // DELETE /api/usuarios/:id - Deletar usuário
-usuariosService.delete(
+usuariosResource.delete(
 	"/:id",
 	auth.autenticarUsuario,
 	usuarioService.deletaUsuario,
 );
 
-module.exports = usuariosService;
+module.exports = usuariosResource;

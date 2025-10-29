@@ -4,13 +4,10 @@ const { auth, passport } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const router = express.Router();
-
-// Autenticação JWT
-router.use(passport.authenticate("jwt", { session: false }));
+const defesaResource = express.Router();
 
 // GET /api/defesas
-router.get(
+defesaResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -21,7 +18,7 @@ router.get(
 );
 
 // GET /api/defesas/tcc/:id_tcc
-router.get(
+defesaResource.get(
 	"/tcc/:id_tcc",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -32,7 +29,7 @@ router.get(
 );
 
 // POST /api/defesas/agendar
-router.post(
+defesaResource.post(
 	"/agendar",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.CRIAR]),
@@ -40,7 +37,7 @@ router.post(
 );
 
 // POST /api/defesas - Criar nova defesa simples
-router.post(
+defesaResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.CRIAR]),
@@ -48,7 +45,7 @@ router.post(
 );
 
 // POST /api/defesas/gerenciar-banca
-router.post(
+defesaResource.post(
 	"/gerenciar-banca",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -59,7 +56,7 @@ router.post(
 );
 
 // PUT /api/defesas/avaliacao/:id_tcc
-router.put(
+defesaResource.put(
 	"/avaliacao/:id_tcc",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.EDITAR]),
@@ -67,7 +64,7 @@ router.put(
 );
 
 // PUT /api/defesas/:id_tcc/:membro_banca
-router.put(
+defesaResource.put(
 	"/:id_tcc/:membro_banca",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.EDITAR]),
@@ -75,11 +72,11 @@ router.put(
 );
 
 // DELETE /api/defesas/:id_tcc/:membro_banca/:fase
-router.delete(
+defesaResource.delete(
 	"/:id_tcc/:membro_banca/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.TRABALHO_CONCLUSAO.DELETAR]),
 	defesaService.deletaDefesa,
 );
 
-module.exports = router;
+module.exports = defesaResource;

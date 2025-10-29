@@ -4,10 +4,10 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const temaTccController = express.Router();
+const temaTccResource = express.Router();
 
 // Rotas para temas de TCC
-temaTccController.get(
+temaTccResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -17,7 +17,7 @@ temaTccController.get(
 	temaTccService.retornaTodosTemasTcc,
 );
 
-temaTccController.get(
+temaTccResource.get(
 	"/curso/:id_curso",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -27,7 +27,7 @@ temaTccController.get(
 	temaTccService.retornaTemasTccPorCurso,
 );
 
-temaTccController.get(
+temaTccResource.get(
 	"/docente/:codigo",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -38,7 +38,7 @@ temaTccController.get(
 );
 
 // Novo endpoint para buscar temas de um orientador por curso
-temaTccController.get(
+temaTccResource.get(
 	"/docente/:codigo/curso/:id_curso",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -48,39 +48,39 @@ temaTccController.get(
 	temaTccService.retornaTemasTccPorDocenteECurso,
 );
 
-temaTccController.post(
+temaTccResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.TEMA_TCC.CRIAR),
 	temaTccService.criaTemaTcc,
 );
 
-temaTccController.put(
+temaTccResource.put(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.TEMA_TCC.EDITAR),
 	temaTccService.atualizaTemaTcc,
 );
 
-temaTccController.patch(
+temaTccResource.patch(
 	"/:id/vagas",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.TEMA_TCC.EDITAR),
 	temaTccService.atualizaVagasTemaTcc,
 );
 
-temaTccController.patch(
+temaTccResource.patch(
 	"/docente/:codigo_docente/curso/:id_curso/vagas",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.TEMA_TCC.EDITAR),
 	temaTccService.atualizaVagasOfertaDocente,
 );
 
-temaTccController.delete(
+temaTccResource.delete(
 	"/:id",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao(Permissoes.TEMA_TCC.DELETAR),
 	temaTccService.deletaTemaTcc,
 );
 
-module.exports = temaTccController;
+module.exports = temaTccResource;

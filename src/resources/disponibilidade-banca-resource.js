@@ -4,10 +4,10 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-const disponibilidadeBancaRouter = express.Router();
+const disponibilidadeBancaResource = express.Router();
 
 // Buscar todas as disponibilidades
-disponibilidadeBancaRouter.get(
+disponibilidadeBancaResource.get(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -18,7 +18,7 @@ disponibilidadeBancaRouter.get(
 );
 
 // Buscar disponibilidade específica
-disponibilidadeBancaRouter.get(
+disponibilidadeBancaResource.get(
 	"/:ano/:semestre/:id_curso/:fase/:codigo_docente/:data_defesa/:hora_defesa",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -29,7 +29,7 @@ disponibilidadeBancaRouter.get(
 );
 
 // Buscar disponibilidades por docente e oferta
-disponibilidadeBancaRouter.get(
+disponibilidadeBancaResource.get(
 	"/docente/:codigo_docente/:ano/:semestre/:id_curso/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -40,7 +40,7 @@ disponibilidadeBancaRouter.get(
 );
 
 // Buscar grade de disponibilidade para um docente e oferta
-disponibilidadeBancaRouter.get(
+disponibilidadeBancaResource.get(
 	"/grade/:codigo_docente/:ano/:semestre/:id_curso/:fase",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -51,7 +51,7 @@ disponibilidadeBancaRouter.get(
 );
 
 // Criar nova disponibilidade
-disponibilidadeBancaRouter.post(
+disponibilidadeBancaResource.post(
 	"/",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -62,7 +62,7 @@ disponibilidadeBancaRouter.post(
 );
 
 // Criar ou atualizar disponibilidade (upsert)
-disponibilidadeBancaRouter.post(
+disponibilidadeBancaResource.post(
 	"/upsert",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -73,7 +73,7 @@ disponibilidadeBancaRouter.post(
 );
 
 // Sincronizar múltiplas disponibilidades
-disponibilidadeBancaRouter.post(
+disponibilidadeBancaResource.post(
 	"/sincronizar",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([
@@ -84,7 +84,7 @@ disponibilidadeBancaRouter.post(
 );
 
 // Atualizar disponibilidade
-disponibilidadeBancaRouter.put(
+disponibilidadeBancaResource.put(
 	"/:ano/:semestre/:id_curso/:fase/:codigo_docente/:data_defesa/:hora_defesa",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.DISPONIBILIDADE_BANCA.EDITAR]),
@@ -92,11 +92,11 @@ disponibilidadeBancaRouter.put(
 );
 
 // Deletar disponibilidade
-disponibilidadeBancaRouter.delete(
+disponibilidadeBancaResource.delete(
 	"/:ano/:semestre/:id_curso/:fase/:codigo_docente/:data_defesa/:hora_defesa",
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissao([Permissoes.DISPONIBILIDADE_BANCA.DELETAR]),
 	disponibilidadeBancaService.deletaDisponibilidade,
 );
 
-module.exports = disponibilidadeBancaRouter;
+module.exports = disponibilidadeBancaResource;

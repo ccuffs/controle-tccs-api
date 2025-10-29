@@ -7,25 +7,25 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 
 const app = express();
-const docentesController = require("./src/controllers/docentes-controller");
-const cursosController = require("./src/controllers/cursos-controller");
-const usuariosController = require("./src/controllers/usuarios-controller");
-const orientadoresController = require("./src/controllers/orientadores-controller");
-const bancaCursoController = require("./src/controllers/banca-curso-controller");
-const orientacoesController = require("./src/controllers/orientacoes-controller");
-const dicentesController = require("./src/controllers/dicentes-controller");
-const ofertasTccController = require("./src/controllers/ofertas-tcc-controller");
-const areaTccController = require("./src/controllers/area-tcc-controller");
-const temaTccController = require("./src/controllers/tema-tcc-controller");
-const trabalhoConclusaoController = require("./src/controllers/trabalho-conclusao-controller");
-const conviteController = require("./src/controllers/convite-controller");
-const authController = require("./src/controllers/auth-controller");
-const datasDefesaController = require("./src/controllers/datas-defesa-controller");
-const disponibilidadeBancaController = require("./src/controllers/disponibilidade-banca-controller");
-const defesaController = require("./src/controllers/defesa-controller");
-const anoSemestreController = require("./src/controllers/ano-semestre-controller");
-const dashboardController = require("./src/controllers/dashboard-controller");
-const declaracoesController = require("./src/controllers/declaracoes-controller");
+const docentesResource = require("./src/resources/docentes-resource");
+const cursosResource = require("./src/resources/cursos-resource");
+const usuariosResource = require("./src/resources/usuarios-resource");
+const orientadoresResource = require("./src/resources/orientadores-resource");
+const bancaCursoResource = require("./src/resources/banca-curso-resource");
+const orientacoesResource = require("./src/resources/orientacoes-resource");
+const dicentesResource = require("./src/resources/dicentes-resource");
+const ofertasTccResource = require("./src/resources/ofertas-tcc-resource");
+const areaTccResource = require("./src/resources/area-tcc-resource");
+const temaTccResource = require("./src/resources/tema-tcc-resource");
+const trabalhoConclusaoResource = require("./src/resources/trabalho-conclusao-resource");
+const conviteResource = require("./src/resources/convite-resource");
+const authResource = require("./src/resources/auth-resource");
+const datasDefesaResource = require("./src/resources/datas-defesa-resource");
+const disponibilidadeBancaResource = require("./src/resources/disponibilidade-banca-resource");
+const defesaResource = require("./src/resources/defesa-resource");
+const anoSemestreResource = require("./src/resources/ano-semestre-resource");
+const dashboardResource = require("./src/resources/dashboard-resource");
+const declaracoesResource = require("./src/resources/declaracoes-resource");
 
 const port = process.env.SERVERPORT || 3010;
 
@@ -48,24 +48,24 @@ app.get("/", (req, res) => {
 });
 
 // Rotas de autenticação
-app.use("/api/auth", authController);
+app.use("/api/auth", authResource);
 
 // Rotas da API
-app.use("/api/docentes", docentesController);
-app.use("/api/cursos", cursosController);
-app.use("/api/usuarios", usuariosController);
-app.use("/api/orientadores", orientadoresController);
-app.use("/api/banca-curso", bancaCursoController);
-app.use("/api/orientacoes", orientacoesController);
-app.use("/api/dicentes", dicentesController);
-app.use("/api/ofertas-tcc", ofertasTccController);
-app.use("/api/areas-tcc", areaTccController);
-app.use("/api/temas-tcc", temaTccController);
-app.use("/api/trabalho-conclusao", trabalhoConclusaoController);
-app.use("/api/convites", conviteController);
-app.use("/api/datas-defesa", datasDefesaController);
-app.use("/api/disponibilidade-banca", disponibilidadeBancaController);
-app.use("/api/defesas", defesaController);
-app.use("/api/ano-semestre", anoSemestreController);
-app.use("/api/dashboard", dashboardController);
-app.use("/api/declaracoes", declaracoesController);
+app.use("/api/docentes", docentesResource);
+app.use("/api/cursos", cursosResource);
+app.use("/api/usuarios", usuariosResource);
+app.use("/api/orientadores", orientadoresResource);
+app.use("/api/banca-curso", bancaCursoResource);
+app.use("/api/orientacoes", orientacoesResource);
+app.use("/api/dicentes", dicentesResource);
+app.use("/api/ofertas-tcc", ofertasTccResource);
+app.use("/api/areas-tcc", areaTccResource);
+app.use("/api/temas-tcc", temaTccResource);
+app.use("/api/trabalho-conclusao", trabalhoConclusaoResource);
+app.use("/api/convites", conviteResource);
+app.use("/api/datas-defesa", datasDefesaResource);
+app.use("/api/disponibilidade-banca", disponibilidadeBancaResource);
+app.use("/api/defesas", defesaResource);
+app.use("/api/ano-semestre", anoSemestreResource);
+app.use("/api/dashboard", dashboardResource);
+app.use("/api/declaracoes", declaracoesResource);
