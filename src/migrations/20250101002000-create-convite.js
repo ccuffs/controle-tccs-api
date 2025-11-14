@@ -62,23 +62,23 @@ module.exports = {
 				type: Sequelize.STRING,
 				allowNull: false,
 			},
-		orientacao: {
-			type: Sequelize.BOOLEAN,
-			allowNull: false,
-			defaultValue: false,
-		},
-		createdAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-		updatedAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-	};
-},
+			orientacao: {
+				type: Sequelize.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
+			},
+			createdAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+			updatedAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+		};
+	},
 
 	async up(queryInterface, Sequelize) {
 		await queryInterface.createTable(
@@ -104,4 +104,3 @@ module.exports = {
 		await queryInterface.dropTable(this.table);
 	},
 };
-

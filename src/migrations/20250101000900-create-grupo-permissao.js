@@ -21,32 +21,32 @@ module.exports = {
 				onUpdate: "CASCADE",
 				onDelete: "CASCADE",
 			},
-		id_permissao: {
-			type: Sequelize.INTEGER,
-			primaryKey: true,
-			allowNull: false,
-			references: {
-				model: {
-					schema: "public",
-					tableName: "permissao",
+			id_permissao: {
+				type: Sequelize.INTEGER,
+				primaryKey: true,
+				allowNull: false,
+				references: {
+					model: {
+						schema: "public",
+						tableName: "permissao",
+					},
+					key: "id",
 				},
-				key: "id",
+				onUpdate: "CASCADE",
+				onDelete: "CASCADE",
 			},
-			onUpdate: "CASCADE",
-			onDelete: "CASCADE",
-		},
-		createdAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-		updatedAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-	};
-},
+			createdAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+			updatedAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+		};
+	},
 
 	async up(queryInterface, Sequelize) {
 		await queryInterface.createTable(
@@ -72,4 +72,3 @@ module.exports = {
 		await queryInterface.dropTable(this.table);
 	},
 };
-

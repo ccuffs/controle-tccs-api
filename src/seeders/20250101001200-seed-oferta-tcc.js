@@ -38,7 +38,7 @@ module.exports = {
 					updatedAt: new Date(),
 				},
 			],
-			{}
+			{},
 		);
 	},
 
@@ -46,4 +46,3 @@ module.exports = {
 		await queryInterface.bulkDelete("oferta_tcc", null, {});
 	},
 };
-

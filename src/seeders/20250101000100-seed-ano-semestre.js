@@ -123,7 +123,7 @@ module.exports = {
 					updatedAt: new Date(),
 				},
 			],
-			{}
+			{},
 		);
 	},
 
@@ -131,4 +131,3 @@ module.exports = {
 		await queryInterface.bulkDelete("ano_semestre", null, {});
 	},
 };
-

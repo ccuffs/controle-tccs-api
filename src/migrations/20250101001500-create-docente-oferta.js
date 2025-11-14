@@ -51,23 +51,23 @@ module.exports = {
 				onUpdate: "CASCADE",
 				onDelete: "CASCADE",
 			},
-		vagas: {
-			type: Sequelize.INTEGER,
-			allowNull: false,
-			defaultValue: 0,
-		},
-		createdAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-		updatedAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-	};
-},
+			vagas: {
+				type: Sequelize.INTEGER,
+				allowNull: false,
+				defaultValue: 0,
+			},
+			createdAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+			updatedAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+		};
+	},
 
 	async up(queryInterface, Sequelize) {
 		await queryInterface.createTable(
@@ -111,4 +111,3 @@ module.exports = {
 		await queryInterface.dropTable(this.table);
 	},
 };
-

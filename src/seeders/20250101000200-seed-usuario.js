@@ -111,7 +111,7 @@ module.exports = {
 					updatedAt: new Date(),
 				},
 			],
-			{}
+			{},
 		);
 	},
 
@@ -119,4 +119,3 @@ module.exports = {
 		await queryInterface.bulkDelete("usuario", null, {});
 	},
 };
-

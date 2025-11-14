@@ -66,7 +66,7 @@ module.exports = {
 					updatedAt: new Date(),
 				},
 			],
-			{}
+			{},
 		);
 	},
 
@@ -74,4 +74,3 @@ module.exports = {
 		await queryInterface.bulkDelete("categoria_permissao", null, {});
 	},
 };
-

@@ -13,30 +13,30 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
-		nome: DataTypes.STRING,
-		sala: DataTypes.INTEGER,
-		siape: DataTypes.INTEGER,
-		id_usuario: {
-			type: DataTypes.STRING,
-			allowNull: true,
+			nome: DataTypes.STRING,
+			sala: DataTypes.INTEGER,
+			siape: DataTypes.INTEGER,
+			id_usuario: {
+				type: DataTypes.STRING,
+				allowNull: true,
+			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
 		},
-		createdAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-		updatedAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-	},
-	{
-		sequelize,
-		tableName: "docente",
-		schema: "public",
-		freezeTableName: true,
-		timestamps: true,
+		{
+			sequelize,
+			tableName: "docente",
+			schema: "public",
+			freezeTableName: true,
+			timestamps: true,
 		},
 	);
 

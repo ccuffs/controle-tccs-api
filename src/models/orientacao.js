@@ -18,27 +18,27 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.INTEGER,
 				allowNull: false,
 			},
-		orientador: {
-			type: DataTypes.BOOLEAN,
-			allowNull: false,
-			defaultValue: false,
+			orientador: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
+			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
 		},
-		createdAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-		updatedAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-	},
-	{
-		tableName: "orientacao",
-		schema: "public",
-		freezeTableName: true,
-		timestamps: true,
+		{
+			tableName: "orientacao",
+			schema: "public",
+			freezeTableName: true,
+			timestamps: true,
 		},
 	);
 

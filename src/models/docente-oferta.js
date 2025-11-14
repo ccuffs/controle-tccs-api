@@ -30,27 +30,27 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 				allowNull: false,
 			},
-		vagas: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			defaultValue: 0,
+			vagas: {
+				type: DataTypes.INTEGER,
+				allowNull: false,
+				defaultValue: 0,
+			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
 		},
-		createdAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-		updatedAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-	},
-	{
-		tableName: "docente_oferta",
-		schema: "public",
-		freezeTableName: true,
-		timestamps: true,
+		{
+			tableName: "docente_oferta",
+			schema: "public",
+			freezeTableName: true,
+			timestamps: true,
 		},
 	);
 

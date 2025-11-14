@@ -22,27 +22,27 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
-		ativo: {
-			type: DataTypes.BOOLEAN,
-			allowNull: false,
-			defaultValue: false,
+			ativo: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
+			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
 		},
-		createdAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-		updatedAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-	},
-	{
-		tableName: "tema_tcc",
-		schema: "public",
-		freezeTableName: true,
-		timestamps: true,
+		{
+			tableName: "tema_tcc",
+			schema: "public",
+			freezeTableName: true,
+			timestamps: true,
 		},
 	);
 

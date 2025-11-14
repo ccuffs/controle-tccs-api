@@ -4,32 +4,32 @@ module.exports = (sequelize, DataTypes) => {
 	const Curso = sequelize.define(
 		"Curso",
 		{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true,
+			id: {
+				type: DataTypes.INTEGER,
+				primaryKey: true,
+				autoIncrement: true,
+			},
+			codigo: DataTypes.INTEGER,
+			nome: DataTypes.TEXT,
+			turno: DataTypes.TEXT,
+			coordenador: DataTypes.STRING,
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
 		},
-		codigo: DataTypes.INTEGER,
-		nome: DataTypes.TEXT,
-		turno: DataTypes.TEXT,
-		coordenador: DataTypes.STRING,
-		createdAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-		updatedAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-	},
-	{
-		sequelize,
-		tableName: "curso",
-		schema: "public",
-		freezeTableName: true,
-		timestamps: true,
+		{
+			sequelize,
+			tableName: "curso",
+			schema: "public",
+			freezeTableName: true,
+			timestamps: true,
 		},
 	);
 

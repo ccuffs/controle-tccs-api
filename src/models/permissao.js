@@ -9,36 +9,36 @@ module.exports = (sequelize, DataTypes) => {
 				primaryKey: true,
 				autoIncrement: true,
 			},
-		codigo: {
-			type: DataTypes.STRING,
-			allowNull: false,
-		},
-		descricao: DataTypes.STRING,
-		codigo_categoria_permissao: {
-			type: DataTypes.STRING,
-			allowNull: false,
-			references: {
-				model: "categoria_permissao",
-				key: "codigo",
+			codigo: {
+				type: DataTypes.STRING,
+				allowNull: false,
+			},
+			descricao: DataTypes.STRING,
+			codigo_categoria_permissao: {
+				type: DataTypes.STRING,
+				allowNull: false,
+				references: {
+					model: "categoria_permissao",
+					key: "codigo",
+				},
+			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
 			},
 		},
-		createdAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-		updatedAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-	},
-	{
-		sequelize,
-		tableName: "permissao",
-		schema: "public",
-		freezeTableName: true,
-		timestamps: true,
+		{
+			sequelize,
+			tableName: "permissao",
+			schema: "public",
+			freezeTableName: true,
+			timestamps: true,
 		},
 	);
 

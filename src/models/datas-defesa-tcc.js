@@ -28,26 +28,26 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.DATEONLY,
 				allowNull: true,
 			},
-		fim: {
-			type: DataTypes.DATEONLY,
-			allowNull: true,
+			fim: {
+				type: DataTypes.DATEONLY,
+				allowNull: true,
+			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
 		},
-		createdAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-		updatedAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-	},
-	{
-		tableName: "datas_defesa_tccs",
-		schema: "public",
-		freezeTableName: true,
-		timestamps: true,
+		{
+			tableName: "datas_defesa_tccs",
+			schema: "public",
+			freezeTableName: true,
+			timestamps: true,
 		},
 	);
 

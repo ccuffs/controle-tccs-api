@@ -55,23 +55,23 @@ module.exports = {
 				primaryKey: true,
 				allowNull: false,
 			},
-		hora_defesa: {
-			type: Sequelize.TIME,
-			primaryKey: true,
-			allowNull: false,
-		},
-		createdAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-		updatedAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-	};
-},
+			hora_defesa: {
+				type: Sequelize.TIME,
+				primaryKey: true,
+				allowNull: false,
+			},
+			createdAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+			updatedAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+		};
+	},
 
 	async up(queryInterface, Sequelize) {
 		await queryInterface.createTable(
@@ -106,4 +106,3 @@ module.exports = {
 		await queryInterface.dropTable(this.table);
 	},
 };
-

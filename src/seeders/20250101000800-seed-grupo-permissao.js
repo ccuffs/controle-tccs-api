@@ -19,8 +19,11 @@ module.exports = {
 		}));
 
 		// Orientador (grupo 3) - permissões específicas
-		const orientadorPermissoes = [1, 11, 14, 16, 17, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33, 36, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
-		const orientadorPermissions = orientadorPermissoes.map(id => ({
+		const orientadorPermissoes = [
+			1, 11, 14, 16, 17, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33, 36, 38,
+			39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+		];
+		const orientadorPermissions = orientadorPermissoes.map((id) => ({
 			id_grupo: 3,
 			id_permissao: id,
 			createdAt: new Date(),
@@ -28,8 +31,11 @@ module.exports = {
 		}));
 
 		// Estudante (grupo 4) - permissões limitadas
-		const estudantePermissoes = [16, 19, 21, 22, 26, 31, 32, 36, 38, 39, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50];
-		const estudantePermissions = estudantePermissoes.map(id => ({
+		const estudantePermissoes = [
+			16, 19, 21, 22, 26, 31, 32, 36, 38, 39, 40, 41, 43, 44, 45, 46, 47,
+			48, 49, 50,
+		];
+		const estudantePermissions = estudantePermissoes.map((id) => ({
 			id_grupo: 4,
 			id_permissao: id,
 			createdAt: new Date(),
@@ -44,7 +50,7 @@ module.exports = {
 				...orientadorPermissions,
 				...estudantePermissions,
 			],
-			{}
+			{},
 		);
 	},
 
@@ -52,4 +58,3 @@ module.exports = {
 		await queryInterface.bulkDelete("grupo_permissao", null, {});
 	},
 };
-

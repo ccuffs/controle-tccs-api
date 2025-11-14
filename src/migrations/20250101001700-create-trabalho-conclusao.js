@@ -82,22 +82,22 @@ module.exports = {
 				allowNull: false,
 				defaultValue: false,
 			},
-		comentarios_tcc: {
-			type: Sequelize.TEXT,
-			allowNull: true,
-		},
-		createdAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-		updatedAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-	};
-},
+			comentarios_tcc: {
+				type: Sequelize.TEXT,
+				allowNull: true,
+			},
+			createdAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+			updatedAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+		};
+	},
 
 	async up(queryInterface, Sequelize) {
 		await queryInterface.createTable(
@@ -139,4 +139,3 @@ module.exports = {
 		await queryInterface.dropTable(this.table);
 	},
 };
-

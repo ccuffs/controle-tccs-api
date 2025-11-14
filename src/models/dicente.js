@@ -15,26 +15,26 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
-		id_usuario: {
-			type: DataTypes.STRING,
-			allowNull: true,
+			id_usuario: {
+				type: DataTypes.STRING,
+				allowNull: true,
+			},
+			createdAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
+			updatedAt: {
+				allowNull: false,
+				type: DataTypes.DATE,
+				defaultValue: DataTypes.NOW,
+			},
 		},
-		createdAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-		updatedAt: {
-			allowNull: false,
-			type: DataTypes.DATE,
-			defaultValue: DataTypes.NOW,
-		},
-	},
-	{
-		tableName: "dicente",
-		schema: "public",
-		freezeTableName: true,
-		timestamps: true,
+		{
+			tableName: "dicente",
+			schema: "public",
+			freezeTableName: true,
+			timestamps: true,
 		},
 	);
 

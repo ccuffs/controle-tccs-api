@@ -21,23 +21,23 @@ module.exports = {
 				type: Sequelize.STRING,
 				allowNull: true,
 			},
-		sistema: {
-			type: Sequelize.INTEGER,
-			allowNull: false,
-			defaultValue: 2,
-		},
-		createdAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-		updatedAt: {
-			type: Sequelize.DATE,
-			allowNull: false,
-			defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-		},
-	};
-},
+			sistema: {
+				type: Sequelize.INTEGER,
+				allowNull: false,
+				defaultValue: 2,
+			},
+			createdAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+			updatedAt: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+			},
+		};
+	},
 
 	async up(queryInterface, Sequelize) {
 		await queryInterface.createTable(
@@ -63,4 +63,3 @@ module.exports = {
 		await queryInterface.dropTable(this.table);
 	},
 };
-

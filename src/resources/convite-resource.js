@@ -4,7 +4,6 @@ const { auth } = require("../middleware/auth");
 const { autorizacao } = require("../middleware/autorizacao");
 const { Permissoes } = require("../enums/permissoes");
 
-
 const conviteResource = express.Router();
 
 // GET /api/convites - Retorna todos os convites com filtros
