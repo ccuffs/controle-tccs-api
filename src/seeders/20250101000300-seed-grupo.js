@@ -12,7 +12,6 @@ module.exports = {
 					sistema: 2,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					id: 2,
@@ -21,7 +20,6 @@ module.exports = {
 					sistema: 2,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					id: 3,
@@ -30,7 +28,6 @@ module.exports = {
 					sistema: 2,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					id: 4,
@@ -39,7 +36,6 @@ module.exports = {
 					sistema: 2,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 			],
 			{}

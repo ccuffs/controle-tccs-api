@@ -13,7 +13,6 @@ module.exports = {
 					publicado: false,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2024,
@@ -23,7 +22,6 @@ module.exports = {
 					publicado: false,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2025,
@@ -33,7 +31,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2020,
@@ -43,7 +40,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2020,
@@ -53,7 +49,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2021,
@@ -63,7 +58,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2021,
@@ -73,7 +67,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2022,
@@ -83,7 +76,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2022,
@@ -93,7 +85,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2023,
@@ -103,7 +94,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2023,
@@ -113,7 +103,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2026,
@@ -123,7 +112,6 @@ module.exports = {
 					publicado: false,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2025,
@@ -133,7 +121,6 @@ module.exports = {
 					publicado: true,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 			],
 			{}

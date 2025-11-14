@@ -8,7 +8,6 @@ module.exports = {
 			id_permissao: i + 1,
 			createdAt: new Date(),
 			updatedAt: new Date(),
-			deletedAt: null,
 		}));
 
 		// Professor (grupo 2) - permissões 6-50 exceto algumas
@@ -17,7 +16,6 @@ module.exports = {
 			id_permissao: i + 6,
 			createdAt: new Date(),
 			updatedAt: new Date(),
-			deletedAt: null,
 		}));
 
 		// Orientador (grupo 3) - permissões específicas
@@ -27,7 +25,6 @@ module.exports = {
 			id_permissao: id,
 			createdAt: new Date(),
 			updatedAt: new Date(),
-			deletedAt: null,
 		}));
 
 		// Estudante (grupo 4) - permissões limitadas
@@ -37,7 +34,6 @@ module.exports = {
 			id_permissao: id,
 			createdAt: new Date(),
 			updatedAt: new Date(),
-			deletedAt: null,
 		}));
 
 		await queryInterface.bulkInsert(

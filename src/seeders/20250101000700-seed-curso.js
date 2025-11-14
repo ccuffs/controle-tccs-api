@@ -13,7 +13,6 @@ module.exports = {
 					coordenador: "claunir.pavan",
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 			],
 			{}

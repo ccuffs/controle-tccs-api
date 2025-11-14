@@ -15,7 +15,6 @@ module.exports = {
 				id_usuario: id,
 				createdAt: new Date(),
 				updatedAt: new Date(),
-				deletedAt: null,
 			})),
 			{}
 		);

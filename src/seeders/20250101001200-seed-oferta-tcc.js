@@ -12,7 +12,6 @@ module.exports = {
 					fase: 1,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2025,
@@ -21,7 +20,6 @@ module.exports = {
 					fase: 2,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2025,
@@ -30,7 +28,6 @@ module.exports = {
 					fase: 1,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 				{
 					ano: 2025,
@@ -39,7 +36,6 @@ module.exports = {
 					fase: 2,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 				},
 			],
 			{}

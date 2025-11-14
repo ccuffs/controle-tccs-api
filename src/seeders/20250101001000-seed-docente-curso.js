@@ -25,7 +25,6 @@ module.exports = {
 				codigo_docente: codigo,
 				createdAt: new Date(),
 				updatedAt: new Date(),
-				deletedAt: null,
 			})),
 			{}
 		);

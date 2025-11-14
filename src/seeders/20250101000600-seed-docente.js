@@ -89,7 +89,7 @@ module.exports = {
 				...d,
 				createdAt: new Date(),
 				updatedAt: new Date(),
-				deletedAt: null,
+,
 			})),
 			{}
 		);

@@ -17,7 +17,6 @@ module.exports = {
 					hora_defesa: hora,
 					createdAt: new Date(),
 					updatedAt: new Date(),
-					deletedAt: null,
 					});
 				}
 			}
