@@ -42,17 +42,12 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.DATE,
 			defaultValue: DataTypes.NOW,
 		},
-		deletedAt: {
-			allowNull: true,
-			type: DataTypes.DATE,
-		},
 	},
 	{
 		tableName: "datas_defesa_tccs",
 		schema: "public",
 		freezeTableName: true,
 		timestamps: true,
-		paranoid: true,
 		},
 	);
 
