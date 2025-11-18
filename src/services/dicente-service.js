@@ -4,6 +4,7 @@ const fs = require("fs");
 const pdf = require("pdf-parse");
 const multer = require("multer");
 const path = require("path");
+const ldap = require("ldapjs");
 
 // Configuração do multer para upload de PDFs
 const storage = multer.diskStorage({
@@ -43,6 +44,191 @@ const upload = multer({
 		fileSize: 10 * 1024 * 1024, // Limite de 10MB
 	},
 });
+
+// Configuração do LDAP
+const ldapConfig = {
+	url: process.env.LDAP_URL || "ldap://localhost:389",
+	bindDN: process.env.LDAP_BIND_DN || "",
+	bindCredentials: process.env.LDAP_BIND_CREDENTIALS || "",
+	searchBase: process.env.LDAP_SEARCH_BASE || "dc=example,dc=com",
+};
+
+/**
+ * Escapa caracteres especiais para filtros LDAP
+ * @param {string} str - String para escapar
+ * @returns {string} String escapada
+ */
+function escapeLdapFilter(str) {
+	if (!str) return "";
+	return str
+		.replace(/\\/g, "\\5c")
+		.replace(/\(/g, "\\28")
+		.replace(/\)/g, "\\29")
+		.replace(/\*/g, "\\2a")
+		.replace(/\//g, "\\2f")
+		.replace(/\0/g, "\\00");
+}
+
+/**
+ * Busca um usuário no LDAP pelo campo cn (Common Name)
+ * @param {string} cn - Nome completo (Common Name) para buscar
+ * @returns {Promise<Object|null>} Objeto com uid, mail e uffsEmailAlternativo ou null
+ */
+async function buscarDadosLdapPorCn(cn) {
+	return new Promise((resolve, reject) => {
+		const client = ldap.createClient({
+			url: ldapConfig.url,
+		});
+
+		// Bind (autenticação) no LDAP
+		client.bind(ldapConfig.bindDN, ldapConfig.bindCredentials, (err) => {
+			if (err) {
+				client.unbind();
+				return reject(new Error(`Erro ao conectar no LDAP: ${err.message}`));
+			}
+
+			// Escapar o nome para o filtro LDAP
+			const cnEscaped = escapeLdapFilter(cn);
+
+			// Buscar pelo campo cn
+			const searchOptions = {
+				filter: `(cn=${cnEscaped})`,
+				scope: "sub",
+				attributes: ["uid", "cn", "mail", "uffsEmailAlternativo"],
+			};
+
+			client.search(ldapConfig.searchBase, searchOptions, (err, res) => {
+				if (err) {
+					client.unbind();
+					return reject(new Error(`Erro na busca LDAP: ${err.message}`));
+				}
+
+				let found = false;
+
+				res.on("searchEntry", (entry) => {
+					found = true;
+					// uid pode ser um array ou string
+					const uid = Array.isArray(entry.object.uid)
+						? entry.object.uid[0]
+						: entry.object.uid;
+					// mail pode ser um array ou string
+					const mail = Array.isArray(entry.object.mail)
+						? entry.object.mail[0]
+						: entry.object.mail;
+					// uffsEmailAlternativo pode ser um array ou string
+					const uffsEmailAlternativo = Array.isArray(
+						entry.object.uffsEmailAlternativo,
+					)
+						? entry.object.uffsEmailAlternativo[0]
+						: entry.object.uffsEmailAlternativo;
+					client.unbind();
+					resolve({
+						uid: uid || null,
+						mail: mail || null,
+						uffsEmailAlternativo: uffsEmailAlternativo || null,
+					});
+				});
+
+				res.on("error", (err) => {
+					client.unbind();
+					reject(new Error(`Erro na busca LDAP: ${err.message}`));
+				});
+
+				res.on("end", (result) => {
+					if (!found) {
+						client.unbind();
+						resolve(null);
+					}
+				});
+			});
+		});
+	});
+}
+
+/**
+ * Busca dados no LDAP e cria/atualiza usuário com associações
+ * @param {string} nome - Nome do dicente para buscar no LDAP
+ * @param {Object} transaction - Transação do Sequelize
+ * @param {number} id_curso - ID do curso para associar ao usuário
+ * @returns {Promise<Object|null>} Objeto com uid e emailAlternativo ou null
+ */
+async function buscarLdapECriarUsuario(nome, transaction, id_curso) {
+	try {
+		// Buscar no LDAP
+		const resultadoLdap = await buscarDadosLdapPorCn(nome);
+
+		if (!resultadoLdap || !resultadoLdap.uid) {
+			return null;
+		}
+
+		const uid = resultadoLdap.uid;
+		const mail = resultadoLdap.mail || null;
+		const uffsEmailAlternativo = resultadoLdap.uffsEmailAlternativo || null;
+
+		// 1. Criar ou atualizar usuário
+		const [usuario, usuarioCriado] = await model.Usuario.findOrCreate({
+			where: { id: uid },
+			defaults: {
+				id: uid,
+				nome: nome,
+				email: mail,
+			},
+			transaction,
+		});
+
+		// Se o usuário já existia, atualizar nome e email se necessário
+		if (!usuarioCriado) {
+			const precisaAtualizar =
+				usuario.nome !== nome || usuario.email !== mail;
+			if (precisaAtualizar) {
+				await usuario.update(
+					{
+						nome: nome,
+						email: mail,
+					},
+					{ transaction },
+				);
+			}
+		}
+
+		// 2. Criar registro em usuario_curso com o id_curso fornecido
+		if (id_curso) {
+			await model.UsuarioCurso.findOrCreate({
+				where: {
+					id_usuario: uid,
+					id_curso: id_curso,
+				},
+				defaults: {
+					id_usuario: uid,
+					id_curso: id_curso,
+				},
+				transaction,
+			});
+		}
+
+		// 3. Criar registro em usuario_grupo (id_grupo = 4)
+		await model.UsuarioGrupo.findOrCreate({
+			where: {
+				id_usuario: uid,
+				id_grupo: 4,
+			},
+			defaults: {
+				id_usuario: uid,
+				id_grupo: 4,
+			},
+			transaction,
+		});
+
+		return {
+			uid: uid,
+			emailAlternativo: uffsEmailAlternativo,
+		};
+	} catch (error) {
+		console.error("Erro ao buscar LDAP e criar usuário:", error);
+		// Retorna null em caso de erro para não bloquear a inserção do dicente
+		return null;
+	}
+}
 
 // Função para retornar todos os dicentes
 const retornaTodosDicentes = async (req, res) => {
@@ -314,21 +500,71 @@ const inserirMultiplosDicentesComOrientacao = async (
 		};
 
 		for (const dicenteData of dicentes) {
+			const transaction = await model.sequelize.transaction();
 			try {
 				// Verifica se o dicente já existe
 				const dicenteExistente = await model.Dicente.findByPk(
 					dicenteData.matricula,
+					{ transaction },
 				);
 
+				let dadosLdap = null;
+				let dicenteCriado = false;
+
 				if (!dicenteExistente) {
+					// Buscar no LDAP e criar usuário antes de criar o dicente
+					dadosLdap = await buscarLdapECriarUsuario(
+						dicenteData.nome,
+						transaction,
+						orientacaoData.id_curso,
+					);
+
+					// Preparar dados do dicente com informações do LDAP
+					const dadosDicente = {
+						...dicenteData,
+					};
+
+					// Se encontrou dados no LDAP, atualizar com id_usuario e email alternativo
+					if (dadosLdap) {
+						dadosDicente.id_usuario = dadosLdap.uid;
+						if (dadosLdap.emailAlternativo) {
+							dadosDicente.email = dadosLdap.emailAlternativo;
+						}
+					}
+
 					// Cria o novo dicente se não existir
-					await model.Dicente.create(dicenteData);
+					await model.Dicente.create(dadosDicente, { transaction });
+					dicenteCriado = true;
 					resultados.detalhes.push({
 						matricula: dicenteData.matricula,
 						nome: dicenteData.nome,
-						status: "dicente_inserido",
+						status: dadosLdap
+							? "dicente_inserido_com_usuario"
+							: "dicente_inserido",
 					});
 				} else {
+					// Se o dicente já existe, tentar buscar no LDAP e atualizar
+					if (!dicenteExistente.id_usuario) {
+						dadosLdap = await buscarLdapECriarUsuario(
+							dicenteData.nome,
+							transaction,
+							orientacaoData.id_curso,
+						);
+
+						if (dadosLdap) {
+							const emailAtualizado = dadosLdap.emailAlternativo
+								? dadosLdap.emailAlternativo
+								: dicenteExistente.email;
+							await dicenteExistente.update(
+								{
+									id_usuario: dadosLdap.uid,
+									email: emailAtualizado,
+								},
+								{ transaction },
+							);
+						}
+					}
+
 					resultados.detalhes.push({
 						matricula: dicenteData.matricula,
 						nome: dicenteData.nome,
@@ -345,13 +581,15 @@ const inserirMultiplosDicentesComOrientacao = async (
 						fase: orientacaoData.fase,
 						matricula: dicenteData.matricula,
 					},
+					transaction,
 				});
 
 				let tccId;
 
 				if (!tccExistente) {
 					// Cria o trabalho de conclusão primeiro
-					const novoTcc = await model.TrabalhoConclusao.create({
+					const novoTcc = await model.TrabalhoConclusao.create(
+						{
 						ano: orientacaoData.ano,
 						semestre: orientacaoData.semestre,
 						id_curso: orientacaoData.id_curso,
@@ -361,7 +599,9 @@ const inserirMultiplosDicentesComOrientacao = async (
 						titulo: null, // Será definido posteriormente
 						resumo: null, // Será definido posteriormente
 						etapa: 0, // Etapa inicial
-					});
+						},
+						{ transaction },
+					);
 
 					tccId = novoTcc.id;
 
@@ -370,8 +610,15 @@ const inserirMultiplosDicentesComOrientacao = async (
 						(d) => d.matricula === dicenteData.matricula,
 					);
 					if (detalheExistente) {
-						if (detalheExistente.status === "dicente_inserido") {
-							detalheExistente.status = "dicente_e_tcc_inseridos";
+						if (
+							detalheExistente.status === "dicente_inserido" ||
+							detalheExistente.status === "dicente_inserido_com_usuario"
+						) {
+							detalheExistente.status = detalheExistente.status.includes(
+								"com_usuario",
+							)
+								? "dicente_e_tcc_inseridos_com_usuario"
+								: "dicente_e_tcc_inseridos";
 						} else {
 							detalheExistente.status = "tcc_inserido";
 						}
@@ -384,9 +631,15 @@ const inserirMultiplosDicentesComOrientacao = async (
 						(d) => d.matricula === dicenteData.matricula,
 					);
 					if (detalheExistente) {
-						if (detalheExistente.status === "dicente_inserido") {
-							detalheExistente.status =
-								"dicente_inserido_tcc_ja_existe";
+						if (
+							detalheExistente.status === "dicente_inserido" ||
+							detalheExistente.status === "dicente_inserido_com_usuario"
+						) {
+							detalheExistente.status = detalheExistente.status.includes(
+								"com_usuario",
+							)
+								? "dicente_inserido_tcc_ja_existe_com_usuario"
+								: "dicente_inserido_tcc_ja_existe";
 						} else {
 							detalheExistente.status = "tcc_ja_existe";
 						}
@@ -401,6 +654,7 @@ const inserirMultiplosDicentesComOrientacao = async (
 							codigo_docente: orientacaoData.codigo_docente,
 							id_tcc: tccId,
 						},
+						transaction,
 					});
 
 					if (!orientacaoExistente) {
@@ -411,18 +665,22 @@ const inserirMultiplosDicentesComOrientacao = async (
 									id_tcc: tccId,
 									orientador: true,
 								},
+								transaction,
 							});
 
 						const isOrientadorPrincipal =
 							orientacaoData.orientador ||
 							!orientadorPrincipalExistente;
 
-						await model.Orientacao.create({
+						await model.Orientacao.create(
+							{
 							id: null, // Auto-increment
 							codigo_docente: orientacaoData.codigo_docente,
 							id_tcc: tccId,
 							orientador: isOrientadorPrincipal,
-						});
+							},
+							{ transaction },
+						);
 
 						// Atualiza o status no detalhe
 						const detalheExistente = resultados.detalhes.find(
@@ -468,8 +726,12 @@ const inserirMultiplosDicentesComOrientacao = async (
 					}
 				}
 
+				// Commit da transação
+				await transaction.commit();
 				resultados.sucessos++;
 			} catch (error) {
+				// Rollback da transação em caso de erro
+				await transaction.rollback();
 				console.log("Erro ao inserir dicente/tcc/orientação:", error);
 				resultados.erros++;
 				resultados.detalhes.push({
