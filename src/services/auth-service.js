@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const authRepository = require("../repository/auth-repository");
 const permissoesService = require("./permissoes-service");
+const { passport } = require("../middleware/auth");
 
 const gerarToken = (usuario) => {
 	const payload = {
@@ -20,40 +21,122 @@ const gerarToken = (usuario) => {
 	);
 };
 
-const fazerLogin = async (userId, senha = null) => {
-	try {
-		// Buscar usuário pelo ID
-		const usuario = await authRepository.buscarUsuarioPorId(userId);
+/**
+ * Verifica se a autenticação LDAP está habilitada
+ * @returns {boolean} True se LDAP está habilitado
+ */
+const isLdapEnabled = () => {
+	const enabled = process.env.LDAP_ENABLED;
+	// Considera habilitado se a variável não existir ou for 'true'
+	return enabled === undefined || enabled === "true" || enabled === "1";
+};
 
-		if (!usuario) {
-			throw new Error("Usuário não encontrado");
-		}
-
-		// Aqui você pode adicionar validação de senha se necessário
-		// Por exemplo, se tiver um campo senha no modelo Usuario:
-		// if (senha && !bcrypt.compareSync(senha, usuario.senha)) {
-		//     throw new Error('Senha incorreta');
-		// }
-
-		// Gerar token
-		const token = gerarToken(usuario);
-
-		// Retornar dados básicos do usuário e token
-		// Permissões serão buscadas apenas quando necessário
-		return {
-			token,
-			usuario: {
-				id: usuario.id,
-				nome: usuario.nome,
-				email: usuario.email,
-				grupos: usuario.grupos.map((grupo) => ({
-					id: grupo.id,
-					nome: grupo.nome,
-					descricao: grupo.descricao,
-					consulta_todos: grupo.consulta_todos,
-				})),
+/**
+ * Autentica o usuário via LDAP
+ * @param {string} userId - ID do usuário (username LDAP)
+ * @param {string} senha - Senha do usuário
+ * @returns {Promise<Object>} Dados do usuário do LDAP se autenticado
+ */
+const autenticarLdap = (userId, senha) => {
+	return new Promise((resolve, reject) => {
+		const req = {
+			body: {
+				username: userId,
+				password: senha,
 			},
 		};
+
+		passport.authenticate(
+			"ldapauth",
+			{ session: false },
+			(err, user, info) => {
+				if (err) {
+					return reject(err);
+				}
+
+				if (!user) {
+					return reject(new Error("Credenciais inválidas"));
+				}
+
+				resolve(user);
+			},
+		)(req);
+	});
+};
+
+const fazerLogin = async (userId, senha = null) => {
+	try {
+		// Verificar se LDAP está habilitado
+		const ldapEnabled = isLdapEnabled();
+
+		if (ldapEnabled) {
+			// Validar que a senha foi fornecida quando LDAP está habilitado
+			if (!senha) {
+				throw new Error("Senha é obrigatória");
+			}
+
+			// Autenticar via LDAP
+			const dadosLdap = await autenticarLdap(userId, senha);
+
+			// Buscar usuário no banco de dados pelo ID retornado do LDAP
+			const usuario = await authRepository.buscarUsuarioPorId(
+				dadosLdap.id,
+			);
+
+			if (!usuario) {
+				throw new Error("Usuário não encontrado");
+			}
+
+			// Gerar token
+			const token = gerarToken(usuario);
+
+			// Retornar dados básicos do usuário e token
+			return {
+				token,
+				usuario: {
+					id: usuario.id,
+					nome: usuario.nome,
+					email: usuario.email,
+					grupos: usuario.grupos.map((grupo) => ({
+						id: grupo.id,
+						nome: grupo.nome,
+						descricao: grupo.descricao,
+						consulta_todos: grupo.consulta_todos,
+					})),
+				},
+			};
+		} else {
+			// LDAP desabilitado - autenticação sem senha (modo desenvolvimento)
+			console.warn(
+				"ATENÇÃO: LDAP desabilitado - autenticação sem validação de senha",
+			);
+
+			// Buscar usuário no banco de dados pelo ID
+			const usuario = await authRepository.buscarUsuarioPorId(userId);
+
+			if (!usuario) {
+				throw new Error("Usuário não encontrado");
+			}
+
+			// Gerar token
+			const token = gerarToken(usuario);
+
+			// Retornar dados básicos do usuário e token
+			return {
+				token,
+				usuario: {
+					id: usuario.id,
+					nome: usuario.nome,
+					email: usuario.email,
+					grupos: usuario.grupos.map((grupo) => ({
+						id: grupo.id,
+						nome: grupo.nome,
+						descricao: grupo.descricao,
+						consulta_todos: grupo.consulta_todos,
+					})),
+				},
+			};
+		}
 	} catch (error) {
 		console.error("Erro no login:", error);
 		throw error;

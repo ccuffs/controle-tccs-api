@@ -19,7 +19,7 @@ const login = async (req, res) => {
 			});
 		}
 
-		// Realizar login
+		// Realizar login (senha pode ser opcional se LDAP estiver desabilitado)
 		const resultado = await authService.fazerLogin(userId, senha);
 
 		res.status(200).json({
@@ -35,7 +35,16 @@ const login = async (req, res) => {
 			});
 		}
 
-		if (error.message === "Senha incorreta") {
+		if (error.message === "Senha é obrigatória") {
+			return res.status(400).json({
+				message: "Senha é obrigatória",
+			});
+		}
+
+		if (
+			error.message === "Senha incorreta" ||
+			error.message === "Credenciais inválidas"
+		) {
 			return res.status(401).json({
 				message: "ID do usuário ou senha incorretos",
 			});
