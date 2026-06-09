@@ -111,4 +111,30 @@ dashboardResource.get(
 	dashboardService.contarDefesasAceitasPorDocente,
 );
 
+// GET /api/dashboard/estudantes-sem-convite-banca
+// Retorna lista de estudantes que ainda não enviaram convites para a banca
+dashboardResource.get(
+	"/estudantes-sem-convite-banca",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ADMIN,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.ORIENTADOR,
+	]),
+	dashboardService.listarEstudantesSemConviteBanca,
+);
+
+// GET /api/dashboard/docentes-sem-disponibilidade-banca
+// Retorna lista de docentes (BancaCurso) sem disponibilidade de banca para a oferta corrente
+dashboardResource.get(
+	"/docentes-sem-disponibilidade-banca",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ADMIN,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.ORIENTADOR,
+	]),
+	dashboardService.listarDocentesSemDisponibilidadeBanca,
+);
+
 module.exports = dashboardResource;

@@ -188,4 +188,71 @@ dashboardRepository.buscarDefesasAgendadas = async (where, include) => {
 	});
 };
 
+// Buscar IDs de TCCs que possuem ao menos um convite de banca
+dashboardRepository.buscarIdsTccsComConviteBanca = async (where, include) => {
+	return await model.Convite.findAll({
+		attributes: ["id_tcc"],
+		where,
+		include,
+		raw: true,
+	});
+};
+
+// Buscar códigos de docentes que já receberam convites de banca na oferta
+dashboardRepository.buscarCodigosDocentesComConviteBanca = async (
+	where,
+	include,
+) => {
+	const { fn, col } = model.Sequelize;
+	return await model.Convite.findAll({
+		attributes: [
+			[fn("DISTINCT", col("Convite.codigo_docente")), "codigo_docente"],
+		],
+		where,
+		include,
+		raw: true,
+	});
+};
+
+// Buscar estudantes sem convite de banca enviado
+dashboardRepository.buscarEstudantesSemConviteBanca = async (
+	where,
+	include,
+) => {
+	return await model.TrabalhoConclusao.findAll({
+		attributes: ["id", "matricula", "fase", "id_curso", "ano", "semestre"],
+		where,
+		include,
+		distinct: true,
+		subQuery: false,
+	});
+};
+
+// Buscar códigos de docentes que já possuem disponibilidade de banca para a oferta
+dashboardRepository.buscarCodigosDocentesComDisponibilidade = async (where) => {
+	return await model.DocenteDisponibilidadeBanca.findAll({
+		attributes: [
+			[
+				model.Sequelize.fn(
+					"DISTINCT",
+					model.Sequelize.col("codigo_docente"),
+				),
+				"codigo_docente",
+			],
+		],
+		where,
+		raw: true,
+	});
+};
+
+// Buscar docentes cadastrados em BancaCurso (com dados do Docente)
+dashboardRepository.buscarDocentesBancaCurso = async (where, include) => {
+	return await model.BancaCurso.findAll({
+		where,
+		include,
+		raw: true,
+		nest: true,
+	});
+};
+
 module.exports = dashboardRepository;

@@ -841,6 +841,296 @@ const buscarDefesasAgendadas = async (filtros) => {
 	};
 };
 
+// Função handler para listar estudantes sem convite de banca
+const listarEstudantesSemConviteBanca = async (req, res) => {
+	try {
+		const { ano, semestre, id_curso, fase, codigo_docente } = req.query;
+		const filtros = {
+			ano: ano ? parseInt(ano) : undefined,
+			semestre: semestre ? parseInt(semestre) : undefined,
+			id_curso: id_curso ? parseInt(id_curso) : undefined,
+			fase: fase ? parseInt(fase) : undefined,
+			codigo_docente: codigo_docente || undefined,
+		};
+
+		const resultado = await calcularEstudantesSemConviteBanca(filtros);
+		res.status(200).json(resultado);
+	} catch (error) {
+		console.error("Erro ao obter estudantes sem convite de banca:", error);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
+
+/**
+ * Função utilitária para listar TCCs sem nenhum convite de banca enviado
+ */
+const calcularEstudantesSemConviteBanca = async (filtros) => {
+	const { ano, semestre, id_curso, fase, codigo_docente } = filtros || {};
+
+	let anoAlvo = ano;
+	let semestreAlvo = semestre;
+
+	if (!anoAlvo || !semestreAlvo) {
+		const atual = await calcularAnoSemestreAtual();
+		anoAlvo = atual.ano;
+		semestreAlvo = atual.semestre;
+	}
+
+	const Op = require("../models").Sequelize.Op;
+
+	const tccWhere = {
+		ano: parseInt(anoAlvo),
+		semestre: parseInt(semestreAlvo),
+	};
+	if (fase) tccWhere.fase = parseInt(fase);
+	if (id_curso) tccWhere.id_curso = parseInt(id_curso);
+
+	// 1) Obter IDs de TCCs que já possuem pelo menos um convite de banca enviado
+	const conviteBancaWhere = { orientacao: false };
+	const conviteBancaIncludeTcc = [
+		{
+			model: require("../models").TrabalhoConclusao,
+			required: true,
+			attributes: [],
+			where: tccWhere,
+		},
+	];
+
+	const tccsComConvite =
+		await dashboardRepository.buscarIdsTccsComConviteBanca(
+			conviteBancaWhere,
+			conviteBancaIncludeTcc,
+		);
+
+	const idsTccsComConvite = [
+		...new Set(tccsComConvite.map((c) => c.id_tcc)),
+	];
+
+	// 2) Buscar TCCs sem convite de banca
+	const tccFinalWhere = {
+		...tccWhere,
+		...(idsTccsComConvite.length > 0
+			? { id: { [Op.notIn]: idsTccsComConvite } }
+			: {}),
+	};
+
+	const dicenteInclude = {
+		model: require("../models").Dicente,
+		attributes: ["matricula", "nome"],
+	};
+
+	const cursoInclude = {
+		model: require("../models").Curso,
+		attributes: ["id", "nome"],
+	};
+
+	const include = [dicenteInclude, cursoInclude];
+
+	// Para orientador: filtrar apenas os TCCs orientados pelo docente
+	if (codigo_docente) {
+		include.push({
+			model: require("../models").Orientacao,
+			required: true,
+			attributes: [],
+			where: {
+				codigo_docente: String(codigo_docente),
+				orientador: true,
+			},
+		});
+	}
+
+	const tccs = await dashboardRepository.buscarEstudantesSemConviteBanca(
+		tccFinalWhere,
+		include,
+	);
+
+	const itens = tccs.map((tcc) => {
+		const t = tcc.toJSON ? tcc.toJSON() : tcc;
+		return {
+			id_tcc: t.id,
+			matricula: String(t.Dicente?.matricula || t.matricula || ""),
+			nome: t.Dicente?.nome || "",
+			id_curso: t.id_curso,
+			nomeCurso: t.Curso?.nome || "",
+			fase: t.fase,
+			faseLabel: String(t.fase) === "1" ? "Projeto" : "TCC",
+		};
+	});
+
+	itens.sort((a, b) => String(a.nome).localeCompare(String(b.nome), "pt"));
+
+	return {
+		ano: anoAlvo,
+		semestre: semestreAlvo,
+		fase: fase ? parseInt(fase) : undefined,
+		id_curso: id_curso ? parseInt(id_curso) : undefined,
+		codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+		total: itens.length,
+		itens,
+	};
+};
+
+// Função handler para listar docentes sem disponibilidade de banca
+const listarDocentesSemDisponibilidadeBanca = async (req, res) => {
+	try {
+		const { ano, semestre, id_curso, fase } = req.query;
+		const filtros = {
+			ano: ano ? parseInt(ano) : undefined,
+			semestre: semestre ? parseInt(semestre) : undefined,
+			id_curso: id_curso ? parseInt(id_curso) : undefined,
+			fase: fase ? parseInt(fase) : undefined,
+		};
+
+		const resultado = await calcularDocentesSemDisponibilidadeBanca(filtros);
+		res.status(200).json(resultado);
+	} catch (error) {
+		console.error(
+			"Erro ao obter docentes sem disponibilidade de banca:",
+			error,
+		);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
+
+/**
+ * Função utilitária para listar docentes de BancaCurso sem nenhuma
+ * disponibilidade de banca informada para a oferta corrente
+ */
+const calcularDocentesSemDisponibilidadeBanca = async (filtros) => {
+	const { ano, semestre, id_curso, fase } = filtros || {};
+
+	let anoAlvo = ano;
+	let semestreAlvo = semestre;
+
+	if (!anoAlvo || !semestreAlvo) {
+		const atual = await calcularAnoSemestreAtual();
+		anoAlvo = atual.ano;
+		semestreAlvo = atual.semestre;
+	}
+
+	const tccWhere = {
+		ano: parseInt(anoAlvo),
+		semestre: parseInt(semestreAlvo),
+	};
+	if (fase) tccWhere.fase = parseInt(fase);
+	if (id_curso) tccWhere.id_curso = parseInt(id_curso);
+
+	// 1) Buscar códigos de docentes que JÁ receberam convites de banca na oferta
+	const conviteWhere = { orientacao: false };
+	const conviteIncludeTcc = [
+		{
+			model: require("../models").TrabalhoConclusao,
+			required: true,
+			attributes: [],
+			where: tccWhere,
+		},
+	];
+
+	const docentesComConvite =
+		await dashboardRepository.buscarCodigosDocentesComConviteBanca(
+			conviteWhere,
+			conviteIncludeTcc,
+		);
+
+	const codigosComConvite = new Set(
+		docentesComConvite.map((d) => d.codigo_docente),
+	);
+
+	// Sem nenhum convite de banca na oferta → lista vazia
+	if (codigosComConvite.size === 0) {
+		return {
+			ano: anoAlvo,
+			semestre: semestreAlvo,
+			fase: fase ? parseInt(fase) : undefined,
+			id_curso: id_curso ? parseInt(id_curso) : undefined,
+			total: 0,
+			itens: [],
+		};
+	}
+
+	// 2) Buscar códigos de docentes que JÁ informaram disponibilidade para a oferta
+	const dispWhere = {
+		ano: parseInt(anoAlvo),
+		semestre: parseInt(semestreAlvo),
+	};
+	if (id_curso) dispWhere.id_curso = parseInt(id_curso);
+	if (fase) dispWhere.fase = parseInt(fase);
+
+	const docentesComDisp =
+		await dashboardRepository.buscarCodigosDocentesComDisponibilidade(
+			dispWhere,
+		);
+
+	const codigosComDisp = new Set(docentesComDisp.map((d) => d.codigo_docente));
+
+	// 3) Buscar dados dos docentes (nome) que têm convite mas NÃO têm disponibilidade
+	const codigosSemDisp = [...codigosComConvite].filter(
+		(c) => !codigosComDisp.has(c),
+	);
+
+	if (codigosSemDisp.length === 0) {
+		return {
+			ano: anoAlvo,
+			semestre: semestreAlvo,
+			fase: fase ? parseInt(fase) : undefined,
+			id_curso: id_curso ? parseInt(id_curso) : undefined,
+			total: 0,
+			itens: [],
+		};
+	}
+
+	const Op = require("../models").Sequelize.Op;
+
+	const bancaWhere = { codigo_docente: { [Op.in]: codigosSemDisp } };
+	if (id_curso) bancaWhere.id_curso = parseInt(id_curso);
+
+	const includeDocente = [
+		{
+			model: require("../models").Docente,
+			as: "docente",
+			attributes: ["codigo", "nome"],
+		},
+	];
+
+	const docentesBanca = await dashboardRepository.buscarDocentesBancaCurso(
+		bancaWhere,
+		includeDocente,
+	);
+
+	// Deduplica por código (pode aparecer em vários cursos quando sem filtro de curso)
+	const docentesMap = new Map();
+	for (const bc of docentesBanca) {
+		const codigo = bc.codigo_docente;
+		if (!codigo) continue;
+		if (!docentesMap.has(codigo)) {
+			docentesMap.set(codigo, {
+				codigo_docente: codigo,
+				nome: bc.docente?.nome || codigo,
+			});
+		}
+	}
+
+	// Garante que docentes com convite mas sem entrada em BancaCurso também apareçam
+	for (const codigo of codigosSemDisp) {
+		if (!docentesMap.has(codigo)) {
+			docentesMap.set(codigo, { codigo_docente: codigo, nome: codigo });
+		}
+	}
+
+	const itens = Array.from(docentesMap.values()).sort((a, b) =>
+		String(a.nome).localeCompare(String(b.nome), "pt"),
+	);
+
+	return {
+		ano: anoAlvo,
+		semestre: semestreAlvo,
+		fase: fase ? parseInt(fase) : undefined,
+		id_curso: id_curso ? parseInt(id_curso) : undefined,
+		total: itens.length,
+		itens,
+	};
+};
+
 module.exports = {
 	contarDicentesComOrientador,
 	contarConvitesBancaStatus,
@@ -850,4 +1140,6 @@ module.exports = {
 	contarConvitesOrientacaoStatus,
 	contarOrientandosPorDocente,
 	contarDefesasAceitasPorDocente,
+	listarEstudantesSemConviteBanca,
+	listarDocentesSemDisponibilidadeBanca,
 };
