@@ -13,7 +13,8 @@ declaracoesResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ORIENTADOR,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.BANCA,
 		Permissoes.GRUPOS.ADMIN,
 	]),
 	declaracoesService.listarDeclaracoes,
@@ -26,7 +27,8 @@ declaracoesResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ORIENTADOR,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.BANCA,
 		Permissoes.GRUPOS.ADMIN,
 	]),
 	declaracoesService.gerarDeclaracao,

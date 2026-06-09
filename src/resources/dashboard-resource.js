@@ -13,7 +13,7 @@ dashboardResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ADMIN,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
 		Permissoes.GRUPOS.ORIENTADOR,
 	]),
 	dashboardService.contarDicentesComOrientador,
@@ -26,7 +26,7 @@ dashboardResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ADMIN,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
 		Permissoes.GRUPOS.ORIENTADOR,
 	]),
 	dashboardService.contarConvitesBancaStatus,
@@ -39,7 +39,7 @@ dashboardResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ADMIN,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
 		Permissoes.GRUPOS.ORIENTADOR,
 	]),
 	dashboardService.listarDefesasAgendadas,
@@ -52,7 +52,7 @@ dashboardResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ADMIN,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
 		Permissoes.GRUPOS.ORIENTADOR,
 	]),
 	dashboardService.contarTccPorEtapa,
@@ -65,7 +65,7 @@ dashboardResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ADMIN,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
 		Permissoes.GRUPOS.ORIENTADOR,
 	]),
 	dashboardService.contarConvitesPorPeriodo,
@@ -78,7 +78,7 @@ dashboardResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ADMIN,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
 		Permissoes.GRUPOS.ORIENTADOR,
 	]),
 	dashboardService.contarConvitesOrientacaoStatus,
@@ -92,7 +92,7 @@ dashboardResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ADMIN,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
 		Permissoes.GRUPOS.ORIENTADOR,
 	]),
 	dashboardService.contarOrientandosPorDocente,
@@ -105,7 +105,7 @@ dashboardResource.get(
 	auth.autenticarUsuario,
 	autorizacao.verificarPermissaoGrupo([
 		Permissoes.GRUPOS.ADMIN,
-		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
 		Permissoes.GRUPOS.ORIENTADOR,
 	]),
 	dashboardService.contarDefesasAceitasPorDocente,
