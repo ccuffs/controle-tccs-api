@@ -1,4 +1,9 @@
 "use strict";
+const {
+	ensureUpdatedAtFunction,
+	ensureUpdatedAtTrigger,
+} = require("./helpers/updated-at");
+
 module.exports = {
 	table: {
 		schema: "public",
@@ -39,24 +44,12 @@ module.exports = {
 			this.getTableData(Sequelize),
 		);
 
-		// Criar função para atualizar automaticamente o campo updatedAt (apenas na primeira migration)
-		await queryInterface.sequelize.query(`
-			CREATE OR REPLACE FUNCTION update_updated_at_column()
-			RETURNS TRIGGER AS $$
-			BEGIN
-				NEW."updatedAt" = CURRENT_TIMESTAMP;
-				RETURN NEW;
-			END;
-			$$ language 'plpgsql';
-		`);
-
-		// Criar trigger para esta tabela
-		await queryInterface.sequelize.query(`
-			CREATE TRIGGER update_usuario_updated_at
-			BEFORE UPDATE ON public.usuario
-			FOR EACH ROW
-			EXECUTE FUNCTION update_updated_at_column();
-		`);
+		await ensureUpdatedAtFunction(queryInterface.sequelize);
+		await ensureUpdatedAtTrigger(
+			queryInterface.sequelize,
+			"usuario",
+			"update_usuario_updated_at",
+		);
 	},
 
 	async down(queryInterface, Sequelize) {

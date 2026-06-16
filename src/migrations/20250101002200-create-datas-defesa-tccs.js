@@ -1,4 +1,7 @@
 "use strict";
+const { ensureUpdatedAtTrigger } = require("./helpers/updated-at");
+const { ensureForeignKey } = require("./helpers/foreign-key");
+
 module.exports = {
 	table: {
 		schema: "public",
@@ -63,22 +66,19 @@ module.exports = {
 			this.getTableData(Sequelize),
 		);
 
-		// Adicionar constraint de foreign key composta para oferta_tcc
-		await queryInterface.sequelize.query(`
+		await ensureForeignKey(
+			queryInterface.sequelize,
+			"fk_oferta_tcc_to_datas_defesas",
+			`
 			ALTER TABLE public.datas_defesa_tccs
 			ADD CONSTRAINT fk_oferta_tcc_to_datas_defesas
 			FOREIGN KEY (ano, semestre, id_curso, fase)
 			REFERENCES public.oferta_tcc(ano, semestre, id_curso, fase)
 			ON UPDATE CASCADE ON DELETE CASCADE;
-		`);
+		`,
+		);
 
-		// Criar trigger para esta tabela
-		await queryInterface.sequelize.query(`
-			CREATE TRIGGER update_datas_defesa_tccs_updated_at
-			BEFORE UPDATE ON public.datas_defesa_tccs
-			FOR EACH ROW
-			EXECUTE FUNCTION update_updated_at_column();
-		`);
+		await ensureUpdatedAtTrigger(queryInterface.sequelize, "datas_defesa_tccs", "update_datas_defesa_tccs_updated_at");
 	},
 
 	async down(queryInterface, Sequelize) {

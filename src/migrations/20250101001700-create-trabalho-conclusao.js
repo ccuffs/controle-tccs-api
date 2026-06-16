@@ -1,4 +1,7 @@
 "use strict";
+const { ensureUpdatedAtTrigger } = require("./helpers/updated-at");
+const { ensureForeignKey, ensureIndex } = require("./helpers/foreign-key");
+
 module.exports = {
 	table: {
 		schema: "public",
@@ -105,29 +108,28 @@ module.exports = {
 			this.getTableData(Sequelize),
 		);
 
-		// Adicionar constraint de foreign key composta para oferta_tcc
-		await queryInterface.sequelize.query(`
+		await ensureForeignKey(
+			queryInterface.sequelize,
+			"fk_oferta_tcc_to_tcc",
+			`
 			ALTER TABLE public.trabalho_conclusao
 			ADD CONSTRAINT fk_oferta_tcc_to_tcc
 			FOREIGN KEY (ano, semestre, id_curso, fase)
 			REFERENCES public.oferta_tcc(ano, semestre, id_curso, fase)
 			ON UPDATE CASCADE ON DELETE CASCADE;
-		`);
+		`,
+		);
 
-		// Criar índice único conforme database.sql
-		await queryInterface.addIndex(this.table, {
-			fields: ["id", "ano", "semestre", "id_curso", "fase", "matricula"],
-			unique: true,
-			name: "tcc_unique",
-		});
+		await ensureIndex(
+			queryInterface.sequelize,
+			"tcc_unique",
+			`
+			CREATE UNIQUE INDEX tcc_unique
+			ON public.trabalho_conclusao (id, ano, semestre, id_curso, fase, matricula);
+		`,
+		);
 
-		// Criar trigger para esta tabela
-		await queryInterface.sequelize.query(`
-			CREATE TRIGGER update_trabalho_conclusao_updated_at
-			BEFORE UPDATE ON public.trabalho_conclusao
-			FOR EACH ROW
-			EXECUTE FUNCTION update_updated_at_column();
-		`);
+		await ensureUpdatedAtTrigger(queryInterface.sequelize, "trabalho_conclusao", "update_trabalho_conclusao_updated_at");
 	},
 
 	async down(queryInterface, Sequelize) {

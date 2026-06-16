@@ -1,4 +1,6 @@
 "use strict";
+const { ensureUpdatedAtTrigger } = require("./helpers/updated-at");
+
 module.exports = {
 	table: {
 		schema: "public",
@@ -54,13 +56,7 @@ module.exports = {
 			this.getTableData(Sequelize),
 		);
 
-		// Criar trigger para esta tabela
-		await queryInterface.sequelize.query(`
-			CREATE TRIGGER update_usuario_grupo_updated_at
-			BEFORE UPDATE ON public.usuario_grupo
-			FOR EACH ROW
-			EXECUTE FUNCTION update_updated_at_column();
-		`);
+		await ensureUpdatedAtTrigger(queryInterface.sequelize, "usuario_grupo", "update_usuario_grupo_updated_at");
 	},
 
 	async down(queryInterface, Sequelize) {
