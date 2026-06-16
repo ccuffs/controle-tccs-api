@@ -273,8 +273,10 @@ defesaRepository.agendarDefesa = async (dadosAgendamento, calcularHorarios) => {
 			{ codigo: membros_banca[1], orientador: false },
 		];
 
-		// Criar data completa (DATE em modelo de defesa)
-		const dataHora = new Date(`${data}T${hora}`);
+		// Criar data em UTC explícito para evitar deslocamento de fuso horário
+		const [year, month, day] = data.split("-").map(Number);
+		const [hh, mm, ss] = hora.split(":").map(Number);
+		const dataHora = new Date(Date.UTC(year, month - 1, day, hh, mm, ss || 0));
 
 		// Inserir defesas
 		for (const d of docentes) {
