@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+    <style type="text/css">
+        @page {
+            size: A4;
+            margin: 2cm 2cm;
+        }
+
+        @media print {
+            .page-break { page-break-before: always; }
+            body { padding: 0; width: 100%; }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            color: #000;
+            background: #fff;
+            /* Largura A4 (794px a 96dpi) menos margens de 2cm (~76px cada lado) */
+            width: 642px;
+            margin: 0 auto;
+            padding: 28px 0;
+        }
+
+        /* Cabeçalho */
+        .header {
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .header img {
+            max-width: 540px;
+            width: 100%;
+            height: auto;
+        }
+        .header p {
+            font-size: 9.5pt;
+            margin: 1px 0;
+        }
+
+        /* Título */
+        h1.titulo {
+            text-align: center;
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 10px 0 12px 0;
+        }
+
+        /* Campos simples */
+        p.campo { margin: 4px 0; line-height: 1.5; }
+
+        /* Banca – tabela por membro */
+        table.membro {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 6px 0;
+            table-layout: fixed;
+        }
+        table.membro td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            font-size: 10.5pt;
+            vertical-align: top;
+            overflow-wrap: break-word;
+        }
+        /* 2 colunas: informações do avaliador | assinatura */
+        table.membro col.col-info       { width: 70%; }
+        table.membro col.col-assinatura { width: 30%; }
+
+        td.role {
+            font-weight: bold;
+            background: #f5f5f5;
+            padding: 5px 8px;
+        }
+
+        /* Célula de informações: itens empilhados */
+        td.info-membro p {
+            margin: 2px 0;
+            line-height: 1.45;
+        }
+
+        /* Linha de dados com altura suficiente para assinatura */
+        tr.dados-membro td {
+            height: 98px;
+            vertical-align: top;
+        }
+
+        /* Assinatura dentro da tabela da banca */
+        tr.dados-membro td.sig-banca {
+            vertical-align: bottom;
+            text-align: center;
+            padding-bottom: 6px;
+        }
+        .sig-banca span {
+            display: inline-block;
+            width: 90%;
+            border-bottom: 1px solid #000;
+        }
+        .sig-banca small {
+            display: block;
+            font-size: 8pt;
+            margin-top: 3px;
+        }
+
+        /* Checkboxes de resultado */
+        .opcao { margin: 3px 0 3px 16px; }
+        .cb {
+            display: inline-block;
+            width: 1em;
+            text-align: center;
+        }
+
+        /* Linhas em branco para preenchimento */
+        .linha {
+            display: block;
+            border-bottom: 1px solid #000;
+            width: 100%;
+            height: 18px;
+            margin: 5px 0;
+        }
+
+        /* Assinaturas finais */
+        .sig-linha {
+            display: block;
+            width: 280px;
+            border-bottom: 1px solid #000;
+            margin-top: 80px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ══ CABEÇALHO ══ -->
+<div class="header">
+    <img src="logo.png" alt="Logo UFFS">
+    <p>SERVI&Ccedil;O P&Uacute;BLICO FEDERAL</p>
+    <p>Universidade Federal da Fronteira Sul</p>
+    <p>Coordena&ccedil;&atilde;o do Curso de #nomeCurso#</p>
+</div>
+
+<h1 class="titulo">Ata de Defesa</h1>
+
+<!-- Campos 1 a 5 -->
+<p class="campo"><strong>1 - TIPO DE DEFESA:</strong> Trabalho de conclus&atilde;o de curso - #tccFase#</p>
+
+<p class="campo"><strong>2 - NOME DO ALUNO(A):</strong> #nomeAluno#</p>
+<p class="campo"><strong>- MATR&Iacute;CULA:</strong> #matriculaAluno#</p>
+
+<p class="campo"><strong>3 &ndash; T&Iacute;TULO:</strong> #titulo#</p>
+
+<p class="campo"><strong>4 &ndash; ORIENTADOR(A):</strong> #orientador#</p>
+<p class="campo"><strong>- SIAPE:</strong> #siapeOrientador#</p>
+
+<p class="campo"><strong>5 - CO-ORIENTADOR(A):</strong> #coOrientador#</p>
+<p class="campo"><strong>- INSTITUI&Ccedil;&Atilde;O:</strong> #coOrientadorInstituicao#</p>
+
+<!-- Campo 6 -->
+<p class="campo" style="margin-top:10px;"><strong>6 &ndash; BANCA EXAMINADORA:</strong></p>
+
+#bancaHtml#
+
+<!-- ══ PÁGINA 2 ══ -->
+<div class="page-break"></div>
+
+<!-- Campo 7 -->
+<p class="campo"><strong>7 &ndash; RESULTADO:</strong></p>
+<p class="opcao">(<span class="cb">#checkMencaoHonrosa#</span>) Aprovado com men&ccedil;&atilde;o honrosa (justificar)</p>
+<p class="opcao">(<span class="cb">#checkAprovado#</span>) Aprovado</p>
+<p class="opcao">(<span class="cb">#checkAprovadoCondicionalmente#</span>) Aprovado condicionalmente</p>
+<p class="opcao">(<span class="cb">#checkReprovado#</span>) Reprovado</p>
+
+<p class="campo" style="margin-top:8px;">Parecer:</p>
+#parecerConteudo#
+
+<p class="campo" style="margin-top:40px;">Nota que ser&aacute; atribu&iacute;da na disciplina: #mediaFinal#</p>
+
+<!-- Campo 8 -->
+<p class="campo" style="margin-top:12px;"><strong>8 - DATA DA DEFESA:</strong> #dataDefesa#</p>
+<p class="campo"><strong>- HOR&Aacute;RIO:</strong> #horaDefesa#</p>
+<p class="campo"><strong>- LOCAL:</strong> #local#</p>
+
+<!-- Assinaturas -->
+<p class="campo" style="margin-top:20px;">Assinatura do(a) Orientador(a):</p>
+<div class="sig-linha"></div>
+
+<p class="campo" style="margin-top:20px;">Assinatura do Aluno(a)</p>
+<div class="sig-linha"></div>
+
+<!-- Preenchido pelo Orientador após a entrega da versão final -->
+<p class="campo" style="margin-top:20px;">Preenchido pelo Orientador ap&oacute;s a entrega da vers&atilde;o final:</p>
+<p class="opcao">(<span class="cb"></span>) Aprovado, ap&oacute;s as corre&ccedil;&otilde;es exigidas pela Banca Examinadora.</p>
+<p class="opcao">(<span class="cb"></span>) Reprovado, n&atilde;o foram feitas as corre&ccedil;&otilde;es exigidas pela Banca Examinadora.</p>
+
+<p class="campo" style="margin-top:8px;">Parecer do orientador:</p>
+<span class="linha"></span>
+<span class="linha"></span>
+<span class="linha"></span>
+<span class="linha"></span>
+
+<p class="campo" style="margin-top:16px;">Assinatura do(a) Orientador(a):</p>
+<div class="sig-linha"></div>
+
+<p class="campo" style="margin-top:16px;">Data: ____/____/____</p>
+
+</body>
+</html>

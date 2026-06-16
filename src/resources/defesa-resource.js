@@ -79,4 +79,50 @@ defesaResource.delete(
 	defesaService.deletaDefesa,
 );
 
+// POST /api/defesas/membro-externo
+defesaResource.post(
+	"/membro-externo",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ORIENTADOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.ADMIN,
+	]),
+	defesaService.adicionarMembroExterno,
+);
+
+// GET /api/defesas/ata/:id_tcc/:fase
+defesaResource.get(
+	"/ata/:id_tcc/:fase",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR,
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+	]),
+	defesaService.gerarAtaDefesa,
+);
+
+// GET /api/defesas/externos/tcc/:id_tcc
+defesaResource.get(
+	"/externos/tcc/:id_tcc",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissao([
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR,
+		Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+	]),
+	defesaService.listarMembrosExternosTcc,
+);
+
+// DELETE /api/defesas/externo/:id_tcc/:codigo_docente/:fase
+defesaResource.delete(
+	"/externo/:id_tcc/:codigo_docente/:fase",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ORIENTADOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.ADMIN,
+	]),
+	defesaService.removerMembroExterno,
+);
+
 module.exports = defesaResource;

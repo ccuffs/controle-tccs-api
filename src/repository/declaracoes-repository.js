@@ -13,7 +13,7 @@ declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 	if (id_curso) filtrosTrabalho.id_curso = parseInt(id_curso);
 	if (fase) filtrosTrabalho.fase = parseInt(fase);
 
-	// Buscar orientações
+	// Buscar orientações (excluindo docentes externos)
 	const orientacoes = await model.Orientacao.findAll({
 		include: [
 			{
@@ -38,9 +38,11 @@ declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 					"sala",
 					"siape",
 					"id_usuario",
+					"externo",
 				],
 				where: {
 					id_usuario: idUsuario,
+					externo: false,
 				},
 			},
 		],
@@ -49,7 +51,7 @@ declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 		},
 	});
 
-	// Buscar convites de banca aceitos
+	// Buscar convites de banca aceitos (excluindo membros externos)
 	const bancas = await model.Convite.findAll({
 		include: [
 			{
@@ -74,9 +76,11 @@ declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 					"sala",
 					"siape",
 					"id_usuario",
+					"externo",
 				],
 				where: {
 					id_usuario: idUsuario,
+					externo: false,
 				},
 			},
 		],
@@ -97,6 +101,7 @@ declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 		nome_dicente: orientacao.TrabalhoConclusao.Dicente.nome,
 		nome_docente: orientacao.Docente.nome,
 		siape_docente: orientacao.Docente.siape,
+		externo: orientacao.Docente.externo,
 		foi_orientador: true,
 		tipo_participacao: "orientacao",
 	}));
@@ -112,6 +117,7 @@ declaracoesRepository.buscarDeclaracoes = async (idUsuario, filtros = {}) => {
 		nome_dicente: convite.TrabalhoConclusao.Dicente.nome,
 		nome_docente: convite.Docente.nome,
 		siape_docente: convite.Docente.siape,
+		externo: convite.Docente.externo,
 		foi_orientador: false,
 		tipo_participacao: "banca",
 	}));
@@ -447,6 +453,158 @@ declaracoesRepository.buscarDadosDeclaracao = async (
 		console.error("Erro ao buscar dados da declaração:", error);
 		throw error;
 	}
+};
+
+// Listar TCCs do orientador que possuem membros externos na banca
+declaracoesRepository.buscarDeclaracoesExternas = async (idUsuarioOrientador, filtros = {}) => {
+	const { ano, semestre, id_curso, fase } = filtros;
+
+	const filtrosTrabalho = {};
+	if (ano) filtrosTrabalho.ano = parseInt(ano);
+	if (semestre) filtrosTrabalho.semestre = parseInt(semestre);
+	if (id_curso) filtrosTrabalho.id_curso = parseInt(id_curso);
+	if (fase) filtrosTrabalho.fase = parseInt(fase);
+
+	// Buscar orientações do orientador logado
+	const orientacoes = await model.Orientacao.findAll({
+		include: [
+			{
+				model: model.TrabalhoConclusao,
+				required: true,
+				where: filtrosTrabalho,
+				include: [
+					{ model: model.Dicente, required: true, attributes: ["nome"] },
+				],
+			},
+			{
+				model: model.Docente,
+				required: true,
+				where: { id_usuario: idUsuarioOrientador },
+				attributes: ["codigo"],
+			},
+		],
+		where: { orientador: true },
+	});
+
+	const idTccs = orientacoes.map((o) => o.TrabalhoConclusao.id);
+
+	if (idTccs.length === 0) return [];
+
+	// Buscar defesas externas nesses TCCs
+	const defesasExternas = await model.Defesa.findAll({
+		where: { id_tcc: idTccs, orientador: false },
+		include: [
+			{
+				model: model.Docente,
+				as: "membroBanca",
+				where: { externo: true },
+				required: true,
+				attributes: ["codigo", "nome", "siape", "externo", "instituicao"],
+			},
+			{
+				model: model.TrabalhoConclusao,
+				required: true,
+				where: filtrosTrabalho,
+				include: [
+					{ model: model.Dicente, required: true, attributes: ["nome"] },
+				],
+			},
+		],
+	});
+
+	return defesasExternas.map((d) => ({
+		id_tcc: d.TrabalhoConclusao.id,
+		ano: d.TrabalhoConclusao.ano,
+		semestre: d.TrabalhoConclusao.semestre,
+		fase: d.fase,
+		titulo_tcc: d.TrabalhoConclusao.titulo || "Sem título",
+		matricula: d.TrabalhoConclusao.matricula,
+		nome_dicente: d.TrabalhoConclusao.Dicente.nome,
+		nome_docente: d.membroBanca.nome,
+		codigo_docente: d.membroBanca.codigo,
+		siape_docente: d.membroBanca.siape,
+		instituicao: d.membroBanca.instituicao,
+		externo: true,
+		foi_orientador: false,
+		tipo_participacao: "banca",
+	}));
+};
+
+// Buscar dados para gerar declaração de membro externo (chamado pelo orientador)
+declaracoesRepository.buscarDadosDeclaracaoExterno = async (
+	idUsuarioOrientador,
+	idTcc,
+	codigoDocente,
+) => {
+	// Verificar se o usuário logado é orientador deste TCC
+	const orientacao = await model.Orientacao.findOne({
+		include: [
+			{
+				model: model.Docente,
+				required: true,
+				where: { id_usuario: idUsuarioOrientador },
+			},
+		],
+		where: { id_tcc: idTcc, orientador: true },
+	});
+
+	if (!orientacao) return null;
+
+	// Buscar defesa do externo neste TCC
+	const defesa = await model.Defesa.findOne({
+		where: { id_tcc: idTcc, membro_banca: codigoDocente, orientador: false },
+		include: [
+			{
+				model: model.Docente,
+				as: "membroBanca",
+				where: { externo: true, codigo: codigoDocente },
+				required: true,
+				attributes: ["codigo", "nome", "siape", "externo", "instituicao"],
+			},
+			{
+				model: model.TrabalhoConclusao,
+				required: true,
+				where: { id: idTcc },
+				include: [
+					{ model: model.Dicente, required: true, attributes: ["nome"] },
+					{
+						model: model.Curso,
+						required: true,
+						attributes: ["id", "nome"],
+						include: [
+							{
+								model: model.Docente,
+								as: "coordenadorDocente",
+								required: true,
+								attributes: ["nome", "siape"],
+							},
+						],
+					},
+				],
+			},
+		],
+	});
+
+	if (!defesa) return null;
+
+	return {
+		id_tcc: defesa.TrabalhoConclusao.id,
+		ano: defesa.TrabalhoConclusao.ano,
+		semestre: defesa.TrabalhoConclusao.semestre,
+		fase: defesa.TrabalhoConclusao.fase,
+		titulo_tcc: defesa.TrabalhoConclusao.titulo || "Sem título",
+		nome_dicente: defesa.TrabalhoConclusao.Dicente.nome,
+		nome_docente: defesa.membroBanca.nome,
+		siape_docente: defesa.membroBanca.siape,
+		externo: true,
+		instituicao: defesa.membroBanca.instituicao,
+		nome_curso: defesa.TrabalhoConclusao.Curso.nome,
+		nome_coordenador: defesa.TrabalhoConclusao.Curso.coordenadorDocente.nome,
+		siape_coordenador: defesa.TrabalhoConclusao.Curso.coordenadorDocente.siape,
+		tipo_participacao: "banca",
+		foi_orientador: false,
+		data_defesa: defesa.data_defesa,
+	};
 };
 
 module.exports = declaracoesRepository;

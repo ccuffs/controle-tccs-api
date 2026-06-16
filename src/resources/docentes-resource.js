@@ -43,4 +43,16 @@ docentesService.get(
 	docenteService.retornaDocentePorUsuario,
 );
 
+// Buscar docentes externos por nome (autocomplete no cadastro)
+docentesService.get(
+	"/buscar-externo",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ORIENTADOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.ADMIN,
+	]),
+	docenteService.buscarExternosPorNome,
+);
+
 module.exports = docentesService;

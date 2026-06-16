@@ -15,8 +15,17 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			nome: DataTypes.STRING,
 			sala: DataTypes.INTEGER,
-			siape: DataTypes.INTEGER,
-			id_usuario: {
+		siape: DataTypes.INTEGER,
+		externo: {
+			type: DataTypes.BOOLEAN,
+			allowNull: false,
+			defaultValue: false,
+		},
+		instituicao: {
+			type: DataTypes.STRING,
+			allowNull: true,
+		},
+		id_usuario: {
 				type: DataTypes.STRING,
 				allowNull: true,
 			},

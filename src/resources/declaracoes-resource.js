@@ -34,4 +34,30 @@ declaracoesResource.get(
 	declaracoesService.gerarDeclaracao,
 );
 
+// GET /api/declaracoes/externas
+// Listar declarações de membros externos que o orientador pode emitir
+declaracoesResource.get(
+	"/externas",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ORIENTADOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.ADMIN,
+	]),
+	declaracoesService.listarDeclaracoesExternas,
+);
+
+// GET /api/declaracoes/gerar-externo/:idTcc/:codigoDocente
+// Gerar declaração para membro externo (orientador emite em nome do externo)
+declaracoesResource.get(
+	"/gerar-externo/:idTcc/:codigoDocente",
+	auth.autenticarUsuario,
+	autorizacao.verificarPermissaoGrupo([
+		Permissoes.GRUPOS.ORIENTADOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.ADMIN,
+	]),
+	declaracoesService.gerarDeclaracaoExterno,
+);
+
 module.exports = declaracoesResource;

@@ -132,7 +132,15 @@ const gerarHtmlDeclaracao = async (dados) => {
 		// Substituir placeholders
 		let htmlPreenchido = templateHtml
 			.replace(/#docente#/g, dados.nome_docente)
-			.replace(/#numSIAPE#/g, dados.siape_docente)
+			.replace(/SIAPE #numSIAPE#/g, () => {
+				if (dados.externo) {
+					if (dados.siape_docente) {
+						return `SIAPE ${dados.siape_docente}, da Instituição ${dados.instituicao || "Externa"}`;
+					}
+					return `da Instituição ${dados.instituicao || "Externa"}`;
+				}
+				return `SIAPE ${dados.siape_docente}`;
+			})
 			.replace(/#tccFase#/g, faseDescricao)
 			.replace(/#nomeAluno#/g, dados.nome_dicente)
 			.replace(/#anoSemestre#/g, `${dados.ano}/${dados.semestre}`)
@@ -234,7 +242,68 @@ const converterImagemParaBase64 = async (caminhoImagem) => {
 	}
 };
 
+// Listar declarações de membros externos (para orientador emitir)
+const listarDeclaracoesExternas = async (req, res) => {
+	try {
+		const idUsuario = req.usuario?.id;
+
+		if (!idUsuario) {
+			return res.status(401).json({ message: "Usuário não autenticado" });
+		}
+
+		const { curso, ano, semestre, fase } = req.query;
+
+		const filtros = {
+			...(curso && { id_curso: parseInt(curso) }),
+			...(ano && { ano: parseInt(ano) }),
+			...(semestre && { semestre: parseInt(semestre) }),
+			...(fase && { fase: parseInt(fase) }),
+		};
+
+		const declaracoes = await declaracoesRepository.buscarDeclaracoesExternas(idUsuario, filtros);
+
+		res.status(200).json({ declaracoes, total: declaracoes.length });
+	} catch (error) {
+		console.error("Erro ao buscar declarações externas:", error);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
+
+// Gerar declaração para membro externo (chamado pelo orientador)
+const gerarDeclaracaoExterno = async (req, res) => {
+	try {
+		const idUsuario = req.usuario?.id;
+		const { idTcc, codigoDocente } = req.params;
+
+		if (!idUsuario) {
+			return res.status(401).json({ message: "Usuário não autenticado" });
+		}
+
+		const dadosDeclaracao = await declaracoesRepository.buscarDadosDeclaracaoExterno(
+			idUsuario,
+			parseInt(idTcc),
+			codigoDocente,
+		);
+
+		if (!dadosDeclaracao) {
+			return res.status(404).json({
+				message: "Declaração não encontrada ou usuário não autorizado",
+			});
+		}
+
+		const htmlDeclaracao = await gerarHtmlDeclaracao(dadosDeclaracao);
+
+		res.setHeader("Content-Type", "text/html; charset=utf-8");
+		res.send(htmlDeclaracao);
+	} catch (error) {
+		console.error("Erro ao gerar declaração para externo:", error);
+		res.status(500).json({ message: "Erro interno do servidor" });
+	}
+};
+
 module.exports = {
 	listarDeclaracoes,
 	gerarDeclaracao,
+	listarDeclaracoesExternas,
+	gerarDeclaracaoExterno,
 };

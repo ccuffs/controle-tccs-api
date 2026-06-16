@@ -123,10 +123,29 @@ const retornaDocentePorUsuario = async (req, res) => {
 	}
 };
 
+// Buscar docentes externos por nome (busca parcial)
+const buscarExternosPorNome = async (req, res) => {
+	try {
+		const { nome } = req.query;
+
+		if (!nome || nome.trim().length < 2) {
+			return res.status(200).json({ docentes: [] });
+		}
+
+		const docentes = await docenteRepository.buscarExternosPorNome(nome.trim());
+
+		return res.status(200).json({ docentes });
+	} catch (error) {
+		console.error("Erro ao buscar docentes externos por nome:", error);
+		return res.status(500).json({ message: "Erro ao buscar docentes" });
+	}
+};
+
 module.exports = {
 	retornaTodosDocentes,
 	criaDocente,
 	atualizaDocente,
 	deletaDocente,
 	retornaDocentePorUsuario,
+	buscarExternosPorNome,
 };

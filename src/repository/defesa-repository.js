@@ -591,4 +591,144 @@ defesaRepository.gerenciarBancaDefesa = async (dadosBanca) => {
 	}
 };
 
+// Adicionar membro externo à banca (sem convite, sem disponibilidade)
+defesaRepository.adicionarMembroExterno = async (dadosExterno) => {
+	const {
+		id_tcc,
+		fase,
+		codigo_docente,
+		data_hora_defesa,
+	} = dadosExterno;
+
+	const t = await model.sequelize.transaction();
+
+	try {
+		// Verificar se já existe defesa para este docente neste TCC
+		const defesaExistente = await model.Defesa.findOne({
+			where: { id_tcc, membro_banca: codigo_docente, fase },
+			transaction: t,
+		});
+
+		if (defesaExistente) {
+			await t.rollback();
+			return { sucesso: false, motivo: "Este docente já está na banca deste TCC" };
+		}
+
+		// Verificar limite de 1 externo por banca
+		const externoBancaExistente = await model.Defesa.findOne({
+			where: { id_tcc, fase, orientador: false },
+			include: [
+				{
+					model: model.Docente,
+					as: "membroBanca",
+					where: { externo: true },
+					required: true,
+				},
+			],
+			transaction: t,
+		});
+
+		if (externoBancaExistente) {
+			await t.rollback();
+			return { sucesso: false, motivo: "Já existe um membro externo nesta banca" };
+		}
+
+		await model.Defesa.create(
+			{
+				id_tcc,
+				membro_banca: codigo_docente,
+				fase: parseInt(fase),
+				orientador: false,
+				data_defesa: data_hora_defesa ? new Date(data_hora_defesa) : null,
+			},
+			{ transaction: t },
+		);
+
+		await t.commit();
+		return { sucesso: true };
+	} catch (error) {
+		await t.rollback();
+		throw error;
+	}
+};
+
+// Listar membros externos de um TCC
+defesaRepository.listarMembrosExternosTcc = async (idTcc) => {
+	const defesas = await model.Defesa.findAll({
+		where: { id_tcc: idTcc, orientador: false },
+		include: [
+			{
+				model: model.Docente,
+				as: "membroBanca",
+				where: { externo: true },
+				required: true,
+				attributes: ["codigo", "nome", "email", "siape", "externo", "instituicao"],
+			},
+		],
+	});
+	return defesas;
+};
+
+// Buscar todos os dados necessários para gerar a ata de defesa
+defesaRepository.buscarDadosAta = async (idTcc, fase) => {
+	const defesas = await model.Defesa.findAll({
+		where: { id_tcc: idTcc, fase },
+		include: [
+			{
+				model: model.TrabalhoConclusao,
+				include: [
+					{
+						model: model.Dicente,
+						attributes: ["matricula", "nome", "email"],
+					},
+					{
+						model: model.Curso,
+						attributes: ["id", "nome"],
+					},
+				],
+			},
+			{
+				model: model.Docente,
+				as: "membroBanca",
+				attributes: [
+					"codigo",
+					"nome",
+					"email",
+					"siape",
+					"externo",
+					"instituicao",
+				],
+			},
+		],
+		order: [["orientador", "DESC"]],
+	});
+
+	if (!defesas || defesas.length === 0) return null;
+
+	// Buscar co-orientador (se houver) a partir da tabela de orientações
+	const tcc = defesas[0].TrabalhoConclusao;
+	const coOrientacao = await model.Orientacao.findOne({
+		where: {
+			id_tcc: idTcc,
+			orientador: false,
+		},
+		include: [
+			{
+				model: model.Docente,
+				attributes: ["codigo", "nome", "email", "siape", "externo", "instituicao"],
+			},
+		],
+	});
+
+	return { defesas, coOrientacao, tcc };
+};
+
+// Remover membro externo da banca
+defesaRepository.removerMembroExterno = async (idTcc, codigoDocente, fase) => {
+	const deleted = await model.Defesa.destroy({
+		where: { id_tcc: idTcc, membro_banca: codigoDocente, fase, orientador: false },
+	});
+	return deleted > 0;
+};
+
 module.exports = defesaRepository;
