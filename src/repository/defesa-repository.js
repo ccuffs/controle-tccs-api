@@ -196,8 +196,9 @@ defesaRepository.deletarDefesaComRestauracao = async (
 
 		// Se a defesa tinha data e hora, restaurar as disponibilidades
 		if (defesa.data_defesa) {
-			const data = defesa.data_defesa.toISOString().split("T")[0];
-			const hora = defesa.data_defesa.toTimeString().split(" ")[0];
+			const iso = defesa.data_defesa.toISOString();
+			const data = iso.split("T")[0];
+			const hora = iso.split("T")[1].substring(0, 8);
 			const { horaAnterior, horaPosterior } = calcularHorarios(hora);
 
 			// Restaurar disponibilidade do horário da defesa

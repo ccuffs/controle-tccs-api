@@ -579,9 +579,10 @@ const gerarAtaDefesa = async (req, res) => {
 		let horaDefesaStr = "___h___";
 		const dataDefesaRaw = defesaOrientador?.data_defesa || defesas[0]?.data_defesa;
 		if (dataDefesaRaw) {
-			const dt = new Date(dataDefesaRaw);
-			dataDefesaStr = dt.toLocaleDateString("pt-BR");
-			horaDefesaStr = dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+			const iso = new Date(dataDefesaRaw).toISOString();
+			const [ano, mes, dia] = iso.split("T")[0].split("-");
+			dataDefesaStr = `${dia}/${mes}/${ano}`;
+			horaDefesaStr = `${iso.slice(11, 13)}h${iso.slice(14, 16)}`;
 		}
 
 		// Conteúdo do parecer: usa comentarios_tcc se disponível, caso contrário linhas em branco

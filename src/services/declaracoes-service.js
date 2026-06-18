@@ -162,12 +162,10 @@ const gerarHtmlDeclaracao = async (dados) => {
 			let horaDefesa = "horário a definir";
 
 			if (dados.data_defesa) {
-				const dataDefesaObj = new Date(dados.data_defesa);
-				dataDefesa = dataDefesaObj.toLocaleDateString("pt-BR");
-				horaDefesa = dataDefesaObj.toLocaleTimeString("pt-BR", {
-					hour: "2-digit",
-					minute: "2-digit",
-				});
+				const iso = new Date(dados.data_defesa).toISOString();
+				const [ano, mes, dia] = iso.split("T")[0].split("-");
+				dataDefesa = `${dia}/${mes}/${ano}`;
+				horaDefesa = `${iso.slice(11, 13)}h${iso.slice(14, 16)}`;
 			}
 
 			htmlPreenchido = htmlPreenchido
