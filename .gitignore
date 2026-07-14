@@ -143,3 +143,6 @@ coordenador.png
 src/public/*
 !src/public/.gitkeep
 .vscode
+
+# Scripts locais (não versionados)
+scripts/atualizar-senhas.js
