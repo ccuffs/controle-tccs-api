@@ -234,9 +234,9 @@ const converterImagemParaBase64 = async (caminhoImagem) => {
 
 		return `data:${mimeType};base64,${base64}`;
 	} catch (error) {
-		console.error("Erro ao converter imagem para base64:", error);
+		console.error(`[declaracoes-service] Falha ao ler imagem "${caminhoImagem}": ${error.code} - ${error.message}`);
 		// Retornar um pixel transparente como fallback
-		return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+		return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 	}
 };
 
