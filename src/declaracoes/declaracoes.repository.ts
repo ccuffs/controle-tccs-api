@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
+import { Op } from "sequelize";
 import {
 	ConviteEntity,
 	CursoEntity,
@@ -38,6 +39,24 @@ export interface DadosDeclaracao {
 	data_defesa?: Date | null;
 }
 
+export interface DadosDeclaracaoTabela {
+	nome_docente: string | null;
+	siape_docente?: number;
+	nome_curso?: string | null;
+	nome_coordenador?: string | null;
+	siape_coordenador?: number;
+	foi_orientador: boolean;
+	estudantes: Array<{
+		id_tcc: number;
+		nome_dicente: string | null;
+		titulo_tcc: string;
+		fase: number;
+		ano: number;
+		semestre: number;
+		data_defesa: Date | null;
+	}>;
+}
+
 const DOCENTE_ATTRS = ["codigo", "email", "nome", "sala", "siape", "id_usuario", "externo"];
 
 @Injectable()
@@ -51,93 +70,63 @@ export class DeclaracoesRepository {
 		private readonly defesaModel: typeof DefesaEntity,
 	) {}
 
+	/**
+	 * Lista declarações individuais apenas para estudantes já avaliados em banca
+	 * (`defesa.avaliacao` preenchida), nos papéis de orientador ou membro de banca.
+	 */
 	async buscarDeclaracoes(idUsuario: string, filtros: FiltrosDeclaracoes): Promise<DadosDeclaracao[]> {
-		const filtrosTrabalho = { ...filtros };
+		const { fase, ...filtrosTrabalho } = filtros;
 
-		const orientacoes = await this.orientacaoModel.findAll({
+		const defesas = await this.defesaModel.findAll({
+			where: {
+				avaliacao: { [Op.ne]: null },
+				...(fase !== undefined ? { fase } : {}),
+			},
 			include: [
+				{
+					model: DocenteEntity,
+					as: "membroBanca",
+					required: true,
+					attributes: DOCENTE_ATTRS,
+					where: { id_usuario: idUsuario, externo: false },
+				},
 				{
 					model: TrabalhoConclusaoEntity,
 					required: true,
 					where: filtrosTrabalho,
 					include: [{ model: DicenteEntity, required: true, attributes: ["nome"] }],
 				},
-				{
-					model: DocenteEntity,
-					required: true,
-					attributes: DOCENTE_ATTRS,
-					where: { id_usuario: idUsuario, externo: false },
-				},
 			],
-			where: { orientador: true },
 		});
 
-		const bancas = await this.conviteModel.findAll({
-			include: [
-				{
-					model: TrabalhoConclusaoEntity,
-					required: true,
-					where: filtrosTrabalho,
-					include: [{ model: DicenteEntity, required: true, attributes: ["nome"] }],
-				},
-				{
-					model: DocenteEntity,
-					required: true,
-					attributes: DOCENTE_ATTRS,
-					where: { id_usuario: idUsuario, externo: false },
-				},
-			],
-			where: { aceito: true, orientacao: false },
-		});
-
-		const declaracoesOrientacao: DadosDeclaracao[] = orientacoes.map((orientacao) => {
-			const tcc = orientacao.trabalhoConclusao!;
-			const docente = orientacao.docente!;
-			return {
-				id_tcc: tcc.id,
-				ano: tcc.ano,
-				semestre: tcc.semestre,
-				fase: tcc.fase,
-				titulo_tcc: tcc.titulo || "Sem título",
-				matricula: tcc.matricula,
-				nome_dicente: tcc.dicente!.nome,
-				nome_docente: docente.nome,
-				siape_docente: docente.siape ?? undefined,
-				externo: docente.externo,
-				foi_orientador: true,
-				tipo_participacao: "orientacao",
-			};
-		});
-
-		const declaracoesBanca: DadosDeclaracao[] = bancas.map((convite) => {
-			const tcc = convite.trabalhoConclusao!;
-			const docente = convite.docente!;
-			return {
-				id_tcc: tcc.id,
-				ano: tcc.ano,
-				semestre: tcc.semestre,
-				fase: tcc.fase,
-				titulo_tcc: tcc.titulo || "Sem título",
-				matricula: tcc.matricula,
-				nome_dicente: tcc.dicente!.nome,
-				nome_docente: docente.nome,
-				siape_docente: docente.siape ?? undefined,
-				externo: docente.externo,
-				foi_orientador: false,
-				tipo_participacao: "banca",
-			};
-		});
-
-		const declaracoes = [...declaracoesOrientacao, ...declaracoesBanca];
 		const declaracoesUnicas: DadosDeclaracao[] = [];
 		const chaves = new Set<string>();
 
-		for (const decl of declaracoes) {
-			const chave = `${decl.id_tcc}_${decl.tipo_participacao}`;
-			if (!chaves.has(chave)) {
-				chaves.add(chave);
-				declaracoesUnicas.push(decl);
-			}
+		for (const defesa of defesas) {
+			const tcc = defesa.trabalhoConclusao!;
+			const docente = defesa.membroBanca!;
+			const foiOrientador = defesa.orientador;
+			const tipoParticipacao = foiOrientador ? "orientacao" : "banca";
+			const chave = `${tcc.id}_${tipoParticipacao}_${defesa.fase}`;
+
+			if (chaves.has(chave)) continue;
+			chaves.add(chave);
+
+			declaracoesUnicas.push({
+				id_tcc: tcc.id,
+				ano: tcc.ano,
+				semestre: tcc.semestre,
+				fase: defesa.fase,
+				titulo_tcc: tcc.titulo || "Sem título",
+				matricula: tcc.matricula,
+				nome_dicente: tcc.dicente!.nome,
+				nome_docente: docente.nome,
+				siape_docente: docente.siape ?? undefined,
+				externo: docente.externo,
+				foi_orientador: foiOrientador,
+				tipo_participacao: tipoParticipacao,
+				data_defesa: defesa.data_defesa,
+			});
 		}
 
 		return declaracoesUnicas;
@@ -204,112 +193,74 @@ export class DeclaracoesRepository {
 		idTcc: number,
 		tipoParticipacao: string,
 	): Promise<DadosDeclaracao | null> {
-		if (tipoParticipacao === "orientacao") {
-			const orientacao = await this.orientacaoModel.findOne({
-				include: [
-					{
-						model: TrabalhoConclusaoEntity,
-						required: true,
-						where: { id: idTcc },
-						include: [
-							{ model: DicenteEntity, required: true, attributes: ["nome"] },
-							{
-								model: CursoEntity,
-								required: true,
-								attributes: ["id", "nome"],
-								include: [
-									{ model: DocenteEntity, as: "coordenadorDocente", required: true, attributes: ["nome", "siape"] },
-								],
-							},
-						],
-					},
-					{ model: DocenteEntity, required: true, attributes: ["nome", "siape"], where: { id_usuario: idUsuario } },
-				],
-				where: { orientador: true },
-			});
-
-			if (!orientacao) return null;
-
-			const tcc = orientacao.trabalhoConclusao!;
-			const curso = tcc.curso!;
-			return {
-				id_tcc: tcc.id,
-				ano: tcc.ano,
-				semestre: tcc.semestre,
-				fase: tcc.fase,
-				titulo_tcc: tcc.titulo || "Sem título",
-				nome_dicente: tcc.dicente!.nome,
-				nome_docente: orientacao.docente!.nome,
-				siape_docente: orientacao.docente!.siape ?? undefined,
-				externo: false,
-				nome_curso: curso.nome ?? undefined,
-				nome_coordenador: curso.coordenadorDocente!.nome ?? undefined,
-				siape_coordenador: curso.coordenadorDocente!.siape ?? undefined,
-				tipo_participacao: "orientacao",
-				foi_orientador: true,
-			};
+		if (tipoParticipacao !== "orientacao" && tipoParticipacao !== "banca") {
+			return null;
 		}
 
-		if (tipoParticipacao === "banca") {
-			const convite = await this.conviteModel.findOne({
-				include: [
-					{
-						model: TrabalhoConclusaoEntity,
-						required: true,
-						where: { id: idTcc },
-						include: [
-							{ model: DicenteEntity, required: true, attributes: ["nome"] },
-							{
-								model: CursoEntity,
-								required: true,
-								attributes: ["id", "nome"],
-								include: [
-									{ model: DocenteEntity, as: "coordenadorDocente", required: true, attributes: ["nome", "siape"] },
-								],
-							},
-						],
-					},
-					{
-						model: DocenteEntity,
-						required: true,
-						attributes: ["nome", "siape", "codigo"],
-						where: { id_usuario: idUsuario },
-					},
-				],
-				where: { aceito: true, orientacao: false },
-			});
+		const foiOrientador = tipoParticipacao === "orientacao";
 
-			if (!convite) return null;
+		const defesa = await this.defesaModel.findOne({
+			where: {
+				id_tcc: idTcc,
+				orientador: foiOrientador,
+				avaliacao: { [Op.ne]: null },
+			},
+			include: [
+				{
+					model: DocenteEntity,
+					as: "membroBanca",
+					required: true,
+					attributes: ["codigo", "nome", "siape", "externo"],
+					where: { id_usuario: idUsuario, externo: false },
+				},
+				{
+					model: TrabalhoConclusaoEntity,
+					required: true,
+					where: { id: idTcc },
+					include: [
+						{ model: DicenteEntity, required: true, attributes: ["nome"] },
+						{
+							model: CursoEntity,
+							required: true,
+							attributes: ["id", "nome"],
+							include: [
+								{
+									model: DocenteEntity,
+									as: "coordenadorDocente",
+									required: true,
+									attributes: ["nome", "siape"],
+								},
+							],
+						},
+					],
+				},
+			],
+			order: [["fase", "DESC"]],
+		});
 
-			const tcc = convite.trabalhoConclusao!;
-			const curso = tcc.curso!;
-			const docente = convite.docente!;
+		if (!defesa) return null;
 
-			const defesa = await this.defesaModel.findOne({
-				where: { id_tcc: idTcc, membro_banca: docente.codigo, fase: tcc.fase },
-				attributes: ["data_defesa"],
-			});
+		const tcc = defesa.trabalhoConclusao!;
+		const curso = tcc.curso!;
+		const docente = defesa.membroBanca!;
 
-			return {
-				id_tcc: tcc.id,
-				ano: tcc.ano,
-				semestre: tcc.semestre,
-				fase: tcc.fase,
-				titulo_tcc: tcc.titulo || "Sem título",
-				nome_dicente: tcc.dicente!.nome,
-				nome_docente: docente.nome,
-				siape_docente: docente.siape ?? undefined,
-				externo: false,
-				nome_curso: curso.nome ?? undefined,
-				nome_coordenador: curso.coordenadorDocente!.nome ?? undefined,
-				siape_coordenador: curso.coordenadorDocente!.siape ?? undefined,
-				tipo_participacao: "banca",
-				foi_orientador: false,
-				data_defesa: defesa?.data_defesa,
-			};
-		}
-
-		return null;
+		return {
+			id_tcc: tcc.id,
+			ano: tcc.ano,
+			semestre: tcc.semestre,
+			fase: defesa.fase,
+			titulo_tcc: tcc.titulo || "Sem título",
+			nome_dicente: tcc.dicente!.nome,
+			nome_docente: docente.nome,
+			siape_docente: docente.siape ?? undefined,
+			externo: false,
+			nome_curso: curso.nome ?? undefined,
+			nome_coordenador: curso.coordenadorDocente!.nome ?? undefined,
+			siape_coordenador: curso.coordenadorDocente!.siape ?? undefined,
+			tipo_participacao: foiOrientador ? "orientacao" : "banca",
+			foi_orientador: foiOrientador,
+			data_defesa: defesa.data_defesa,
+		};
 	}
 
 	async buscarDeclaracoesExternas(idUsuarioOrientador: string, filtros: FiltrosDeclaracoes): Promise<DadosDeclaracao[]> {
@@ -332,8 +283,15 @@ export class DeclaracoesRepository {
 
 		if (idTccs.length === 0) return [];
 
+		const { fase, ...filtrosTcc } = filtrosTrabalho;
+
 		const defesasExternas = await this.defesaModel.findAll({
-			where: { id_tcc: idTccs, orientador: false },
+			where: {
+				id_tcc: idTccs,
+				orientador: false,
+				avaliacao: { [Op.ne]: null },
+				...(fase !== undefined ? { fase } : {}),
+			},
 			include: [
 				{
 					model: DocenteEntity,
@@ -345,7 +303,7 @@ export class DeclaracoesRepository {
 				{
 					model: TrabalhoConclusaoEntity,
 					required: true,
-					where: filtrosTrabalho,
+					where: filtrosTcc,
 					include: [{ model: DicenteEntity, required: true, attributes: ["nome"] }],
 				},
 			],
@@ -373,6 +331,95 @@ export class DeclaracoesRepository {
 		});
 	}
 
+	/**
+	 * Busca defesas avaliadas do docente logado para declaração consolidada em tabela.
+	 * Inclui apenas registros com `avaliacao` preenchida (estudante já avaliado em banca).
+	 * `foiOrientador=true` → papel de orientador na defesa; `false` → membro de banca.
+	 */
+	async buscarDadosDeclaracaoTabela(
+		idUsuario: string,
+		foiOrientador: boolean,
+		filtros: FiltrosDeclaracoes,
+	): Promise<DadosDeclaracaoTabela | null> {
+		const { fase, ...filtrosTrabalho } = filtros;
+
+		const defesas = await this.defesaModel.findAll({
+			where: {
+				orientador: foiOrientador,
+				avaliacao: { [Op.ne]: null },
+				...(fase !== undefined ? { fase } : {}),
+			},
+			include: [
+				{
+					model: DocenteEntity,
+					as: "membroBanca",
+					required: true,
+					attributes: ["codigo", "nome", "siape", "externo"],
+					where: { id_usuario: idUsuario, externo: false },
+				},
+				{
+					model: TrabalhoConclusaoEntity,
+					required: true,
+					where: filtrosTrabalho,
+					include: [
+						{ model: DicenteEntity, required: true, attributes: ["nome"] },
+						{
+							model: CursoEntity,
+							required: true,
+							attributes: ["id", "nome"],
+							include: [
+								{
+									model: DocenteEntity,
+									as: "coordenadorDocente",
+									required: true,
+									attributes: ["nome", "siape"],
+								},
+							],
+						},
+					],
+				},
+			],
+		});
+
+		if (defesas.length === 0) return null;
+
+		const primeira = defesas[0]!;
+		const docente = primeira.membroBanca!;
+		const curso = primeira.trabalhoConclusao!.curso!;
+
+		const estudantesUnicos = new Map<string, DadosDeclaracaoTabela["estudantes"][number]>();
+
+		for (const defesa of defesas) {
+			const tcc = defesa.trabalhoConclusao!;
+			const chave = `${tcc.id}_${defesa.fase}`;
+			if (estudantesUnicos.has(chave)) continue;
+
+			estudantesUnicos.set(chave, {
+				id_tcc: tcc.id,
+				nome_dicente: tcc.dicente!.nome,
+				titulo_tcc: tcc.titulo || "Sem título",
+				fase: defesa.fase,
+				ano: tcc.ano,
+				semestre: tcc.semestre,
+				data_defesa: defesa.data_defesa,
+			});
+		}
+
+		const estudantes = Array.from(estudantesUnicos.values()).sort((a, b) =>
+			(a.nome_dicente || "").localeCompare(b.nome_dicente || "", "pt-BR", { sensitivity: "base" }),
+		);
+
+		return {
+			nome_docente: docente.nome,
+			siape_docente: docente.siape ?? undefined,
+			nome_curso: curso.nome ?? undefined,
+			nome_coordenador: curso.coordenadorDocente!.nome ?? undefined,
+			siape_coordenador: curso.coordenadorDocente!.siape ?? undefined,
+			foi_orientador: foiOrientador,
+			estudantes,
+		};
+	}
+
 	async buscarDadosDeclaracaoExterno(
 		idUsuarioOrientador: string,
 		idTcc: number,
@@ -386,7 +433,12 @@ export class DeclaracoesRepository {
 		if (!orientacao) return null;
 
 		const defesa = await this.defesaModel.findOne({
-			where: { id_tcc: idTcc, membro_banca: codigoDocente, orientador: false },
+			where: {
+				id_tcc: idTcc,
+				membro_banca: codigoDocente,
+				orientador: false,
+				avaliacao: { [Op.ne]: null },
+			},
 			include: [
 				{
 					model: DocenteEntity,
@@ -412,6 +464,7 @@ export class DeclaracoesRepository {
 					],
 				},
 			],
+			order: [["fase", "DESC"]],
 		});
 
 		if (!defesa) return null;
@@ -424,7 +477,7 @@ export class DeclaracoesRepository {
 			id_tcc: tcc.id,
 			ano: tcc.ano,
 			semestre: tcc.semestre,
-			fase: tcc.fase,
+			fase: defesa.fase,
 			titulo_tcc: tcc.titulo || "Sem título",
 			nome_dicente: tcc.dicente!.nome,
 			nome_docente: membro.nome,

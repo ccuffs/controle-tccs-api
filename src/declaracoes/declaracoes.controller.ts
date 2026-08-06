@@ -68,4 +68,21 @@ export class DeclaracoesController {
 		const html = await this.declaracoesService.gerarDeclaracaoExterno(usuario.id as string, Number(idTcc), codigoDocente);
 		res.send(html);
 	}
+
+	@Get("gerar-tabela/:tipoParticipacao")
+	@RequerGrupo(Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.BANCA, Permissoes.GRUPOS.ADMIN)
+	@Header("Content-Type", "text/html; charset=utf-8")
+	async gerarDeclaracaoTabela(
+		@UsuarioAtual() usuario: UsuarioEntity,
+		@Param("tipoParticipacao") tipoParticipacao: string,
+		@Query() query: FiltrosQuery,
+		@Res() res: Response,
+	) {
+		const html = await this.declaracoesService.gerarDeclaracaoTabela(
+			usuario.id as string,
+			tipoParticipacao,
+			parseFiltros(query),
+		);
+		res.send(html);
+	}
 }
