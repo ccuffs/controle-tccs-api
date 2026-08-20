@@ -28,6 +28,7 @@
     "passport-ldapauth": "^3.0.1",
     "passport-local": "^1.0.0",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "4.10.38",
     "pg": "^8.11.5",
     "pg-hstore": "^2.3.4",
     "reflect-metadata": "^0.2.2",

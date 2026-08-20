@@ -199,8 +199,14 @@ export class DicentesController {
 				throw error;
 			}
 
+			const detalheErro = (error as Error)?.message || String(error);
+			console.error("Erro ao processar PDF de dicentes:", error);
+
 			throw new HttpException(
-				{ message: "Erro interno do servidor ao processar PDF", erro: (error as Error).message },
+				{
+					message: `Erro interno do servidor ao processar PDF: ${detalheErro}`,
+					erro: detalheErro,
+				},
 				500,
 			);
 		}

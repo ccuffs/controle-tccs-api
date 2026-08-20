@@ -198,8 +198,19 @@ export class DicentesService {
 
 				let tccId: number;
 				const detalheExistente = resultados.detalhes.find((d) => d.matricula === dicenteData.matricula)!;
-
-				if (!tccExistente) {
+				const marcarStatusTccCriado = () => {
+					if (
+						detalheExistente.status === "dicente_inserido" ||
+						detalheExistente.status === "dicente_inserido_com_usuario"
+					) {
+						detalheExistente.status = detalheExistente.status.includes("com_usuario")
+							? "dicente_e_tcc_inseridos_com_usuario"
+							: "dicente_e_tcc_inseridos";
+					} else {
+						detalheExistente.status = "tcc_inserido";
+					}
+				};
+				const criarNovoTcc = async () => {
 					const novoTcc = await this.trabalhoConclusaoModel.create(
 						{
 							ano: orientacaoData.ano,
@@ -214,14 +225,57 @@ export class DicentesService {
 						} as unknown as Partial<TrabalhoConclusaoEntity>,
 						{ transaction },
 					);
-					tccId = novoTcc.id;
+					marcarStatusTccCriado();
+					return novoTcc.id;
+				};
 
-					if (detalheExistente.status === "dicente_inserido" || detalheExistente.status === "dicente_inserido_com_usuario") {
-						detalheExistente.status = detalheExistente.status.includes("com_usuario")
-							? "dicente_e_tcc_inseridos_com_usuario"
-							: "dicente_e_tcc_inseridos";
+				if (!tccExistente) {
+					// TCC 2: se o estudante já tem projeto aprovado, reutiliza o mesmo TCC
+					// (atualiza fase=2 e etapa=7) em vez de criar um novo registro.
+					if (Number(orientacaoData.fase) === 2) {
+						const tccComProjetoAprovado = await this.trabalhoConclusaoModel.findOne({
+							where: {
+								matricula: dicenteData.matricula,
+								id_curso: orientacaoData.id_curso,
+								aprovado_projeto: true,
+								aprovado_tcc: false,
+							},
+							order: [
+								["ano", "DESC"],
+								["semestre", "DESC"],
+								["id", "DESC"],
+							],
+							transaction,
+						});
+
+						if (tccComProjetoAprovado) {
+							await tccComProjetoAprovado.update(
+								{
+									ano: orientacaoData.ano,
+									semestre: orientacaoData.semestre,
+									id_curso: orientacaoData.id_curso,
+									fase: 2,
+									etapa: 7,
+								},
+								{ transaction },
+							);
+							tccId = tccComProjetoAprovado.id;
+
+							if (
+								detalheExistente.status === "dicente_inserido" ||
+								detalheExistente.status === "dicente_inserido_com_usuario"
+							) {
+								detalheExistente.status = detalheExistente.status.includes("com_usuario")
+									? "dicente_inserido_tcc_atualizado_fase2_com_usuario"
+									: "dicente_inserido_tcc_atualizado_fase2";
+							} else {
+								detalheExistente.status = "tcc_atualizado_fase2";
+							}
+						} else {
+							tccId = await criarNovoTcc();
+						}
 					} else {
-						detalheExistente.status = "tcc_inserido";
+						tccId = await criarNovoTcc();
 					}
 				} else {
 					tccId = tccExistente.id;
