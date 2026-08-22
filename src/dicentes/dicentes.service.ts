@@ -229,54 +229,95 @@ export class DicentesService {
 					return novoTcc.id;
 				};
 
-				if (!tccExistente) {
-					// TCC 2: se o estudante já tem projeto aprovado, reutiliza o mesmo TCC
-					// (atualiza fase=2 e etapa=7) em vez de criar um novo registro.
-					if (Number(orientacaoData.fase) === 2) {
-						const tccComProjetoAprovado = await this.trabalhoConclusaoModel.findOne({
-							where: {
-								matricula: dicenteData.matricula,
+			if (!tccExistente) {
+				// TCC fase 2: cria um novo registro separado copiando os dados da fase 1,
+				// mantendo o registro original da fase 1 intacto.
+				if (Number(orientacaoData.fase) === 2) {
+					// Busca o TCC de fase 1 mais recente com projeto aprovado (para definir etapa inicial)
+					const tccFase1Aprovado = await this.trabalhoConclusaoModel.findOne({
+						where: {
+							matricula: dicenteData.matricula,
+							id_curso: orientacaoData.id_curso,
+							fase: 1,
+							aprovado_projeto: true,
+							aprovado_tcc: false,
+						},
+						order: [["id", "DESC"]],
+						transaction,
+					});
+
+					// Busca o TCC de fase 1 mais recente para copiar os dados (com ou sem aprovação)
+					const tccFase1 = tccFase1Aprovado ?? await this.trabalhoConclusaoModel.findOne({
+						where: {
+							matricula: dicenteData.matricula,
+							id_curso: orientacaoData.id_curso,
+							fase: 1,
+						},
+						order: [["id", "DESC"]],
+						transaction,
+					});
+
+					if (tccFase1) {
+						// Cria novo TCC de fase 2 copiando dados da fase 1
+						const novoTccFase2 = await this.trabalhoConclusaoModel.create(
+							{
+								ano: orientacaoData.ano,
+								semestre: orientacaoData.semestre,
 								id_curso: orientacaoData.id_curso,
-								aprovado_projeto: true,
-								aprovado_tcc: false,
-							},
-							order: [
-								["ano", "DESC"],
-								["semestre", "DESC"],
-								["id", "DESC"],
-							],
-							transaction,
-						});
+								fase: 2,
+								matricula: String(dicenteData.matricula),
+								tema: tccFase1.tema,
+								titulo: tccFase1.titulo,
+								resumo: tccFase1.resumo,
+								etapa: tccFase1Aprovado ? 7 : 0,
+							} as unknown as Partial<TrabalhoConclusaoEntity>,
+							{ transaction },
+						);
+						tccId = novoTccFase2.id;
 
-						if (tccComProjetoAprovado) {
-							await tccComProjetoAprovado.update(
-								{
-									ano: orientacaoData.ano,
-									semestre: orientacaoData.semestre,
-									id_curso: orientacaoData.id_curso,
-									fase: 2,
-									etapa: 7,
-								},
-								{ transaction },
-							);
-							tccId = tccComProjetoAprovado.id;
-
-							if (
-								detalheExistente.status === "dicente_inserido" ||
-								detalheExistente.status === "dicente_inserido_com_usuario"
-							) {
-								detalheExistente.status = detalheExistente.status.includes("com_usuario")
-									? "dicente_inserido_tcc_atualizado_fase2_com_usuario"
-									: "dicente_inserido_tcc_atualizado_fase2";
-							} else {
-								detalheExistente.status = "tcc_atualizado_fase2";
-							}
+						if (
+							detalheExistente.status === "dicente_inserido" ||
+							detalheExistente.status === "dicente_inserido_com_usuario"
+						) {
+							detalheExistente.status = detalheExistente.status.includes("com_usuario")
+								? "dicente_inserido_tcc_atualizado_fase2_com_usuario"
+								: "dicente_inserido_tcc_atualizado_fase2";
 						} else {
-							tccId = await criarNovoTcc();
+							detalheExistente.status = "tcc_atualizado_fase2";
+						}
+
+						// Copia a orientação da fase 1 para o novo TCC de fase 2 quando nenhum
+						// orientador específico é informado na importação
+						if (!orientacaoData.codigo_docente) {
+							const orientacaoFase1 = await this.orientacaoModel.findOne({
+								where: { id_tcc: tccFase1.id, orientador: true },
+								transaction,
+							});
+
+							if (orientacaoFase1) {
+								const orientacaoFase2Existente = await this.orientacaoModel.findOne({
+									where: { id_tcc: tccId, orientador: true },
+									transaction,
+								});
+
+								if (!orientacaoFase2Existente) {
+									await this.orientacaoModel.create(
+										{
+											codigo_docente: orientacaoFase1.codigo_docente,
+											id_tcc: tccId,
+											orientador: true,
+										} as Partial<OrientacaoEntity>,
+										{ transaction },
+									);
+								}
+							}
 						}
 					} else {
 						tccId = await criarNovoTcc();
 					}
+				} else {
+					tccId = await criarNovoTcc();
+				}
 				} else {
 					tccId = tccExistente.id;
 

@@ -46,7 +46,9 @@
     "migrate": "npx sequelize-cli db:migrate",
     "migrate:safe": "node scripts/migrate-safe.js",
     "migrate:undo": "npx sequelize-cli db:migrate:undo",
-    "migrate:status": "npx sequelize-cli db:migrate:status"
+    "migrate:status": "npx sequelize-cli db:migrate:status",
+    "fix:tccs-fase2": "node scripts/corrigir-tccs-fase1-fase2.js",
+    "fix:tccs-fase2:dry-run": "node scripts/corrigir-tccs-fase1-fase2.js --dry-run"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.24",

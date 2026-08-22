@@ -5,8 +5,8 @@
  * criar usuários, atualizar dicentes e criar associações
  */
 
-require("dotenv").config();
 const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const Sequelize = require("sequelize");
 const ldap = require("ldapjs");
 
