@@ -88,7 +88,7 @@ export class TrabalhoConclusaoRepository {
 			order: [
 				["ano", "DESC"],
 				["semestre", "DESC"],
-				["fase", "ASC"],
+				["fase", "DESC"],
 				["id", "DESC"],
 			],
 		});

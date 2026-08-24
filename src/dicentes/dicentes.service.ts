@@ -230,8 +230,10 @@ export class DicentesService {
 				};
 
 			if (!tccExistente) {
-				// TCC fase 2: cria um novo registro separado copiando os dados da fase 1,
-				// mantendo o registro original da fase 1 intacto.
+				// TCC fase 2: atualiza o próprio registro de fase 1 para fase 2 (mesmo
+				// id), em vez de criar um registro separado. Mantém o mesmo padrão do
+				// avanço de fase feito pelo dicente (PUT em /trabalho-conclusao/:id),
+				// preservando orientação/convites/defesas já vinculados ao id_tcc.
 				if (Number(orientacaoData.fase) === 2) {
 					// Busca o TCC de fase 1 mais recente com projeto aprovado (para definir etapa inicial)
 					const tccFase1Aprovado = await this.trabalhoConclusaoModel.findOne({
@@ -246,7 +248,7 @@ export class DicentesService {
 						transaction,
 					});
 
-					// Busca o TCC de fase 1 mais recente para copiar os dados (com ou sem aprovação)
+					// Busca o TCC de fase 1 mais recente para atualizar (com ou sem aprovação)
 					const tccFase1 = tccFase1Aprovado ?? await this.trabalhoConclusaoModel.findOne({
 						where: {
 							matricula: dicenteData.matricula,
@@ -258,22 +260,18 @@ export class DicentesService {
 					});
 
 					if (tccFase1) {
-						// Cria novo TCC de fase 2 copiando dados da fase 1
-						const novoTccFase2 = await this.trabalhoConclusaoModel.create(
+						// Atualiza o registro de fase 1 para fase 2, mantendo o mesmo id
+						await tccFase1.update(
 							{
 								ano: orientacaoData.ano,
 								semestre: orientacaoData.semestre,
 								id_curso: orientacaoData.id_curso,
 								fase: 2,
-								matricula: String(dicenteData.matricula),
-								tema: tccFase1.tema,
-								titulo: tccFase1.titulo,
-								resumo: tccFase1.resumo,
 								etapa: tccFase1Aprovado ? 7 : 0,
 							} as unknown as Partial<TrabalhoConclusaoEntity>,
 							{ transaction },
 						);
-						tccId = novoTccFase2.id;
+						tccId = tccFase1.id;
 
 						if (
 							detalheExistente.status === "dicente_inserido" ||
@@ -286,32 +284,8 @@ export class DicentesService {
 							detalheExistente.status = "tcc_atualizado_fase2";
 						}
 
-						// Copia a orientação da fase 1 para o novo TCC de fase 2 quando nenhum
-						// orientador específico é informado na importação
-						if (!orientacaoData.codigo_docente) {
-							const orientacaoFase1 = await this.orientacaoModel.findOne({
-								where: { id_tcc: tccFase1.id, orientador: true },
-								transaction,
-							});
-
-							if (orientacaoFase1) {
-								const orientacaoFase2Existente = await this.orientacaoModel.findOne({
-									where: { id_tcc: tccId, orientador: true },
-									transaction,
-								});
-
-								if (!orientacaoFase2Existente) {
-									await this.orientacaoModel.create(
-										{
-											codigo_docente: orientacaoFase1.codigo_docente,
-											id_tcc: tccId,
-											orientador: true,
-										} as Partial<OrientacaoEntity>,
-										{ transaction },
-									);
-								}
-							}
-						}
+						// A orientação da fase 1 já permanece vinculada ao mesmo id_tcc,
+						// então não é preciso copiá-la para um novo registro.
 					} else {
 						tccId = await criarNovoTcc();
 					}

@@ -13,6 +13,7 @@ const TCC_ATTRS = [
 	"id",
 	"ano",
 	"semestre",
+	"id_curso",
 	"fase",
 	"matricula",
 	"tema",
