@@ -5,8 +5,8 @@
  * criar usuários, atualizar dicentes e criar associações
  */
 
-require("dotenv").config();
 const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const Sequelize = require("sequelize");
 const ldap = require("ldapjs");
 
@@ -140,23 +140,43 @@ async function main() {
 		await sequelize.authenticate();
 		console.log("Conexão com banco de dados estabelecida\n");
 
-		// Carregar modelos
-		const Dicente = require(path.join(
-			__dirname,
-			"../src/models/dicente.js",
-		))(sequelize, Sequelize.DataTypes);
-		const Usuario = require(path.join(
-			__dirname,
-			"../src/models/usuario.js",
-		))(sequelize, Sequelize.DataTypes);
-		const UsuarioCurso = require(path.join(
-			__dirname,
-			"../src/models/usuario-curso.js",
-		))(sequelize, Sequelize.DataTypes);
-		const UsuarioGrupo = require(path.join(
-			__dirname,
-			"../src/models/usuario-grupo.js",
-		))(sequelize, Sequelize.DataTypes);
+		// Modelos mínimos definidos inline (script standalone, não depende mais de src/models,
+		// que foi removido quando o backend migrou para NestJS/TypeScript).
+		const Dicente = sequelize.define(
+			"Dicente",
+			{
+				matricula: { type: Sequelize.DataTypes.BIGINT, primaryKey: true },
+				nome: Sequelize.DataTypes.STRING,
+				email: Sequelize.DataTypes.STRING,
+				id_usuario: Sequelize.DataTypes.STRING,
+			},
+			{ tableName: "dicente", schema: "public", freezeTableName: true, timestamps: true },
+		);
+		const Usuario = sequelize.define(
+			"Usuario",
+			{
+				id: { type: Sequelize.DataTypes.STRING, primaryKey: true },
+				nome: Sequelize.DataTypes.STRING,
+				email: Sequelize.DataTypes.STRING,
+			},
+			{ tableName: "usuario", schema: "public", freezeTableName: true, timestamps: true },
+		);
+		const UsuarioCurso = sequelize.define(
+			"UsuarioCurso",
+			{
+				id_curso: { type: Sequelize.DataTypes.INTEGER, primaryKey: true },
+				id_usuario: { type: Sequelize.DataTypes.STRING, primaryKey: true },
+			},
+			{ tableName: "usuario_curso", schema: "public", freezeTableName: true, timestamps: true },
+		);
+		const UsuarioGrupo = sequelize.define(
+			"UsuarioGrupo",
+			{
+				id_grupo: { type: Sequelize.DataTypes.INTEGER, primaryKey: true },
+				id_usuario: { type: Sequelize.DataTypes.STRING, primaryKey: true },
+			},
+			{ tableName: "usuario_grupo", schema: "public", freezeTableName: true, timestamps: true },
+		);
 
 		// Buscar todos os dicentes
 		console.log("Buscando dicentes no banco de dados...");

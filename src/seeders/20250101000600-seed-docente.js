@@ -89,7 +89,6 @@ module.exports = {
 				...d,
 				createdAt: new Date(),
 				updatedAt: new Date(),
-,
 			})),
 			{}
 		);
@@ -99,4 +98,3 @@ module.exports = {
 		await queryInterface.bulkDelete("docente", null, {});
 	},
 };
-
