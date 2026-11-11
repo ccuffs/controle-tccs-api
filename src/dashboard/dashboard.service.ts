@@ -341,9 +341,33 @@ export class DashboardService {
 		const tccWhere: Record<string, number> = { ano: anoAlvo, semestre: semestreAlvo };
 		if (id_curso) tccWhere.id_curso = parseInt(id_curso, 10);
 
-		const defesaWhere: Record<string, unknown> = { data_defesa: { [Op.ne]: null } };
+		// Buscar o período do semestre para filtrar data_defesa dentro do intervalo correto.
+		// Isso evita que defesas agendadas em datas de semestres anteriores apareçam na lista.
+		const periodo = await this.dashboardRepository.buscarPeriodoSemestre(anoAlvo, semestreAlvo);
+
+		const defesaWhere: Record<string, unknown> = {};
 		if (fase) defesaWhere.fase = parseInt(fase, 10);
-		if (codigo_docente) defesaWhere.membro_banca = String(codigo_docente);
+
+		if (periodo?.inicio && periodo?.fim) {
+			// Estende o fim em 1 dia para incluir o último dia completo do semestre
+			const fimPeriodo = new Date(periodo.fim as string);
+			fimPeriodo.setDate(fimPeriodo.getDate() + 1);
+			defesaWhere.data_defesa = {
+				[Op.gte]: new Date(periodo.inicio as string),
+				[Op.lt]: fimPeriodo,
+			};
+		} else {
+			// Fallback: apenas garante que a data existe
+			defesaWhere.data_defesa = { [Op.ne]: null };
+		}
+
+		// Nota: o filtro por codigo_docente é realizado em memória após o agrupamento,
+		// verificando se o docente participa como orientador OU como membro de banca.
+		// Isso garante que membros de banca que não são orientadores também vejam as defesas.
+
+		const tccIncludeNested = [
+			{ model: DicenteEntity, attributes: ["matricula", "nome"] },
+		];
 
 		const include = [
 			{
@@ -351,7 +375,7 @@ export class DashboardService {
 				required: true,
 				attributes: ["id", "ano", "semestre", "id_curso", "fase", "titulo", "matricula"],
 				where: tccWhere,
-				include: [{ model: DicenteEntity, attributes: ["matricula", "nome"] }],
+				include: tccIncludeNested,
 			},
 			{ model: DocenteEntity, as: "membroBanca", attributes: ["codigo", "nome"] },
 		];
@@ -371,6 +395,9 @@ export class DashboardService {
 		}
 
 		const grupos = new Map<string, ItemAgendado>();
+		// Rastreia quais pares (id_tcc, fase) incluem o docente informado (como orientador ou banca)
+		const defesasComDocente = new Set<string>();
+
 		for (const d of defesas as unknown as Record<string, any>[]) {
 			const idTcc = d.id_tcc;
 			const dataHora = new Date(d.data_defesa);
@@ -398,12 +425,26 @@ export class DashboardService {
 			}
 
 			const item = grupos.get(chave)!;
-			const nomeDocente = d.membroBanca?.nome || d.membro_banca || "";
+			const codigoMembroAtual = d.membroBanca?.codigo || String(d.membro_banca || "");
+			const nomeDocente = d.membroBanca?.nome || "";
 			if (d.orientador) item.orientador = nomeDocente;
 			else if (nomeDocente) item.banca.push(nomeDocente);
+
+			// Rastrear se este docente está presente nesta defesa (como orientador ou membro de banca)
+			// Usamos "id_tcc|fase" como chave pois identifica unicamente uma defesa
+			if (codigo_docente && codigoMembroAtual === String(codigo_docente)) {
+				defesasComDocente.add(`${idTcc}|${faseNum}`);
+			}
 		}
 
-		const itens = Array.from(grupos.values()).sort((a, b) => {
+		// Filtrar apenas defesas em que o docente participa (orientador ou membro de banca)
+		// Quando codigo_docente não é informado (admin/coordenador), retorna todas
+		let itens = Array.from(grupos.values());
+		if (codigo_docente) {
+			itens = itens.filter(item => defesasComDocente.has(`${item.id_tcc}|${item.fase}`));
+		}
+
+		itens = itens.sort((a, b) => {
 			if (a.data !== b.data) return a.data.localeCompare(b.data);
 			if (a.hora !== b.hora) return a.hora.localeCompare(b.hora);
 			return String(a.estudante).localeCompare(String(b.estudante), "pt", { sensitivity: "base" });
