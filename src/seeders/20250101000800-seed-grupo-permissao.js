@@ -42,6 +42,21 @@ module.exports = {
 			updatedAt: new Date(),
 		}));
 
+		// Banca (grupo 5) - permissões necessárias para convites, defesas e disponibilidade
+		//  11 – VISUALIZAR_ORIENTACOES          (GET /orientadores/docente + PermissionContext)
+		//  36 – VISUALIZAR_TRABALHO_CONCLUSAO   (GET /defesas)
+		//  39 – EDITAR_TRABALHO_CONCLUSAO       (PUT /defesas – salvar avaliações)
+		//  41 – VISUALIZAR_CONVITE              (GET /convites/docente/:codigo)
+		//  44 – EDITAR_CONVITE                  (PUT /convites – responder convite)
+		//  46-50 – DISPONIBILIDADE_BANCA        (CRUD de disponibilidade)
+		const bancaPermissoes = [11, 36, 39, 41, 44, 46, 47, 48, 49, 50];
+		const bancaPermissions = bancaPermissoes.map((id) => ({
+			id_grupo: 5,
+			id_permissao: id,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		}));
+
 		await queryInterface.bulkInsert(
 			"grupo_permissao",
 			[
@@ -49,6 +64,7 @@ module.exports = {
 				...professorPermissions,
 				...orientadorPermissions,
 				...estudantePermissions,
+				...bancaPermissions,
 			],
 			{},
 		);

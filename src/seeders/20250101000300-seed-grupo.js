@@ -37,6 +37,14 @@ module.exports = {
 					createdAt: new Date(),
 					updatedAt: new Date(),
 				},
+				{
+					id: 5,
+					nome: "banca",
+					descricao: "Membro de banca avaliadora de TCCs.",
+					sistema: 2,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
 			],
 			{},
 		);
