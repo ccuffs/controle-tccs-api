@@ -1,12 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { CursoEntity, GrupoEntity, UsuarioEntity } from "../database/entities";
+import { CursoEntity, DocenteEntity, GrupoEntity, UsuarioEntity } from "../database/entities";
 
 @Injectable()
 export class AuthRepository {
 	constructor(
 		@InjectModel(UsuarioEntity)
 		private readonly usuarioModel: typeof UsuarioEntity,
+		@InjectModel(DocenteEntity)
+		private readonly docenteModel: typeof DocenteEntity,
 	) {}
 
 	async buscarUsuarioPorEmail(email: string): Promise<UsuarioEntity | null> {
@@ -27,5 +29,22 @@ export class AuthRepository {
 
 	async buscarUsuarioPorIdSimples(userId: string): Promise<UsuarioEntity | null> {
 		return this.usuarioModel.findByPk(userId);
+	}
+
+	/**
+	 * Vincula o registro do docente ao usuário autenticado caso `id_usuario`
+	 * ainda seja nulo. Executado de forma silenciosa no login (lazy binding):
+	 * evita que docentes que nunca tiveram `id_usuario` preenchido recebam
+	 * "Docente não encontrado para este usuário" ao tentar acessar os convites.
+	 */
+	async vincularDocenteAoUsuario(email: string, idUsuario: string): Promise<void> {
+		try {
+			await this.docenteModel.update(
+				{ id_usuario: idUsuario },
+				{ where: { email, id_usuario: null } },
+			);
+		} catch {
+			// Silencioso: não bloqueia o login se a vinculação falhar.
+		}
 	}
 }

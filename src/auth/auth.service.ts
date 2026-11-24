@@ -101,6 +101,12 @@ export class AuthService implements OnModuleInit {
 				throw new Error("Usuário não encontrado");
 			}
 
+			// Lazy binding: garante que o registro do docente aponte para este
+			// usuário caso `id_usuario` ainda seja nulo. Resolve o erro
+			// "Docente não encontrado para este usuário" para docentes (ex.:
+			// membros de banca) cujo id_usuario nunca foi preenchido manualmente.
+			await this.authRepository.vincularDocenteAoUsuario(dadosLdap.email, dadosLdap.id);
+
 			return this.montarRespostaLogin(usuario);
 		}
 
@@ -109,6 +115,14 @@ export class AuthService implements OnModuleInit {
 		}
 
 		const usuario = await this.localStrategy.validate(userId, senha);
+
+		// Lazy binding para login local também (mesmo comportamento do fluxo LDAP).
+		if (usuario.email) {
+			await this.authRepository.vincularDocenteAoUsuario(
+				usuario.email,
+				usuario.id as string,
+			);
+		}
 
 		return this.montarRespostaLogin(usuario);
 	}
