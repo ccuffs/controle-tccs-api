@@ -1,6 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { AreaTccEntity, CursoEntity, DocenteEntity, DocenteOfertaEntity, TemaTccEntity } from "../database/entities";
+import {
+	AreaTccEntity,
+	CursoEntity,
+	DocenteEntity,
+	DocenteOfertaEntity,
+	OrientacaoEntity,
+	TemaTccEntity,
+	TrabalhoConclusaoEntity,
+} from "../database/entities";
 
 const DOCENTE_ATTRS = ["codigo", "email", "nome", "sala", "siape", "id_usuario"];
 
@@ -11,7 +19,32 @@ export class TemasTccRepository {
 		private readonly temaTccModel: typeof TemaTccEntity,
 		@InjectModel(DocenteOfertaEntity)
 		private readonly docenteOfertaModel: typeof DocenteOfertaEntity,
+		@InjectModel(OrientacaoEntity)
+		private readonly orientacaoModel: typeof OrientacaoEntity,
 	) {}
+
+	/** Orientandos (orientador principal) do docente nos TCCs da oferta: vagas já ocupadas. */
+	contarOrientandosNaOferta(
+		codigoDocente: string,
+		idCurso: string,
+		ano: number,
+		semestre: number,
+		fase: number,
+	): Promise<number> {
+		return this.orientacaoModel.count({
+			where: { codigo_docente: codigoDocente, orientador: true },
+			include: [
+				{
+					model: TrabalhoConclusaoEntity,
+					required: true,
+					attributes: [],
+					where: { ano, semestre, fase, id_curso: parseInt(idCurso, 10) },
+				},
+			],
+			distinct: true,
+			col: "id_tcc",
+		});
+	}
 
 	async obterTodosTemasTcc(): Promise<TemaTccEntity[]> {
 		return this.temaTccModel.findAll({

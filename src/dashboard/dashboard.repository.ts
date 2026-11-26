@@ -5,7 +5,10 @@ import {
 	AnoSemestreEntity,
 	BancaCursoEntity,
 	ConviteEntity,
+	CursoEntity,
+	DatasDefesaTccEntity,
 	DefesaEntity,
+	DicenteEntity,
 	DocenteDisponibilidadeBancaEntity,
 	OrientacaoEntity,
 	OrientadorCursoEntity,
@@ -31,6 +34,8 @@ export class DashboardRepository {
 		private readonly disponibilidadeModel: typeof DocenteDisponibilidadeBancaEntity,
 		@InjectModel(BancaCursoEntity)
 		private readonly bancaCursoModel: typeof BancaCursoEntity,
+		@InjectModel(DatasDefesaTccEntity)
+		private readonly datasDefesaModel: typeof DatasDefesaTccEntity,
 	) {}
 
 	contarTccsNaOferta(where: WhereOptions): Promise<number> {
@@ -48,7 +53,7 @@ export class DashboardRepository {
 		order: [string, string][],
 	): Promise<Record<string, unknown>[]> {
 		return this.trabalhoConclusaoModel.findAll({
-			attributes: ["etapa", [fn("COUNT", col("TrabalhoConclusao.id")), "quantidade"]],
+			attributes: ["fase", "etapa", [fn("COUNT", col("TrabalhoConclusao.id")), "quantidade"]],
 			where,
 			include,
 			group,
@@ -183,15 +188,32 @@ export class DashboardRepository {
 		}) as unknown as Promise<{ codigo_docente: string }[]>;
 	}
 
-	buscarEstudantesSemConviteBanca(where: WhereOptions, include: Includeable[]): Promise<TrabalhoConclusaoEntity[]> {
-		// `distinct: true` no legado não tem efeito real em findAll (só existe em
-		// count/findAndCountAll) — omitido aqui, mesmo comportamento observável.
+	/** TCCs da oferta com orientações, convites e defesas, para calcular as pendências. */
+	buscarTccsParaPendencias(where: WhereOptions, codigoDocente?: string): Promise<TrabalhoConclusaoEntity[]> {
 		return this.trabalhoConclusaoModel.findAll({
-			attributes: ["id", "matricula", "fase", "id_curso", "ano", "semestre"],
+			attributes: ["id", "matricula", "fase", "etapa", "id_curso", "ano", "semestre"],
 			where,
-			include,
-			subQuery: false,
+			include: [
+				{ model: DicenteEntity, attributes: ["matricula", "nome"] },
+				{ model: CursoEntity, attributes: ["id", "nome"] },
+				{
+					model: OrientacaoEntity,
+					attributes: ["codigo_docente", "orientador"],
+					where: codigoDocente ? { codigo_docente: codigoDocente, orientador: true } : { orientador: true },
+					required: Boolean(codigoDocente),
+				},
+				{
+					model: ConviteEntity,
+					attributes: ["codigo_docente", "fase", "orientacao", "data_feedback", "aceito"],
+					separate: true,
+				},
+				{ model: DefesaEntity, attributes: ["membro_banca", "fase", "orientador"], separate: true },
+			],
 		});
+	}
+
+	buscarDatasDefesa(where: WhereOptions): Promise<Record<string, unknown>[]> {
+		return this.datasDefesaModel.findAll({ where, raw: true }) as unknown as Promise<Record<string, unknown>[]>;
 	}
 
 	buscarCodigosDocentesComDisponibilidade(where: WhereOptions): Promise<{ codigo_docente: string }[]> {

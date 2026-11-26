@@ -30,6 +30,11 @@ export class FiltrosDashboardDto {
 	@IsNumberString()
 	dias?: string;
 
+	/** convites-por-periodo: janela móvel dos últimos N meses, agrupada por mês (ignora ano/semestre). */
+	@IsOptional()
+	@IsNumberString()
+	meses?: string;
+
 	/** convites-*-status: idade mínima (em dias) para um convite pendente contar como antigo. Padrão 5. */
 	@IsOptional()
 	@IsNumberString()

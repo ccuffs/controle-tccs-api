@@ -2,7 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { Op } from "sequelize";
 import { AnoSemestreService } from "../ano-semestre/ano-semestre.service";
 import { rotuloEtapa, rotuloFase } from "../common/etapas-tcc";
-import { CursoEntity, DicenteEntity, DocenteEntity, OrientacaoEntity, TrabalhoConclusaoEntity } from "../database/entities";
+import { calcularPendenciasTcc, type ConvitePendencia, type DefesaPendencia } from "../common/pendencias-tcc";
+import { DicenteEntity, DocenteEntity, OrientacaoEntity, TrabalhoConclusaoEntity } from "../database/entities";
 import { DashboardRepository } from "./dashboard.repository";
 import { FiltrosDashboardDto } from "./dto/filtros-dashboard.dto";
 
@@ -95,15 +96,22 @@ export class DashboardService {
 		const resultados = await this.dashboardRepository.buscarDistribuicaoPorEtapa(
 			where,
 			include,
-			["TrabalhoConclusao.etapa"],
-			[["etapa", "ASC"]],
+			["TrabalhoConclusao.fase", "TrabalhoConclusao.etapa"],
+			[
+				["fase", "ASC"],
+				["etapa", "ASC"],
+			],
 		);
 
+		// Agrupado por fase e etapa: o mesmo número de etapa tem significados diferentes
+		// por fase (ex.: 6 = "Defesa agendada" no TCC I e "Seminário de andamento" no TCC II).
 		const distribuicao = resultados.map((r) => {
 			const etapa = r.etapa === null ? 0 : parseInt(String(r.etapa), 10);
+			const faseItem = parseInt(String(r.fase), 10);
 			return {
+				fase: faseItem,
 				etapa,
-				etapa_label: rotuloEtapa(etapa, fase ? parseInt(fase, 10) : undefined),
+				etapa_label: rotuloEtapa(etapa, faseItem),
 				quantidade: parseInt(String(r.quantidade), 10),
 			};
 		});
@@ -119,6 +127,9 @@ export class DashboardService {
 	}
 
 	async calcularConvitesPorPeriodo(filtros: FiltrosDashboardDto) {
+		const meses = filtros.meses ? parseInt(filtros.meses, 10) : undefined;
+		if (meses !== undefined && meses > 0) return this.calcularConvitesPorMes(filtros, Math.min(meses, 36));
+
 		const { id_curso, fase, codigo_docente } = filtros;
 		const { ano: anoAlvo, semestre: semestreAlvo } = await this.resolverOfertaAlvo(filtros.ano, filtros.semestre);
 
@@ -188,6 +199,54 @@ export class DashboardService {
 			codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
 			inicio: inicioPeriodo,
 			fim: fimPeriodo,
+			pontos: Array.from(pontosMap.values()),
+		};
+	}
+
+	/** Convites enviados nos últimos `meses` meses (incluindo o atual), agrupados por mês. */
+	private async calcularConvitesPorMes(filtros: FiltrosDashboardDto, meses: number) {
+		const { id_curso, fase, codigo_docente } = filtros;
+		const agora = new Date();
+		const inicio = new Date(agora.getFullYear(), agora.getMonth() - (meses - 1), 1);
+
+		const where: Record<string, unknown> = {
+			data_envio: { [Op.gte]: inicio, [Op.lte]: agora },
+			...(codigo_docente ? { codigo_docente: String(codigo_docente) } : {}),
+		};
+		const include = [
+			{
+				model: TrabalhoConclusaoEntity,
+				required: true,
+				attributes: [],
+				where: {
+					...(fase ? { fase: parseInt(fase, 10) } : {}),
+					...(id_curso ? { id_curso: parseInt(id_curso, 10) } : {}),
+				},
+			},
+		];
+
+		const convites = await this.dashboardRepository.buscarConvitesPorPeriodo(where, include);
+
+		const chaveMes = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+		const pontosMap = new Map<string, { mes: string; orientacao: number; banca: number }>();
+		for (let i = 0; i < meses; i++) {
+			const d = new Date(inicio.getFullYear(), inicio.getMonth() + i, 1);
+			pontosMap.set(chaveMes(d), { mes: chaveMes(d), orientacao: 0, banca: 0 });
+		}
+		for (const c of convites) {
+			const ponto = pontosMap.get(chaveMes(new Date(c.data_envio as string)));
+			if (!ponto) continue;
+			if (c.orientacao) ponto.orientacao += 1;
+			else ponto.banca += 1;
+		}
+
+		return {
+			fase: fase ? parseInt(fase, 10) : undefined,
+			id_curso: id_curso ? parseInt(id_curso, 10) : undefined,
+			codigo_docente: codigo_docente ? String(codigo_docente) : undefined,
+			meses,
+			inicio,
+			fim: agora,
 			pontos: Array.from(pontosMap.values()),
 		};
 	}
@@ -615,6 +674,11 @@ export class DashboardService {
 		};
 	}
 
+	/**
+	 * Discentes com pendência de convite de banca (mesma regra do acompanhamento de
+	 * orientações): têm orientador, já chegaram à etapa de convite da banca da fase e
+	 * têm menos de 2 convites válidos. `prazo` = início do período de defesas da oferta.
+	 */
 	async calcularEstudantesSemConviteBanca(filtros: FiltrosDashboardDto) {
 		const { id_curso, fase, codigo_docente } = filtros;
 		const { ano: anoAlvo, semestre: semestreAlvo } = await this.resolverOfertaAlvo(filtros.ano, filtros.semestre);
@@ -623,54 +687,53 @@ export class DashboardService {
 		if (fase) tccWhere.fase = parseInt(fase, 10);
 		if (id_curso) tccWhere.id_curso = parseInt(id_curso, 10);
 
-		const conviteBancaIncludeTcc = [{ model: TrabalhoConclusaoEntity, required: true, attributes: [], where: tccWhere }];
-
-		const tccsComConvite = await this.dashboardRepository.buscarIdsTccsComConviteBanca(
-			{ orientacao: false },
-			conviteBancaIncludeTcc,
+		const tccs = await this.dashboardRepository.buscarTccsParaPendencias(
+			tccWhere,
+			codigo_docente ? String(codigo_docente) : undefined,
 		);
 
-		const idsTccsComConvite = [...new Set(tccsComConvite.map((c) => c.id_tcc))];
+		const datas = await this.dashboardRepository.buscarDatasDefesa({ ano: anoAlvo, semestre: semestreAlvo });
+		const prazoPorOferta = new Map<string, string | null>();
+		for (const d of datas) prazoPorOferta.set(`${d.id_curso}|${d.fase}`, (d.inicio as string | null) ?? null);
 
-		const tccFinalWhere: Record<string, unknown> = {
-			...tccWhere,
-			...(idsTccsComConvite.length > 0 ? { id: { [Op.notIn]: idsTccsComConvite } } : {}),
-		};
-
-		const include: unknown[] = [
-			{ model: DicenteEntity, attributes: ["matricula", "nome"] },
-			{ model: CursoEntity, attributes: ["id", "nome"] },
-		];
-
-		if (codigo_docente) {
-			include.push({
-				model: OrientacaoEntity,
-				required: true,
-				attributes: [],
-				where: { codigo_docente: String(codigo_docente), orientador: true },
-			});
-		}
-
-		const tccs = await this.dashboardRepository.buscarEstudantesSemConviteBanca(tccFinalWhere, include as never);
-
-		const itens = tccs.map((tcc) => {
+		const itens = tccs.flatMap((tcc) => {
 			const t = tcc.toJSON() as unknown as {
 				id: number;
 				matricula: string;
 				id_curso: number;
 				fase: number;
+				etapa: number | null;
 				dicente?: { matricula: string; nome: string };
 				curso?: { nome: string };
+				orientacoes?: { orientador: boolean }[];
+				convites?: ConvitePendencia[];
+				defesas?: DefesaPendencia[];
 			};
-			return {
-				id_tcc: t.id,
-				matricula: String(t.dicente?.matricula || t.matricula || ""),
-				nome: t.dicente?.nome || "",
-				id_curso: t.id_curso,
-				nomeCurso: t.curso?.nome || "",
-				fase: t.fase,
-				faseLabel: String(t.fase) === "1" ? "Projeto" : "TCC",
-			};
+			const faseTcc = Number(t.fase);
+			const etapa = t.etapa ?? 0;
+			const pendencia = calcularPendenciasTcc({
+				fase: faseTcc,
+				etapa,
+				temOrientador: (t.orientacoes || []).some((o) => o.orientador),
+				convites: t.convites || [],
+				defesas: t.defesas || [],
+			}).find((p) => p.codigo === "SEM_CONVITE_BANCA" || p.codigo === "CONVITE_BANCA_INCOMPLETO");
+			if (!pendencia) return [];
+			return [
+				{
+					id_tcc: t.id,
+					matricula: String(t.dicente?.matricula || t.matricula || ""),
+					nome: t.dicente?.nome || "",
+					id_curso: t.id_curso,
+					nomeCurso: t.curso?.nome || "",
+					fase: faseTcc,
+					faseLabel: faseTcc === 1 ? "Projeto" : "TCC",
+					etapa,
+					etapa_label: rotuloEtapa(etapa, faseTcc),
+					pendencia,
+					prazo: prazoPorOferta.get(`${t.id_curso}|${faseTcc}`) ?? null,
+				},
+			];
 		});
 
 		itens.sort((a, b) => String(a.nome).localeCompare(String(b.nome), "pt"));
@@ -723,22 +786,38 @@ export class DashboardService {
 		const bancaWhere: Record<string, unknown> = { codigo_docente: { [Op.in]: codigosSemDisp } };
 		if (id_curso) bancaWhere.id_curso = parseInt(id_curso, 10);
 
-		const includeDocente = [{ model: DocenteEntity, as: "docente", attributes: ["codigo", "nome"] }];
+		const includeDocente = [
+			{ model: DocenteEntity, as: "docente", attributes: ["codigo", "nome", "siape", "email"] },
+		];
 
 		const docentesBanca = await this.dashboardRepository.buscarDocentesBancaCurso(bancaWhere, includeDocente);
 
-		const docentesMap = new Map<string, { codigo_docente: string; nome: string }>();
-		for (const bc of docentesBanca as unknown as { codigo_docente: string; docente?: { nome?: string } }[]) {
+		interface DocenteSemDisp {
+			codigo_docente: string;
+			nome: string;
+			siape: number | null;
+			email: string | null;
+		}
+		const docentesMap = new Map<string, DocenteSemDisp>();
+		for (const bc of docentesBanca as unknown as {
+			codigo_docente: string;
+			docente?: { nome?: string; siape?: number | null; email?: string | null };
+		}[]) {
 			const codigo = bc.codigo_docente;
 			if (!codigo) continue;
 			if (!docentesMap.has(codigo)) {
-				docentesMap.set(codigo, { codigo_docente: codigo, nome: bc.docente?.nome || codigo });
+				docentesMap.set(codigo, {
+					codigo_docente: codigo,
+					nome: bc.docente?.nome || codigo,
+					siape: bc.docente?.siape ?? null,
+					email: bc.docente?.email ?? null,
+				});
 			}
 		}
 
 		for (const codigo of codigosSemDisp) {
 			if (!docentesMap.has(codigo)) {
-				docentesMap.set(codigo, { codigo_docente: codigo, nome: codigo });
+				docentesMap.set(codigo, { codigo_docente: codigo, nome: codigo, siape: null, email: null });
 			}
 		}
 

@@ -40,6 +40,18 @@ export class TemasTccService {
 		const temas = await this.temasTccRepository.obterTemasTccPorCurso(idCurso);
 		const faseVigente = await this.calcularFaseVigente(idCurso, anoAtual, semestreAtual);
 
+		// vagasOcupadas: orientandos do docente na oferta vigente (as vagas são do docente, não do tema).
+		const ocupadasPorDocente = new Map<string, Promise<number>>();
+		const ocupadas = (codigo: string) => {
+			if (!ocupadasPorDocente.has(codigo)) {
+				ocupadasPorDocente.set(
+					codigo,
+					this.temasTccRepository.contarOrientandosNaOferta(codigo, idCurso, anoAtual, semestreAtual, faseVigente),
+				);
+			}
+			return ocupadasPorDocente.get(codigo) as Promise<number>;
+		};
+
 		return Promise.all(
 			temas.map(async (tema) => {
 				const temaData = tema.toJSON() as Record<string, unknown> & { docente: { codigo: string } };
@@ -51,6 +63,7 @@ export class TemasTccService {
 					faseVigente,
 				);
 				temaData.vagasOferta = docenteOferta ? docenteOferta.vagas : 0;
+				temaData.vagasOcupadas = await ocupadas(temaData.docente.codigo);
 				return temaData;
 			}),
 		);
@@ -73,10 +86,18 @@ export class TemasTccService {
 			faseVigente,
 		);
 		const vagasOferta = docenteOferta ? docenteOferta.vagas : 0;
+		const vagasOcupadas = await this.temasTccRepository.contarOrientandosNaOferta(
+			codigo,
+			idCurso,
+			anoAtual,
+			semestreAtual,
+			faseVigente,
+		);
 
 		return temas.map((tema) => {
 			const temaData = tema.toJSON() as Record<string, unknown>;
 			temaData.vagasOferta = vagasOferta;
+			temaData.vagasOcupadas = vagasOcupadas;
 			return temaData;
 		});
 	}

@@ -1,14 +1,10 @@
 import { HttpException, Injectable } from "@nestjs/common";
-import { ETAPA_CONVITE_BANCA, calcularProgresso, rotuloEtapa, rotuloFase } from "../common/etapas-tcc";
+import { calcularProgresso, rotuloEtapa, rotuloFase } from "../common/etapas-tcc";
+import { calcularPendenciasTcc } from "../common/pendencias-tcc";
 import { Permissoes } from "../permissoes/permissoes.enum";
 import { PermissoesService } from "../permissoes/permissoes.service";
 import { AcompanhamentoRepository } from "./acompanhamento.repository";
 import { FiltrosAcompanhamentoDto } from "./dto/filtros-acompanhamento.dto";
-
-export interface PendenciaTcc {
-	codigo: "SEM_CONVITE_ORIENTACAO" | "SEM_CONVITE_BANCA" | "CONVITE_BANCA_INCOMPLETO";
-	descricao: string;
-}
 
 interface DocenteResumo {
 	codigo: string;
@@ -161,45 +157,13 @@ export class AcompanhamentoService {
 			orientador,
 			coorientadores,
 			nota_media: notaMedia,
-			pendencias: this.calcularPendencias(t, fase, etapa, Boolean(orientador), defesasFase),
+			pendencias: calcularPendenciasTcc({
+				fase,
+				etapa,
+				temOrientador: Boolean(orientador),
+				convites: t.convites || [],
+				defesas: t.defesas || [],
+			}),
 		};
-	}
-
-	private calcularPendencias(
-		t: TccJson,
-		fase: number,
-		etapa: number,
-		temOrientador: boolean,
-		defesasFase: DefesaJson[],
-	): PendenciaTcc[] {
-		const convites = t.convites || [];
-		const recusado = (c: ConviteJson) => c.data_feedback !== null && c.data_feedback !== undefined && !c.aceito;
-		const pendencias: PendenciaTcc[] = [];
-
-		if (!temOrientador) {
-			// Sem orientador e sem convite de orientação ainda válido (pendente ou aceito).
-			const conviteValido = convites.some((c) => c.orientacao && !recusado(c));
-			if (!conviteValido) {
-				pendencias.push({ codigo: "SEM_CONVITE_ORIENTACAO", descricao: "Sem convite de orientação" });
-			}
-			return pendencias;
-		}
-
-		const etapaConvite = ETAPA_CONVITE_BANCA[fase];
-		if (etapaConvite !== undefined && etapa >= etapaConvite) {
-			// Conta convites de banca válidos da fase; membros incluídos direto na defesa também valem.
-			const convitesValidos = new Set(
-				convites.filter((c) => !c.orientacao && Number(c.fase) === fase && !recusado(c)).map((c) => c.codigo_docente),
-			);
-			for (const d of defesasFase) if (!d.orientador) convitesValidos.add(d.membro_banca);
-
-			if (convitesValidos.size === 0) {
-				pendencias.push({ codigo: "SEM_CONVITE_BANCA", descricao: "Sem convite de banca" });
-			} else if (convitesValidos.size === 1) {
-				pendencias.push({ codigo: "CONVITE_BANCA_INCOMPLETO", descricao: "Falta 1 convite de banca" });
-			}
-		}
-
-		return pendencias;
 	}
 }
