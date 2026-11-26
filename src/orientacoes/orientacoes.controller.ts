@@ -13,11 +13,15 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { RequerPermissao } from "../common/decorators/permissoes.decorator";
+import { UsuarioAtual } from "../common/decorators/usuario-atual.decorator";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { PermissoesGuard } from "../common/guards/permissoes.guard";
+import { UsuarioEntity } from "../database/entities";
 import { Permissoes } from "../permissoes/permissoes.enum";
+import { AcompanhamentoService } from "./acompanhamento.service";
 import { AtualizarOrientacaoDto } from "./dto/atualizar-orientacao.dto";
 import { CriarOrientacaoDto } from "./dto/criar-orientacao.dto";
+import { FiltrosAcompanhamentoDto } from "./dto/filtros-acompanhamento.dto";
 import { FiltrosOrientacoes } from "./orientacoes.repository";
 import { OrientacoesService } from "./orientacoes.service";
 
@@ -25,7 +29,17 @@ import { OrientacoesService } from "./orientacoes.service";
 @Controller("orientacoes")
 @UseGuards(JwtAuthGuard, PermissoesGuard)
 export class OrientacoesController {
-	constructor(private readonly orientacoesService: OrientacoesService) {}
+	constructor(
+		private readonly orientacoesService: OrientacoesService,
+		private readonly acompanhamentoService: AcompanhamentoService,
+	) {}
+
+	/** Tabela de acompanhamento (Orientações / Meus orientandos), paginada e filtrada no servidor. */
+	@Get("acompanhamento")
+	@RequerPermissao(Permissoes.ORIENTACAO.VISUALIZAR, Permissoes.ORIENTACAO.VISUALIZAR_TODAS)
+	listarAcompanhamento(@Query() query: FiltrosAcompanhamentoDto, @UsuarioAtual() usuario: UsuarioEntity) {
+		return this.acompanhamentoService.listar(query, usuario.id as string);
+	}
 
 	@Get()
 	@RequerPermissao(Permissoes.ORIENTACAO.VISUALIZAR, Permissoes.ORIENTACAO.VISUALIZAR_TODAS)

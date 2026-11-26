@@ -30,6 +30,7 @@ export interface DadosAgendamento {
 	hora: string;
 	codigo_orientador: string;
 	membros_banca: [string, string];
+	local?: string | null;
 }
 
 export interface DadosGerenciarBanca {
@@ -217,6 +218,7 @@ export class DefesasRepository {
 
 		try {
 			const { id_tcc, fase, data, hora, codigo_orientador, membros_banca } = dados;
+			const local = dados.local?.trim() || null;
 
 			const docentes = [
 				{ codigo: codigo_orientador, orientador: true },
@@ -230,7 +232,7 @@ export class DefesasRepository {
 
 			for (const d of docentes) {
 				await this.defesaModel.create(
-					{ id_tcc, membro_banca: d.codigo, fase, data_defesa: dataHora, orientador: d.orientador } as Partial<DefesaEntity>,
+					{ id_tcc, membro_banca: d.codigo, fase, data_defesa: dataHora, orientador: d.orientador, local } as Partial<DefesaEntity>,
 					{ transaction: t },
 				);
 			}

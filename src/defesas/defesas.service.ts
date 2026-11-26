@@ -178,6 +178,7 @@ export class DefesasService {
 				hora: dados.hora,
 				codigo_orientador: dados.codigo_orientador,
 				membros_banca: dados.membros_banca as [string, string],
+				local: dados.local,
 			},
 			calcularHorarios,
 		);

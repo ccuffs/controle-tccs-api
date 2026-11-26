@@ -1,4 +1,4 @@
-import { IsArray, IsInt, IsOptional, IsString } from "class-validator";
+import { IsArray, IsInt, IsOptional, IsString, MaxLength } from "class-validator";
 
 /** Campos opcionais de propósito: DefesasService replica a validação manual do legado
  * (mensagem "Parâmetros inválidos"). */
@@ -26,4 +26,9 @@ export class AgendarDefesaDto {
 	@IsOptional()
 	@IsArray()
 	membros_banca?: string[];
+
+	@IsOptional()
+	@IsString()
+	@MaxLength(255)
+	local?: string;
 }

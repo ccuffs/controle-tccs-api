@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { col, fn, literal, Includeable, WhereOptions } from "sequelize";
+import { col, fn, literal, Includeable, Op, WhereOptions } from "sequelize";
 import {
 	AnoSemestreEntity,
 	BancaCursoEntity,
@@ -72,11 +72,51 @@ export class DashboardRepository {
 		}) as unknown as Promise<Record<string, unknown>[]>;
 	}
 
-	private statusAggregate(where: WhereOptions, include: Includeable[]) {
+	buscarTodosPeriodos(): Promise<Record<string, unknown>[]> {
+		return this.anoSemestreModel.findAll({ raw: true }) as unknown as Promise<Record<string, unknown>[]>;
+	}
+
+	/** Período (ano_semestre) imediatamente anterior ao informado, pela ordem ano/semestre. */
+	buscarPeriodoAnterior(ano: number, semestre: number): Promise<Record<string, unknown> | null> {
+		return this.anoSemestreModel.findOne({
+			where: { [Op.or]: [{ ano: { [Op.lt]: ano } }, { ano, semestre: { [Op.lt]: semestre } }] },
+			order: [
+				["ano", "DESC"],
+				["semestre", "DESC"],
+			],
+			raw: true,
+		}) as unknown as Promise<Record<string, unknown> | null>;
+	}
+
+	/** Convites de banca dos TCCs informados (para status de confirmação dos membros). */
+	buscarConvitesBancaPorTccs(idsTcc: number[]): Promise<Record<string, unknown>[]> {
+		if (idsTcc.length === 0) return Promise.resolve([]);
+		return this.conviteModel.findAll({
+			attributes: ["id_tcc", "codigo_docente", "fase", "data_envio", "data_feedback", "aceito"],
+			where: { orientacao: false, id_tcc: { [Op.in]: idsTcc } },
+			raw: true,
+		}) as unknown as Promise<Record<string, unknown>[]>;
+	}
+
+	/**
+	 * `limitePendencia` é gerado pelo serviço (Date → ISO), nunca vem do usuário,
+	 * por isso pode ser interpolado no literal.
+	 */
+	private statusAggregate(where: WhereOptions, include: Includeable[], limitePendencia: Date) {
+		const limiteIso = limitePendencia.toISOString();
 		return this.conviteModel.findAll({
 			attributes: [
 				[fn("SUM", literal('CASE WHEN "Convite"."data_feedback" IS NOT NULL THEN 1 ELSE 0 END')), "respondidos"],
 				[fn("SUM", literal('CASE WHEN "Convite"."data_feedback" IS NULL THEN 1 ELSE 0 END')), "pendentes"],
+				[
+					fn(
+						"SUM",
+						literal(
+							`CASE WHEN "Convite"."data_feedback" IS NULL AND "Convite"."data_envio" < '${limiteIso}' THEN 1 ELSE 0 END`,
+						),
+					),
+					"pendentes_antigos",
+				],
 				[fn("COUNT", col("Convite.id_tcc")), "total"],
 			],
 			where,
@@ -85,12 +125,12 @@ export class DashboardRepository {
 		}) as unknown as Promise<Record<string, unknown>[]>;
 	}
 
-	buscarConvitesOrientacaoStatus(where: WhereOptions, include: Includeable[]) {
-		return this.statusAggregate(where, include);
+	buscarConvitesOrientacaoStatus(where: WhereOptions, include: Includeable[], limitePendencia: Date) {
+		return this.statusAggregate(where, include, limitePendencia);
 	}
 
-	buscarConvitesBancaStatus(where: WhereOptions, include: Includeable[]) {
-		return this.statusAggregate(where, include);
+	buscarConvitesBancaStatus(where: WhereOptions, include: Includeable[], limitePendencia: Date) {
+		return this.statusAggregate(where, include, limitePendencia);
 	}
 
 	buscarOrientadoresCurso(where: WhereOptions, include: Includeable[]): Promise<Record<string, unknown>[]> {

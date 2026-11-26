@@ -27,6 +27,10 @@ export class DefesaEntity extends Model {
 	@Column(DataType.FLOAT)
 	declare avaliacao: number | null;
 
+	/** Sala ou link da defesa; replicado em todas as linhas (membros) da mesma defesa, como data_defesa. */
+	@Column(DataType.STRING)
+	declare local: string | null;
+
 	@AllowNull(false)
 	@Default(false)
 	@Column(DataType.BOOLEAN)
