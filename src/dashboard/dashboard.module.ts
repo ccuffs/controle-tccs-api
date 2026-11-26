@@ -9,6 +9,7 @@ import {
 	DatasDefesaTccEntity,
 	DefesaEntity,
 	DicenteEntity,
+	DocenteEntity,
 	DocenteDisponibilidadeBancaEntity,
 	OrientacaoEntity,
 	OrientadorCursoEntity,
@@ -18,6 +19,7 @@ import { PermissoesModule } from "../permissoes/permissoes.module";
 import { DashboardController } from "./dashboard.controller";
 import { DashboardRepository } from "./dashboard.repository";
 import { DashboardService } from "./dashboard.service";
+import { EscopoDocenteService } from "./escopo-docente.service";
 
 @Module({
 	imports: [
@@ -33,11 +35,12 @@ import { DashboardService } from "./dashboard.service";
 			DatasDefesaTccEntity,
 			DicenteEntity,
 			CursoEntity,
+			DocenteEntity,
 		]),
 		PermissoesModule,
 		AnoSemestreModule,
 	],
 	controllers: [DashboardController],
-	providers: [DashboardRepository, DashboardService],
+	providers: [DashboardRepository, DashboardService, EscopoDocenteService],
 })
 export class DashboardModule {}
