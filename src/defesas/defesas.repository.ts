@@ -42,6 +42,8 @@ export interface DadosGerenciarBanca {
 	orientador_codigo?: string;
 	data_hora_defesa?: string | null;
 	alteracoes?: { membro_antigo: string; membro_novo: string }[];
+	/** Local da defesa; undefined = não altera. */
+	local?: string | null;
 }
 
 const includeTccECurso = [
@@ -393,6 +395,10 @@ export class DefesasRepository {
 						);
 					}
 				}
+			}
+
+			if (dados.local !== undefined) {
+				await this.defesaModel.update({ local: dados.local }, { where: { id_tcc, fase }, transaction: t });
 			}
 
 			if (data_hora_defesa !== undefined) {

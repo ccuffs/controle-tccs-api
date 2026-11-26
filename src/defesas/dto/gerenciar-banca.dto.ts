@@ -1,4 +1,4 @@
-import { IsArray, IsInt, IsOptional, IsString } from "class-validator";
+import { IsArray, IsInt, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class GerenciarBancaDto {
 	@IsOptional()
@@ -32,4 +32,10 @@ export class GerenciarBancaDto {
 	@IsOptional()
 	@IsArray()
 	alteracoes?: { membro_antigo: string; membro_novo: string }[];
+
+	/** Sala ou link da defesa; `null` limpa. Omitido = não altera. */
+	@IsOptional()
+	@IsString()
+	@MaxLength(255)
+	local?: string | null;
 }

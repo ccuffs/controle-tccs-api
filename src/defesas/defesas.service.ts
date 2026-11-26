@@ -154,6 +154,7 @@ export class DefesasService {
 			orientador_codigo: dados.orientador_codigo,
 			data_hora_defesa: dados.data_hora_defesa,
 			alteracoes: dados.alteracoes,
+			local: dados.local === undefined ? undefined : dados.local?.trim() || null,
 		});
 	}
 

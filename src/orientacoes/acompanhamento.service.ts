@@ -7,11 +7,14 @@ import { AcompanhamentoRepository } from "./acompanhamento.repository";
 import { FiltrosAcompanhamentoDto } from "./dto/filtros-acompanhamento.dto";
 
 interface DocenteResumo {
+	/** id da linha em `orientacao` (para alterar/remover a orientação). */
+	id_orientacao: number;
 	codigo: string;
 	nome: string;
 }
 
 interface OrientacaoJson {
+	id: number;
 	codigo_docente: string;
 	orientador: boolean;
 	docente?: { codigo?: string; nome?: string | null } | null;
@@ -122,6 +125,7 @@ export class AcompanhamentoService {
 
 		const orientacoes = t.orientacoes || [];
 		const paraDocente = (o: OrientacaoJson): DocenteResumo => ({
+			id_orientacao: o.id,
 			codigo: o.docente?.codigo || o.codigo_docente,
 			nome: o.docente?.nome || o.codigo_docente,
 		});
