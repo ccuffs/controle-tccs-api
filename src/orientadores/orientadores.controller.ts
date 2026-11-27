@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { RequerPermissao } from "../common/decorators/permissoes.decorator";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { PermissoesGuard } from "../common/guards/permissoes.guard";
@@ -53,9 +53,17 @@ export class OrientadoresController {
 	@Delete(":id_curso/:codigo_docente")
 	@HttpCode(200)
 	@RequerPermissao(Permissoes.ORIENTACAO.DELETAR)
-	async deletaOrientacao(@Param("id_curso") idCurso: string, @Param("codigo_docente") codigoDocente: string) {
+	async deletaOrientacao(
+		@Param("id_curso") idCurso: string,
+		@Param("codigo_docente") codigoDocente: string,
+		@Query("removerGrupo") removerGrupo?: string,
+	) {
 		try {
-			const sucesso = await this.orientadoresService.deletarOrientacao(Number(idCurso), codigoDocente);
+			const sucesso = await this.orientadoresService.deletarOrientacao(
+				Number(idCurso),
+				codigoDocente,
+				removerGrupo === "true",
+			);
 
 			if (!sucesso) {
 				throw new HttpException({ message: "Orientação não encontrada" }, 404);

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { Op } from "sequelize";
-import { DocenteEntity } from "../database/entities";
+import { CursoEntity, DocenteEntity } from "../database/entities";
 
 const DOCENTE_ATTRS = ["codigo", "email", "nome", "sala", "siape", "externo", "instituicao", "id_usuario"];
 
@@ -12,9 +12,11 @@ export class DocentesRepository {
 		private readonly docenteModel: typeof DocenteEntity,
 	) {}
 
+	/** Inclui `cursos` (docente_curso) para o cadastro saber a que cursos cada docente pertence. */
 	async obterTodosDocentes(): Promise<DocenteEntity[]> {
 		return this.docenteModel.findAll({
 			attributes: DOCENTE_ATTRS,
+			include: [{ model: CursoEntity, as: "cursos", attributes: ["id", "codigo", "nome"], through: { attributes: [] } }],
 			order: [["nome", "ASC"]],
 		});
 	}
