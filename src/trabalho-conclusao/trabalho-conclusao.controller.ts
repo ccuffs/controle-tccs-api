@@ -12,10 +12,13 @@ import {
 	Query,
 	UseGuards,
 } from "@nestjs/common";
+import { UsuarioAtual } from "../common/decorators/usuario-atual.decorator";
 import { RequerPermissao } from "../common/decorators/permissoes.decorator";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { PermissoesGuard } from "../common/guards/permissoes.guard";
+import { UsuarioEntity } from "../database/entities";
 import { Permissoes } from "../permissoes/permissoes.enum";
+import { PermissoesService } from "../permissoes/permissoes.service";
 import { AtualizarTrabalhoConclusaoDto } from "./dto/atualizar-trabalho-conclusao.dto";
 import { CriarTrabalhoConclusaoDto } from "./dto/criar-trabalho-conclusao.dto";
 import { FiltrosTrabalhoConclusao } from "./trabalho-conclusao.repository";
@@ -25,18 +28,56 @@ import { TrabalhoConclusaoService } from "./trabalho-conclusao.service";
 @Controller("trabalho-conclusao")
 @UseGuards(JwtAuthGuard, PermissoesGuard)
 export class TrabalhoConclusaoController {
-	constructor(private readonly trabalhoConclusaoService: TrabalhoConclusaoService) {}
+	constructor(
+		private readonly trabalhoConclusaoService: TrabalhoConclusaoService,
+		private readonly permissoesService: PermissoesService,
+	) {}
+
+	/** Retorna a matrícula do usuário autenticado; lança 403 se não for discente. */
+	private async exigirMatricula(userId: string): Promise<string> {
+		const matricula = await this.permissoesService.buscarMatriculaDoUsuario(userId);
+		if (!matricula) {
+			throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+		}
+		return matricula;
+	}
 
 	@Get()
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR, Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS)
-	async retornaTodosTrabalhosConlusao(@Query() query: FiltrosTrabalhoConclusao) {
+	async retornaTodosTrabalhosConlusao(
+		@Query() query: FiltrosTrabalhoConclusao,
+		@UsuarioAtual() usuario: UsuarioEntity,
+	) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			// Restringe ao próprio TCC do discente
+			const matricula = await this.exigirMatricula(usuario.id as string);
+			query = { ...query, matricula };
+		}
+
 		const trabalhos = await this.trabalhoConclusaoService.obterTodosTrabalhosConclusao(query);
 		return { trabalhos };
 	}
 
 	@Get("discente/:matricula")
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR, Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS)
-	async buscarPorDiscente(@Param("matricula") matricula: string) {
+	async buscarPorDiscente(@Param("matricula") matricula: string, @UsuarioAtual() usuario: UsuarioEntity) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			const minhaMatricula = await this.exigirMatricula(usuario.id as string);
+			if (matricula !== minhaMatricula) {
+				throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+			}
+		}
+
 		const trabalho = await this.trabalhoConclusaoService.buscarPorDiscente(matricula);
 
 		if (!trabalho) {
@@ -48,8 +89,20 @@ export class TrabalhoConclusaoController {
 
 	@Get("discente/:matricula/oferta-atual")
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR, Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS)
-	async buscarPorDiscenteOfertaAtual(@Param("matricula") matricula: string) {
+	async buscarPorDiscenteOfertaAtual(@Param("matricula") matricula: string, @UsuarioAtual() usuario: UsuarioEntity) {
 		try {
+			const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+				usuario.id as string,
+				Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+			);
+
+			if (!temPermissaoTotal) {
+				const minhaMatricula = await this.exigirMatricula(usuario.id as string);
+				if (matricula !== minhaMatricula) {
+					throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+				}
+			}
+
 			const trabalho = await this.trabalhoConclusaoService.buscarPorDiscenteOfertaAtual(matricula);
 
 			if (!trabalho) {
@@ -67,11 +120,23 @@ export class TrabalhoConclusaoController {
 
 	@Get(":id")
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR, Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS)
-	async retornaTrabalhoConlusaoPorId(@Param("id") id: string) {
+	async retornaTrabalhoConlusaoPorId(@Param("id") id: string, @UsuarioAtual() usuario: UsuarioEntity) {
 		const trabalho = await this.trabalhoConclusaoService.obterTrabalhoConclusaoPorId(Number(id));
 
 		if (!trabalho) {
 			throw new HttpException({ message: "Trabalho de conclusão não encontrado" }, 404);
+		}
+
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			const minhaMatricula = await this.exigirMatricula(usuario.id as string);
+			if (trabalho.matricula !== minhaMatricula) {
+				throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+			}
 		}
 
 		return { trabalho };
@@ -87,7 +152,24 @@ export class TrabalhoConclusaoController {
 
 	@Put(":id")
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.EDITAR)
-	async atualizaTrabalhoConlusao(@Param("id") id: string, @Body() dadosAtualizados: AtualizarTrabalhoConclusaoDto) {
+	async atualizaTrabalhoConlusao(
+		@Param("id") id: string,
+		@Body() dadosAtualizados: AtualizarTrabalhoConclusaoDto,
+		@UsuarioAtual() usuario: UsuarioEntity,
+	) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			const minhaMatricula = await this.exigirMatricula(usuario.id as string);
+			const pertence = await this.permissoesService.verificarPropriedadeTcc(Number(id), minhaMatricula);
+			if (!pertence) {
+				throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+			}
+		}
+
 		const trabalhoAtualizado = await this.trabalhoConclusaoService.atualizarTrabalhoConclusao(
 			Number(id),
 			dadosAtualizados,
@@ -102,8 +184,21 @@ export class TrabalhoConclusaoController {
 
 	@Delete(":id")
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.DELETAR)
-	async deletaTrabalhoConlusao(@Param("id") id: string) {
+	async deletaTrabalhoConlusao(@Param("id") id: string, @UsuarioAtual() usuario: UsuarioEntity) {
 		try {
+			const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+				usuario.id as string,
+				Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+			);
+
+			if (!temPermissaoTotal) {
+				const minhaMatricula = await this.exigirMatricula(usuario.id as string);
+				const pertence = await this.permissoesService.verificarPropriedadeTcc(Number(id), minhaMatricula);
+				if (!pertence) {
+					throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+				}
+			}
+
 			const sucesso = await this.trabalhoConclusaoService.deletarTrabalhoConclusao(Number(id));
 
 			if (!sucesso) {

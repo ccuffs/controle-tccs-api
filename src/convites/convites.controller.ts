@@ -12,10 +12,15 @@ import {
 	Query,
 	UseGuards,
 } from "@nestjs/common";
+import { UsuarioAtual } from "../common/decorators/usuario-atual.decorator";
+import { RequerGrupo } from "../common/decorators/grupos.decorator";
 import { RequerPermissao } from "../common/decorators/permissoes.decorator";
+import { GruposGuard } from "../common/guards/grupos.guard";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { PermissoesGuard } from "../common/guards/permissoes.guard";
+import { UsuarioEntity } from "../database/entities";
 import { Permissoes } from "../permissoes/permissoes.enum";
+import { PermissoesService } from "../permissoes/permissoes.service";
 import { ConvitesService } from "./convites.service";
 import { FiltrosConvites } from "./convites.repository";
 import { CriarConviteDto } from "./dto/criar-convite.dto";
@@ -24,11 +29,45 @@ import { CriarConviteDto } from "./dto/criar-convite.dto";
 @Controller("convites")
 @UseGuards(JwtAuthGuard, PermissoesGuard)
 export class ConvitesController {
-	constructor(private readonly convitesService: ConvitesService) {}
+	constructor(
+		private readonly convitesService: ConvitesService,
+		private readonly permissoesService: PermissoesService,
+	) {}
 
 	@Get()
 	@RequerPermissao(Permissoes.CONVITE.VISUALIZAR, Permissoes.CONVITE.VISUALIZAR_TODOS)
-	async retornaTodosConvites(@Query() query: FiltrosConvites) {
+	async retornaTodosConvites(@Query() query: FiltrosConvites, @UsuarioAtual() usuario: UsuarioEntity) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.CONVITE.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			// Restringe aos convites do próprio TCC do discente
+			if (query.id_tcc) {
+				// Verifica se o TCC solicitado pertence ao discente
+				const matricula = await this.permissoesService.buscarMatriculaDoUsuario(usuario.id as string);
+				if (!matricula) {
+					throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+				}
+				const pertence = await this.permissoesService.verificarPropriedadeTcc(Number(query.id_tcc), matricula);
+				if (!pertence) {
+					throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+				}
+			} else {
+				// Sem id_tcc: injeta o TCC do discente como filtro
+				const matricula = await this.permissoesService.buscarMatriculaDoUsuario(usuario.id as string);
+				if (!matricula) {
+					return { convites: [] };
+				}
+				const idTcc = await this.permissoesService.buscarIdTccPorMatricula(matricula);
+				if (!idTcc) {
+					return { convites: [] };
+				}
+				query = { ...query, id_tcc: String(idTcc) };
+			}
+		}
+
 		const convites = await this.convitesService.obterTodosConvites(query);
 		return { convites };
 	}
@@ -36,12 +75,38 @@ export class ConvitesController {
 	@Post()
 	@HttpCode(HttpStatus.CREATED)
 	@RequerPermissao(Permissoes.CONVITE.CRIAR)
-	async criaConvite(@Body("formData") formData: CriarConviteDto) {
+	async criaConvite(@Body("formData") formData: CriarConviteDto, @UsuarioAtual() usuario: UsuarioEntity) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			// Verifica se o TCC do convite pertence ao discente
+			const matricula = await this.permissoesService.buscarMatriculaDoUsuario(usuario.id as string);
+			if (!matricula) {
+				throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+			}
+			const pertence = await this.permissoesService.verificarPropriedadeTcc(formData.id_tcc, matricula);
+			if (!pertence) {
+				throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+			}
+		}
+
 		await this.convitesService.criarConvite(formData);
 		return { message: "Convite criado com sucesso" };
 	}
 
+	/** Responder convite: apenas professores (BANCA, ORIENTADOR, PROFESSOR, PROFESSOR_CCR, ADMIN). */
 	@Put(":id/:codigo_docente/:fase")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(
+		Permissoes.GRUPOS.BANCA,
+		Permissoes.GRUPOS.ORIENTADOR,
+		Permissoes.GRUPOS.PROFESSOR,
+		Permissoes.GRUPOS.PROFESSOR_CCR,
+		Permissoes.GRUPOS.ADMIN,
+	)
 	@RequerPermissao(Permissoes.CONVITE.EDITAR)
 	async respondeConvite(
 		@Param("id") id: string,
@@ -60,7 +125,25 @@ export class ConvitesController {
 		@Param("id") id: string,
 		@Param("codigo_docente") codigoDocente: string,
 		@Param("fase") fase: string,
+		@UsuarioAtual() usuario: UsuarioEntity,
 	) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			// :id aqui é id_tcc — verifica se o TCC pertence ao discente
+			const matricula = await this.permissoesService.buscarMatriculaDoUsuario(usuario.id as string);
+			if (!matricula) {
+				throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+			}
+			const pertence = await this.permissoesService.verificarPropriedadeTcc(Number(id), matricula);
+			if (!pertence) {
+				throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+			}
+		}
+
 		const sucesso = await this.convitesService.deletarConvite(Number(id), codigoDocente, Number(fase));
 
 		if (!sucesso) {
