@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { Op } from "sequelize";
+import { Op, col } from "sequelize";
+import { contemSemAcento } from "../common/busca-sem-acento";
 import { CursoEntity, DocenteEntity } from "../database/entities";
 
 const DOCENTE_ATTRS = ["codigo", "email", "nome", "sala", "siape", "externo", "instituicao", "id_usuario"];
@@ -38,10 +39,7 @@ export class DocentesRepository {
 	async buscarExternosPorNome(nome: string): Promise<DocenteEntity[]> {
 		return this.docenteModel.findAll({
 			attributes: DOCENTE_ATTRS,
-			where: {
-				externo: true,
-				nome: { [Op.iLike]: `%${nome}%` },
-			},
+			where: { [Op.and]: [{ externo: true }, contemSemAcento(col("nome"), nome)] },
 			order: [["nome", "ASC"]],
 			limit: 10,
 		});

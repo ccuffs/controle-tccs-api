@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { Op, WhereOptions, cast, col, where as sqlWhere } from "sequelize";
+import { Op, WhereOptions, cast, col } from "sequelize";
+import { contemSemAcento } from "../common/busca-sem-acento";
 import {
 	ConviteEntity,
 	DefesaEntity,
@@ -39,8 +40,8 @@ export class AcompanhamentoRepository {
 	 * depois nome do discente). A paginação é feita sobre esta lista.
 	 */
 	async buscarIdsOrdenados(where: WhereOptions, busca?: string): Promise<number[]> {
-		// Escapa curingas do LIKE para que a busca seja literal.
-		const termo = busca?.trim().replace(/[\\%_]/g, (c) => `\\${c}`);
+		// Busca sem diferenciar acentos nem maiúsculas ("andre" encontra "ANDRÉ" e "Alexandre").
+		const termo = busca?.trim();
 		const whereBusca = termo
 			? {
 					[Op.and]: [
@@ -48,9 +49,9 @@ export class AcompanhamentoRepository {
 						{
 							[Op.or]: [
 								// matrícula é bigint no banco: compara como texto para permitir busca parcial
-								sqlWhere(cast(col("TrabalhoConclusao.matricula"), "text"), { [Op.iLike]: `%${termo}%` }),
-								{ "$dicente.nome$": { [Op.iLike]: `%${termo}%` } },
-								{ "$orientacoes.docente.nome$": { [Op.iLike]: `%${termo}%` } },
+								contemSemAcento(cast(col("TrabalhoConclusao.matricula"), "text"), termo),
+								contemSemAcento(col("dicente.nome"), termo),
+								contemSemAcento(col("orientacoes->docente.nome"), termo),
 							],
 						},
 					],
