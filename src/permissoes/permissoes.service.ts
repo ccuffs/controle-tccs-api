@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { GrupoEntity, PermissaoEntity } from "../database/entities";
+import { InjectModel } from "@nestjs/sequelize";
+import { DicenteEntity, GrupoEntity, PermissaoEntity, TrabalhoConclusaoEntity } from "../database/entities";
 import { PermissoesRepository } from "./permissoes.repository";
 
 export interface PermissaoConsolidada {
@@ -13,7 +14,11 @@ export interface PermissaoConsolidada {
 
 @Injectable()
 export class PermissoesService {
-	constructor(private readonly permissoesRepository: PermissoesRepository) {}
+	constructor(
+		private readonly permissoesRepository: PermissoesRepository,
+		@InjectModel(DicenteEntity) private readonly dicenteModel: typeof DicenteEntity,
+		@InjectModel(TrabalhoConclusaoEntity) private readonly tccModel: typeof TrabalhoConclusaoEntity,
+	) {}
 
 	async buscarPermissoesDoUsuario(userId: string): Promise<PermissaoConsolidada[]> {
 		const usuario = await this.permissoesRepository.buscarUsuarioComGruposEPermissoes(userId);
@@ -94,5 +99,43 @@ export class PermissoesService {
 
 	async buscarTodosGrupos(): Promise<GrupoEntity[]> {
 		return this.permissoesRepository.buscarTodosGrupos();
+	}
+
+	/** Retorna a matrícula do discente vinculado ao userId, ou null se não for discente. */
+	async buscarMatriculaDoUsuario(userId: string): Promise<string | null> {
+		const dicente = await this.dicenteModel.findOne({
+			where: { id_usuario: userId },
+			attributes: ["matricula"],
+		});
+		return dicente?.matricula ?? null;
+	}
+
+	/** Verifica se o usuário possui uma permissão específica pelo seu ID numérico. */
+	async usuarioTemPermissaoId(userId: string, permissaoId: number): Promise<boolean> {
+		const permissoes = await this.buscarPermissoesDoUsuario(userId);
+		return permissoes.some((p) => p.id === permissaoId);
+	}
+
+	/** Retorna o id do TCC mais recente da matrícula informada, ou null se não houver. */
+	async buscarIdTccPorMatricula(matricula: string): Promise<number | null> {
+		const tcc = await this.tccModel.findOne({
+			where: { matricula },
+			order: [
+				["ano", "DESC"],
+				["semestre", "DESC"],
+				["id", "DESC"],
+			],
+			attributes: ["id"],
+		});
+		return tcc?.id ?? null;
+	}
+
+	/** Verifica se o TCC com o id fornecido pertence ao discente com a matrícula informada. */
+	async verificarPropriedadeTcc(idTcc: number, matricula: string): Promise<boolean> {
+		const tcc = await this.tccModel.findOne({
+			where: { id: idTcc, matricula },
+			attributes: ["id"],
+		});
+		return tcc !== null;
 	}
 }

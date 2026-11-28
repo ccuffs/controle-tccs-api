@@ -1,5 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
+import { RequerGrupo } from "../common/decorators/grupos.decorator";
 import { RequerPermissao } from "../common/decorators/permissoes.decorator";
+import { GruposGuard } from "../common/guards/grupos.guard";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { PermissoesGuard } from "../common/guards/permissoes.guard";
 import { Permissoes } from "../permissoes/permissoes.enum";
@@ -75,8 +77,11 @@ export class DisponibilidadeBancaController {
 		return { grade };
 	}
 
+	/** Criar disponibilidade: apenas professores da banca, orientadores, coordenadores e admins. */
 	@Post()
 	@HttpCode(HttpStatus.CREATED)
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.BANCA, Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.DISPONIBILIDADE_BANCA.CRIAR, Permissoes.DISPONIBILIDADE_BANCA.EDITAR)
 	async criaDisponibilidade(@Body() dadosDisponibilidade: CriarDisponibilidadeDto) {
 		try {
@@ -91,6 +96,8 @@ export class DisponibilidadeBancaController {
 	}
 
 	@Post("upsert")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.BANCA, Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.DISPONIBILIDADE_BANCA.CRIAR, Permissoes.DISPONIBILIDADE_BANCA.EDITAR)
 	async criaOuAtualizaDisponibilidade(@Body() dadosDisponibilidade: CriarDisponibilidadeDto) {
 		try {
@@ -105,6 +112,8 @@ export class DisponibilidadeBancaController {
 	}
 
 	@Post("sincronizar")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.BANCA, Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.DISPONIBILIDADE_BANCA.CRIAR, Permissoes.DISPONIBILIDADE_BANCA.EDITAR)
 	async sincronizarDisponibilidades(@Body("disponibilidades") disponibilidades: unknown) {
 		try {
@@ -120,6 +129,8 @@ export class DisponibilidadeBancaController {
 	}
 
 	@Put(":ano/:semestre/:id_curso/:fase/:codigo_docente/:data_defesa/:hora_defesa")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.BANCA, Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.DISPONIBILIDADE_BANCA.EDITAR)
 	async atualizaDisponibilidade(
 		@Param("ano") ano: string,
@@ -158,6 +169,8 @@ export class DisponibilidadeBancaController {
 	}
 
 	@Delete(":ano/:semestre/:id_curso/:fase/:codigo_docente/:data_defesa/:hora_defesa")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.BANCA, Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.DISPONIBILIDADE_BANCA.DELETAR)
 	async deletaDisponibilidade(
 		@Param("ano") ano: string,

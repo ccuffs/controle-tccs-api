@@ -23,6 +23,7 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { PermissoesGuard } from "../common/guards/permissoes.guard";
 import { UsuarioEntity } from "../database/entities";
 import { Permissoes } from "../permissoes/permissoes.enum";
+import { PermissoesService } from "../permissoes/permissoes.service";
 import { AdicionarMembroExternoDto } from "./dto/membro-externo.dto";
 import { AgendarDefesaDto } from "./dto/agendar-defesa.dto";
 import { AtualizarDefesaDto } from "./dto/atualizar-defesa.dto";
@@ -35,24 +36,65 @@ import { FiltrosDefesas } from "./defesas.repository";
 @Controller("defesas")
 @UseGuards(JwtAuthGuard, PermissoesGuard)
 export class DefesasController {
-	constructor(private readonly defesasService: DefesasService) {}
+	constructor(
+		private readonly defesasService: DefesasService,
+		private readonly permissoesService: PermissoesService,
+	) {}
+
+	/** Verifica propriedade do TCC; lança 403 se o discente não for dono. */
+	private async exigirPropriedadeTcc(idTcc: number, userId: string): Promise<void> {
+		const matricula = await this.permissoesService.buscarMatriculaDoUsuario(userId);
+		if (!matricula) {
+			throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+		}
+		const pertence = await this.permissoesService.verificarPropriedadeTcc(idTcc, matricula);
+		if (!pertence) {
+			throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+		}
+	}
 
 	@Get()
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR, Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS)
-	async retornaTodasDefesas(@Query() query: FiltrosDefesas) {
+	async retornaTodasDefesas(@Query() query: FiltrosDefesas, @UsuarioAtual() usuario: UsuarioEntity) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			// Restringe ao próprio TCC do discente
+			const matricula = await this.permissoesService.buscarMatriculaDoUsuario(usuario.id as string);
+			if (!matricula) return { defesas: [] };
+			const idTcc = await this.permissoesService.buscarIdTccPorMatricula(matricula);
+			if (!idTcc) return { defesas: [] };
+			query = { ...query, id_tcc: String(idTcc) };
+		}
+
 		const defesas = await this.defesasService.obterTodasDefesas(query);
 		return { defesas };
 	}
 
 	@Get("tcc/:id_tcc")
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR, Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS)
-	async retornaDefesasPorTcc(@Param("id_tcc") idTcc: string) {
+	async retornaDefesasPorTcc(@Param("id_tcc") idTcc: string, @UsuarioAtual() usuario: UsuarioEntity) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			await this.exigirPropriedadeTcc(Number(idTcc), usuario.id as string);
+		}
+
 		const defesas = await this.defesasService.obterDefesasPorTcc(Number(idTcc));
 		return { defesas: defesas || [] };
 	}
 
+	/** Agendar defesa: apenas coordenadores e admins. */
 	@Post("agendar")
 	@HttpCode(HttpStatus.CREATED)
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.CRIAR)
 	async agendarDefesa(@Body() dados: AgendarDefesaDto) {
 		const resultado = await this.defesasService.agendarDefesa(dados);
@@ -63,15 +105,21 @@ export class DefesasController {
 		};
 	}
 
+	/** Criar defesa: apenas coordenadores e admins. */
 	@Post()
 	@HttpCode(HttpStatus.CREATED)
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.CRIAR)
 	async criaDefesa(@Body("formData") formData: CriarDefesaDto) {
 		await this.defesasService.criarDefesa(formData);
 		return { message: "Defesa criada com sucesso" };
 	}
 
+	/** Gerenciar banca: apenas orientadores, coordenadores e admins. */
 	@Post("gerenciar-banca")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.CRIAR, Permissoes.TRABALHO_CONCLUSAO.EDITAR)
 	async gerenciarBancaDefesa(@Body() dados: GerenciarBancaDto) {
 		const resultado = await this.defesasService.gerenciarBancaDefesa(dados);
@@ -84,7 +132,10 @@ export class DefesasController {
 		};
 	}
 
+	/** Registrar avaliação: apenas membros da banca, orientadores, coordenadores e admins. */
 	@Put("avaliacao/:id_tcc")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.BANCA, Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.EDITAR)
 	async registraAvaliacaoDefesa(@Param("id_tcc") idTcc: string, @Body("avaliacao") avaliacao: number) {
 		const sucesso = await this.defesasService.registrarAvaliacaoDefesa(Number(idTcc), avaliacao);
@@ -96,7 +147,10 @@ export class DefesasController {
 		return { message: "Avaliação registrada com sucesso" };
 	}
 
+	/** Atualizar defesa (nota de membro): apenas membros da banca, orientadores, coordenadores e admins. */
 	@Put(":id_tcc/:membro_banca")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.BANCA, Permissoes.GRUPOS.ORIENTADOR, Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.EDITAR)
 	async atualizaDefesa(
 		@Param("id_tcc") idTcc: string,
@@ -112,7 +166,10 @@ export class DefesasController {
 		return { message: "Defesa atualizada com sucesso" };
 	}
 
+	/** Deletar defesa: apenas coordenadores e admins. */
 	@Delete(":id_tcc/:membro_banca/:fase")
+	@UseGuards(GruposGuard)
+	@RequerGrupo(Permissoes.GRUPOS.PROFESSOR_CCR, Permissoes.GRUPOS.ADMIN)
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.DELETAR)
 	async deletaDefesa(@Param("id_tcc") idTcc: string, @Param("membro_banca") membroBanca: string, @Param("fase") fase: string) {
 		const resultado = await this.defesasService.deletarDefesa(Number(idTcc), membroBanca, Number(fase));
@@ -141,14 +198,33 @@ export class DefesasController {
 		@Param("fase") fase: string,
 		@Query("local") local: string | undefined,
 		@Res() res: Response,
+		@UsuarioAtual() usuario: UsuarioEntity,
 	) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			await this.exigirPropriedadeTcc(Number(idTcc), usuario.id as string);
+		}
+
 		const html = await this.defesasService.gerarAtaDefesa(Number(idTcc), Number(fase), local || "");
 		res.send(html);
 	}
 
 	@Get("externos/tcc/:id_tcc")
 	@RequerPermissao(Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR, Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS)
-	async listarMembrosExternosTcc(@Param("id_tcc") idTcc: string) {
+	async listarMembrosExternosTcc(@Param("id_tcc") idTcc: string, @UsuarioAtual() usuario: UsuarioEntity) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.TRABALHO_CONCLUSAO.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal) {
+			await this.exigirPropriedadeTcc(Number(idTcc), usuario.id as string);
+		}
+
 		const membros = await this.defesasService.listarMembrosExternosTcc(Number(idTcc));
 		return { membros };
 	}

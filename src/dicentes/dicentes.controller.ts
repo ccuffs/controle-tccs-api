@@ -23,6 +23,7 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { PermissoesGuard } from "../common/guards/permissoes.guard";
 import { UsuarioEntity } from "../database/entities";
 import { Permissoes } from "../permissoes/permissoes.enum";
+import { PermissoesService } from "../permissoes/permissoes.service";
 import { AtualizarDicenteDto } from "./dto/atualizar-dicente.dto";
 import { CriarDicenteDto } from "./dto/criar-dicente.dto";
 import { DicentesService, OrientacaoDataPdf } from "./dicentes.service";
@@ -55,7 +56,10 @@ const uploadPdfOptions = {
 /** Porta de src/resources/dicentes-resource.js + src/services/dicente-service.js. */
 @Controller("dicentes")
 export class DicentesController {
-	constructor(private readonly dicentesService: DicentesService) {}
+	constructor(
+		private readonly dicentesService: DicentesService,
+		private readonly permissoesService: PermissoesService,
+	) {}
 
 	@Get()
 	@UseGuards(JwtAuthGuard, PermissoesGuard)
@@ -107,7 +111,19 @@ export class DicentesController {
 	@Get("usuario/:id_usuario")
 	@UseGuards(JwtAuthGuard, PermissoesGuard)
 	@RequerPermissao(Permissoes.DICENTE.VISUALIZAR, Permissoes.DICENTE.VISUALIZAR_TODOS)
-	async retornaDicentePorUsuarioAdmin(@Param("id_usuario") idUsuario: string) {
+	async retornaDicentePorUsuarioAdmin(
+		@Param("id_usuario") idUsuario: string,
+		@UsuarioAtual() usuario: UsuarioEntity,
+	) {
+		const temPermissaoTotal = await this.permissoesService.usuarioTemPermissaoId(
+			usuario.id as string,
+			Permissoes.DICENTE.VISUALIZAR_TODOS,
+		);
+
+		if (!temPermissaoTotal && idUsuario !== (usuario.id as string)) {
+			throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
+		}
+
 		const dicente = await this.dicentesService.obterDicentePorUsuario(idUsuario);
 
 		if (!dicente) {
