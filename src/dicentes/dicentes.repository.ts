@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
+import { aplicarDesde, periodoDesde } from "../common/periodo-desde";
 import {
 	CursoEntity,
 	DefesaEntity,
@@ -15,6 +16,9 @@ export interface FiltrosTcc {
 	fase?: string | number;
 	id_curso?: string | number;
 	etapa?: string | number;
+	/** "A partir de" (opção "Todos os períodos" restrita): TCCs com período >= desde. */
+	desde_ano?: string | number;
+	desde_semestre?: string | number;
 }
 
 @Injectable()
@@ -30,13 +34,14 @@ export class DicentesRepository {
 
 	async obterDicentesComFiltrosTcc(filtros: FiltrosTcc): Promise<DicenteEntity[]> {
 		const { ano, semestre, fase, id_curso, etapa } = filtros;
-		const trabalhoWhere: Record<string, number> = {};
+		const trabalhoWhere: Record<string | symbol, unknown> = {};
 
 		if (ano) trabalhoWhere.ano = parseInt(String(ano), 10);
 		if (semestre) trabalhoWhere.semestre = parseInt(String(semestre), 10);
 		if (fase) trabalhoWhere.fase = parseInt(String(fase), 10);
 		if (id_curso) trabalhoWhere.id_curso = parseInt(String(id_curso), 10);
 		if (etapa) trabalhoWhere.etapa = parseInt(String(etapa), 10);
+		aplicarDesde(trabalhoWhere, periodoDesde(filtros.desde_ano, filtros.desde_semestre));
 
 		return this.dicenteModel.findAll({
 			include: [

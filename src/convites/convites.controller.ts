@@ -43,10 +43,10 @@ export class ConvitesController {
 		);
 
 		if (!temPermissaoTotal) {
-			// Restringe aos convites do próprio TCC do discente
+			// Restringe aos convites dos TCCs do próprio discente
+			const matricula = await this.permissoesService.buscarMatriculaDoUsuario(usuario.id as string);
 			if (query.id_tcc) {
 				// Verifica se o TCC solicitado pertence ao discente
-				const matricula = await this.permissoesService.buscarMatriculaDoUsuario(usuario.id as string);
 				if (!matricula) {
 					throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
 				}
@@ -54,18 +54,11 @@ export class ConvitesController {
 				if (!pertence) {
 					throw new HttpException({ message: "Permissão negada: recurso pertence a outro usuário" }, 403);
 				}
-			} else {
-				// Sem id_tcc: injeta o TCC do discente como filtro
-				const matricula = await this.permissoesService.buscarMatriculaDoUsuario(usuario.id as string);
-				if (!matricula) {
-					return { convites: [] };
-				}
-				const idTcc = await this.permissoesService.buscarIdTccPorMatricula(matricula);
-				if (!idTcc) {
-					return { convites: [] };
-				}
-				query = { ...query, id_tcc: String(idTcc) };
+			} else if (!matricula) {
+				return { convites: [] };
 			}
+			// Sem id_tcc: todos os TCCs do discente (filtráveis por ano/semestre do seletor do topo).
+			query = { ...query, matricula: matricula as string };
 		}
 
 		const convites = await this.convitesService.obterTodosConvites(query);
@@ -153,8 +146,19 @@ export class ConvitesController {
 
 	@Get("docente/:codigo")
 	@RequerPermissao(Permissoes.CONVITE.VISUALIZAR, Permissoes.CONVITE.VISUALIZAR_TODOS)
-	async retornaConvitesDocente(@Param("codigo") codigo: string) {
-		const convites = await this.convitesService.obterConvitesDocente(codigo);
+	async retornaConvitesDocente(
+		@Param("codigo") codigo: string,
+		@Query("ano") ano?: string,
+		@Query("semestre") semestre?: string,
+		@Query("desde_ano") desdeAno?: string,
+		@Query("desde_semestre") desdeSemestre?: string,
+	) {
+		const convites = await this.convitesService.obterConvitesDocente(codigo, {
+			ano,
+			semestre,
+			desde_ano: desdeAno,
+			desde_semestre: desdeSemestre,
+		});
 		return { convites };
 	}
 }

@@ -5,6 +5,7 @@ import { Permissoes } from "../permissoes/permissoes.enum";
 import { PermissoesService } from "../permissoes/permissoes.service";
 import { AcompanhamentoRepository } from "./acompanhamento.repository";
 import { FiltrosAcompanhamentoDto } from "./dto/filtros-acompanhamento.dto";
+import { aplicarDesde, periodoDesde } from "../common/periodo-desde";
 
 interface DocenteResumo {
 	/** id da linha em `orientacao` (para alterar/remover a orientação). */
@@ -72,10 +73,11 @@ export class AcompanhamentoService {
 	async listar(filtros: FiltrosAcompanhamentoDto, idUsuario: string) {
 		const codigoDocente = await this.resolverDocente(filtros.codigo_docente, idUsuario);
 
-		const where: Record<string, unknown> = {};
+		const where: Record<string | symbol, unknown> = {};
 		if (filtros.id_curso) where.id_curso = parseInt(filtros.id_curso, 10);
 		if (filtros.ano) where.ano = parseInt(filtros.ano, 10);
 		if (filtros.semestre) where.semestre = parseInt(filtros.semestre, 10);
+		aplicarDesde(where, periodoDesde(filtros.desde_ano, filtros.desde_semestre));
 		if (filtros.fase) where.fase = parseInt(filtros.fase, 10);
 
 		if (codigoDocente) {

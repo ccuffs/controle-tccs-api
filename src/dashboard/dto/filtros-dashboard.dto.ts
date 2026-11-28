@@ -13,6 +13,15 @@ export class FiltrosDashboardDto {
 	@IsNumberString()
 	semestre?: string;
 
+	/** defesas-agendadas com incluir_historico: só períodos >= desde_ano/desde_semestre. */
+	@IsOptional()
+	@IsNumberString()
+	desde_ano?: string;
+
+	@IsOptional()
+	@IsIn(["1", "2"])
+	desde_semestre?: string;
+
 	@IsOptional()
 	@IsNumberString()
 	id_curso?: string;

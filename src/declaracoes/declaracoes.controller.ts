@@ -6,6 +6,8 @@ import { GruposGuard } from "../common/guards/grupos.guard";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { UsuarioEntity } from "../database/entities";
 import { Permissoes } from "../permissoes/permissoes.enum";
+import { aplicarDesde, periodoDesde } from "../common/periodo-desde";
+import { FiltrosDeclaracoes } from "./declaracoes.repository";
 import { DeclaracoesService } from "./declaracoes.service";
 
 interface FiltrosQuery {
@@ -13,16 +15,22 @@ interface FiltrosQuery {
 	ano?: string;
 	semestre?: string;
 	fase?: string;
+	/** "A partir de" (opção "Todos os períodos" restrita). */
+	desde_ano?: string;
+	desde_semestre?: string;
 }
 
+/** Filtros aplicados como where do TCC; "desde" entra como condição extra (Op.and). */
 function parseFiltros(query: FiltrosQuery) {
 	const { curso, ano, semestre, fase } = query;
-	return {
+	const filtros: Record<string | symbol, unknown> = {
 		...(curso && { id_curso: parseInt(curso, 10) }),
 		...(ano && { ano: parseInt(ano, 10) }),
 		...(semestre && { semestre: parseInt(semestre, 10) }),
 		...(fase && { fase: parseInt(fase, 10) }),
 	};
+	aplicarDesde(filtros, periodoDesde(query.desde_ano, query.desde_semestre));
+	return filtros as FiltrosDeclaracoes;
 }
 
 /** Porta de src/resources/declaracoes-resource.js + src/services/declaracoes-service.js. */

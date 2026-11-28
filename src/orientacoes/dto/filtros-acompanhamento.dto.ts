@@ -19,6 +19,15 @@ export class FiltrosAcompanhamentoDto {
 	@IsNumberString()
 	semestre?: string;
 
+	/** "A partir de" (opção "Todos os períodos" restrita): período >= desde_ano/desde_semestre. */
+	@IsOptional()
+	@IsNumberString()
+	desde_ano?: string;
+
+	@IsOptional()
+	@IsIn(["1", "2"])
+	desde_semestre?: string;
+
 	@IsOptional()
 	@IsIn(["1", "2"])
 	fase?: string;

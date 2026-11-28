@@ -10,6 +10,7 @@ import {
 	Patch,
 	Post,
 	Put,
+	Query,
 	UseGuards,
 } from "@nestjs/common";
 import { RequerPermissao } from "../common/decorators/permissoes.decorator";
@@ -18,7 +19,7 @@ import { PermissoesGuard } from "../common/guards/permissoes.guard";
 import { Permissoes } from "../permissoes/permissoes.enum";
 import { AtualizarTemaTccDto } from "./dto/atualizar-tema-tcc.dto";
 import { CriarTemaTccDto } from "./dto/criar-tema-tcc.dto";
-import { TemasTccService } from "./temas-tcc.service";
+import { periodoTemas, TemasTccService } from "./temas-tcc.service";
 
 /** Porta de src/resources/tema-tcc-resource.js + src/services/tema-tcc-service.js.
  * Respostas não usam envelope (arrays/objetos crus), igual ao legado. */
@@ -35,8 +36,12 @@ export class TemasTccController {
 
 	@Get("curso/:id_curso")
 	@RequerPermissao(Permissoes.TEMA_TCC.VISUALIZAR, Permissoes.TEMA_TCC.VISUALIZAR_TODOS)
-	async retornaTemasTccPorCurso(@Param("id_curso") idCurso: string) {
-		return this.temasTccService.obterTemasTccPorCurso(idCurso);
+	async retornaTemasTccPorCurso(
+		@Param("id_curso") idCurso: string,
+		@Query("ano") ano?: string,
+		@Query("semestre") semestre?: string,
+	) {
+		return this.temasTccService.obterTemasTccPorCurso(idCurso, periodoTemas(ano, semestre));
 	}
 
 	@Get("docente/:codigo")
@@ -47,8 +52,13 @@ export class TemasTccController {
 
 	@Get("docente/:codigo/curso/:id_curso")
 	@RequerPermissao(Permissoes.TEMA_TCC.VISUALIZAR, Permissoes.TEMA_TCC.VISUALIZAR_TODOS)
-	async retornaTemasTccPorDocenteECurso(@Param("codigo") codigo: string, @Param("id_curso") idCurso: string) {
-		return this.temasTccService.obterTemasTccPorDocenteECurso(codigo, idCurso);
+	async retornaTemasTccPorDocenteECurso(
+		@Param("codigo") codigo: string,
+		@Param("id_curso") idCurso: string,
+		@Query("ano") ano?: string,
+		@Query("semestre") semestre?: string,
+	) {
+		return this.temasTccService.obterTemasTccPorDocenteECurso(codigo, idCurso, periodoTemas(ano, semestre));
 	}
 
 	@Post()
@@ -88,8 +98,15 @@ export class TemasTccController {
 		@Param("codigo_docente") codigoDocente: string,
 		@Param("id_curso") idCurso: string,
 		@Body("vagas") vagas: number,
+		@Body("ano") ano?: number,
+		@Body("semestre") semestre?: number,
 	) {
-		const docenteOferta = await this.temasTccService.atualizarVagasOfertaDocente(codigoDocente, idCurso, vagas);
+		const docenteOferta = await this.temasTccService.atualizarVagasOfertaDocente(
+			codigoDocente,
+			idCurso,
+			vagas,
+			periodoTemas(ano, semestre),
+		);
 		return { message: "Vagas da oferta atualizadas com sucesso", docenteOferta };
 	}
 

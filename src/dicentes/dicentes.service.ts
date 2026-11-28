@@ -49,8 +49,8 @@ export class DicentesService {
 	) {}
 
 	obterTodosDicentes(filtros: FiltrosTcc): Promise<DicenteEntity[]> {
-		const { ano, semestre, fase, id_curso, etapa } = filtros;
-		if (ano || semestre || fase || id_curso || etapa) {
+		const { ano, semestre, fase, id_curso, etapa, desde_ano } = filtros;
+		if (ano || semestre || fase || id_curso || etapa || desde_ano) {
 			return this.dicentesRepository.obterDicentesComFiltrosTcc(filtros);
 		}
 		return this.dicentesRepository.obterTodosDicentes();

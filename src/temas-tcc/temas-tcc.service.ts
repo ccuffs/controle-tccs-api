@@ -6,6 +6,19 @@ import { AtualizarTemaTccDto } from "./dto/atualizar-tema-tcc.dto";
 import { CriarTemaTccDto } from "./dto/criar-tema-tcc.dto";
 import { TemasTccRepository } from "./temas-tcc.repository";
 
+/** Período das vagas (docente_oferta); os temas em si não têm período. */
+export interface PeriodoTemas {
+	ano: number;
+	semestre: number;
+}
+
+/** Converte ?ano&semestre (ou campos do corpo) num período; exige os dois, senão vale o atual. */
+export function periodoTemas(ano?: string | number, semestre?: string | number): PeriodoTemas | undefined {
+	const a = Number(ano);
+	const s = Number(semestre);
+	return Number.isInteger(a) && a > 0 && (s === 1 || s === 2) ? { ano: a, semestre: s } : undefined;
+}
+
 @Injectable()
 export class TemasTccService {
 	constructor(
@@ -13,6 +26,11 @@ export class TemasTccService {
 		private readonly anoSemestreService: AnoSemestreService,
 		private readonly ofertasTccService: OfertasTccService,
 	) {}
+
+	/** Período informado pelo seletor do front ou, sem ele, o período atual. */
+	private async resolverPeriodo(periodo?: PeriodoTemas): Promise<{ ano: number; semestre: number }> {
+		return periodo ?? this.anoSemestreService.calcularAnoSemestreAtual();
+	}
 
 	obterTodosTemasTcc(): Promise<TemaTccEntity[]> {
 		return this.temasTccRepository.obterTodosTemasTcc();
@@ -35,8 +53,8 @@ export class TemasTccService {
 		return 1;
 	}
 
-	async obterTemasTccPorCurso(idCurso: string): Promise<Record<string, unknown>[]> {
-		const { ano: anoAtual, semestre: semestreAtual } = await this.anoSemestreService.calcularAnoSemestreAtual();
+	async obterTemasTccPorCurso(idCurso: string, periodo?: PeriodoTemas): Promise<Record<string, unknown>[]> {
+		const { ano: anoAtual, semestre: semestreAtual } = await this.resolverPeriodo(periodo);
 		const temas = await this.temasTccRepository.obterTemasTccPorCurso(idCurso);
 		const faseVigente = await this.calcularFaseVigente(idCurso, anoAtual, semestreAtual);
 
@@ -73,8 +91,12 @@ export class TemasTccService {
 		return this.temasTccRepository.obterTemasTccPorDocente(codigo);
 	}
 
-	async obterTemasTccPorDocenteECurso(codigo: string, idCurso: string): Promise<Record<string, unknown>[]> {
-		const { ano: anoAtual, semestre: semestreAtual } = await this.anoSemestreService.calcularAnoSemestreAtual();
+	async obterTemasTccPorDocenteECurso(
+		codigo: string,
+		idCurso: string,
+		periodo?: PeriodoTemas,
+	): Promise<Record<string, unknown>[]> {
+		const { ano: anoAtual, semestre: semestreAtual } = await this.resolverPeriodo(periodo);
 		const temas = await this.temasTccRepository.obterTemasTccPorDocenteECurso(codigo, idCurso);
 		const faseVigente = await this.calcularFaseVigente(idCurso, anoAtual, semestreAtual);
 
@@ -122,8 +144,9 @@ export class TemasTccService {
 		codigoDocente: string,
 		idCurso: string,
 		vagas: number,
+		periodo?: PeriodoTemas,
 	): Promise<DocenteOfertaEntity> {
-		const { ano: anoAtual, semestre: semestreAtual } = await this.anoSemestreService.calcularAnoSemestreAtual();
+		const { ano: anoAtual, semestre: semestreAtual } = await this.resolverPeriodo(periodo);
 		return this.temasTccRepository.criarOuAtualizarOfertaDocente(anoAtual, semestreAtual, idCurso, codigoDocente, vagas);
 	}
 }

@@ -6,6 +6,7 @@ import { calcularPendenciasTcc, type ConvitePendencia, type DefesaPendencia } fr
 import { DicenteEntity, DocenteEntity, OrientacaoEntity, TrabalhoConclusaoEntity } from "../database/entities";
 import { DashboardRepository } from "./dashboard.repository";
 import { FiltrosDashboardDto } from "./dto/filtros-dashboard.dto";
+import { atendeDesde, periodoDesde } from "../common/periodo-desde";
 
 interface OfertaAlvo {
 	ano: number;
@@ -465,9 +466,13 @@ export class DashboardService {
 					return { ano: Number(p.ano), semestre: Number(p.semestre), inicio: new Date(p.inicio as string), fim };
 				});
 
-			if (anoAlvo !== undefined || semestreAlvo !== undefined) {
+			const desde = periodoDesde(filtros.desde_ano, filtros.desde_semestre);
+			if (anoAlvo !== undefined || semestreAlvo !== undefined || desde) {
 				const janelas = periodos.filter(
-					(p) => (anoAlvo === undefined || p.ano === anoAlvo) && (semestreAlvo === undefined || p.semestre === semestreAlvo),
+					(p) =>
+						(anoAlvo === undefined || p.ano === anoAlvo) &&
+						(semestreAlvo === undefined || p.semestre === semestreAlvo) &&
+						atendeDesde(p, desde),
 				);
 				condicoesData.push(
 					janelas.length > 0

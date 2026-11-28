@@ -5,7 +5,7 @@ import { ConviteEntity } from "../database/entities";
 import { DocentesRepository } from "../docentes/docentes.repository";
 import { OrientacoesRepository } from "../orientacoes/orientacoes.repository";
 import { TemasTccRepository } from "../temas-tcc/temas-tcc.repository";
-import { ConvitesRepository, FiltrosConvites } from "./convites.repository";
+import { ConvitesRepository, FiltrosConvites, FiltrosTccConvite } from "./convites.repository";
 import { CriarConviteDto } from "./dto/criar-convite.dto";
 
 @Injectable()
@@ -118,13 +118,13 @@ export class ConvitesService {
 		return this.convitesRepository.deletarConvite(id, codigoDocente, fase);
 	}
 
-	async obterConvitesDocente(codigo: string): Promise<ConviteEntity[]> {
+	async obterConvitesDocente(codigo: string, filtrosTcc: FiltrosTccConvite = {}): Promise<ConviteEntity[]> {
 		const docente = await this.docentesRepository.obterDocentePorUsuario(codigo);
 
 		if (!docente) {
 			throw new HttpException({ message: "Docente não encontrado para este usuário" }, 404);
 		}
 
-		return this.convitesRepository.obterConvitesDocente(docente.codigo);
+		return this.convitesRepository.obterConvitesDocente(docente.codigo, filtrosTcc);
 	}
 }
